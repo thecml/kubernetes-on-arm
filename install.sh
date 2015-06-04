@@ -12,7 +12,6 @@
 #
 #
 #
-#
 
 
 echo "Hope you do this over ssh or by cmd, so you can copy the output"
@@ -22,7 +21,7 @@ echo "Updating the system..."
 time pacman -Syu --noconfirm
 
 echo "Now were going to install some packages"
-time pacman -S docker git samba rsync nmap fdisk --noconfirm
+time pacman -S docker git samba rsync nmap --noconfirm
 
 echo "Git is very good software. Were going to use it."
 echo "We'll set up a bare repository with a live folder."
@@ -43,8 +42,10 @@ cd master.git
 git init --bare
 
 cd hooks
-cat > post-recieve <<EOF
+cat > post-receive <<EOF
 #!/bin/bash
 git --work-tree=/lib/luxas/master --git-dir=/lib/luxas/master.git checkout -f
 EOF
+
+chmod a+x post-receive
 
