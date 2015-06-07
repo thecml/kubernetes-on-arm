@@ -13,6 +13,11 @@
 #
 #
 
+
+trap 'exit' ERR
+
+
+
 echo "This script will run for about 15 min, depending on how updated your system is"
 
 echo "Hope you do this over ssh or by cmd, so you can copy the output"
