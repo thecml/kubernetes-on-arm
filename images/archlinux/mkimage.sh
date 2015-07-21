@@ -1,92 +1,67 @@
-#!/usr/bin/env bash
-# Generate a minimal filesystem for archlinux and load it into the local
-# docker as "archlinux"
-# requires root
+#!/bin/bash
+(( EUID != 0 )) && echo 'This script must be run as root.' && exit 1
 set -e
 
-hash pacstrap &>/dev/null || {
-	echo "Could not find pacstrap. Run pacman -S arch-install-scripts"
-	exit 1
-}
+buildfolder=$(basename $0)-$RANDOM
 
-hash expect &>/dev/null || {
-	echo "Could not find expect. Run pacman -S expect"
-	exit 1
-}
+mkdir -p "$buildfolder"
 
-export LANG="C.UTF-8"
+pacstrap -C ./mkimage-arch-pacman.conf -c -G -M -d "$buildfolder" \
+    filesystem shadow pacman gzip bzip2 sed grep gettext bash archlinux-keyring \
+    nano which
 
-ROOTFS=$(mktemp -d ${TMPDIR:-/var/tmp}/rootfs-archlinux-XXXXXXXXXX)
-chmod 755 $ROOTFS
+# clear packages cache
+rm -f "$buildfolder/var/cache/pacman/pkg/"*
+rm -f "$buildfolder/var/log/pacman.log"
 
-# packages to ignore for space savings
-PKGIGNORE=(
-    cryptsetup
-    device-mapper
-    dhcpcd
-    iproute2
-    jfsutils
-    linux
-    lvm2
-    man-db
-    man-pages
-    mdadm
-    nano
-    netctl
-    openresolv
-    pciutils
-    pcmciautils
-    reiserfsprogs
-    s-nail
-    systemd-sysvcompat
-    usbutils
-    vi
-    xfsprogs
-)
-IFS=','
-PKGIGNORE="${PKGIGNORE[*]}"
-unset IFS
+# create working dev
+mknod -m 666 "$buildfolder/dev"/null c 1 3
+mknod -m 666 "$buildfolder/dev"/zero c 1 5
+mknod -m 666 "$buildfolder/dev"/random c 1 8
+mknod -m 666 "$buildfolder/dev"/urandom c 1 9
+mkdir -m 755 "$buildfolder/dev"/pts
+mkdir -m 1777 "$buildfolder/dev"/shm
+mknod -m 666 "$buildfolder/dev"/tty c 5 0
+mknod -m 600 "$buildfolder/dev"/console c 5 1
+mknod -m 666 "$buildfolder/dev"/tty0 c 4 0
+mknod -m 666 "$buildfolder/dev"/full c 1 7
+mknod -m 600 "$buildfolder/dev"/initctl p
+mknod -m 666 "$buildfolder/dev"/ptmx c 5 2
 
-expect <<EOF
-	set send_slow {1 .1}
-	proc send {ignore arg} {
-		sleep .1
-		exp_send -s -- \$arg
-	}
-	set timeout 180
-	spawn pacstrap -C ./mkimage-arch-pacman.conf -c -d -G -i $ROOTFS base haveged --ignore $PKGIGNORE
-	expect {
-		-exact "anyway? \[Y/n\] " { send -- "n\r"; exp_continue }
-		-exact "(default=all): " { send -- "\r"; exp_continue }
-		-exact "installation? \[Y/n\]" { send -- "y\r"; exp_continue }
-	}
-EOF
+# link pacman log to /dev/null
+arch-chroot "$buildfolder" ln -s /dev/null /var/log/pacman.log
 
-arch-chroot $ROOTFS /bin/sh -c 'rm -r /usr/share/man/*'
-arch-chroot $ROOTFS /bin/sh -c "haveged -w 1024; pacman-key --init; pkill haveged; pacman -Rs --noconfirm haveged; pacman-key --populate archlinux; pkill gpg-agent"
-arch-chroot $ROOTFS /bin/sh -c "ln -s /usr/share/zoneinfo/UTC /etc/localtime"
-echo 'en_US.UTF-8 UTF-8' > $ROOTFS/etc/locale.gen
-arch-chroot $ROOTFS locale-gen
-arch-chroot $ROOTFS /bin/sh -c 'echo "Server = http://mirror.archlinuxarm.org/$arch/$repo" > /etc/pacman.d/mirrorlist'
+# backup required locale stuff
+mkdir store-locale
+cp -a "$buildfolder/usr/share/locale/"{locale.alias,en_US} store-locale
 
-# udev doesn't work in containers, rebuild /dev
-DEV=$ROOTFS/dev
-rm -rf $DEV
-mkdir -p $DEV
-mknod -m 666 $DEV/null c 1 3
-mknod -m 666 $DEV/zero c 1 5
-mknod -m 666 $DEV/random c 1 8
-mknod -m 666 $DEV/urandom c 1 9
-mkdir -m 755 $DEV/pts
-mkdir -m 1777 $DEV/shm
-mknod -m 666 $DEV/tty c 5 0
-mknod -m 600 $DEV/console c 5 1
-mknod -m 666 $DEV/tty0 c 4 0
-mknod -m 666 $DEV/full c 1 7
-mknod -m 600 $DEV/initctl p
-mknod -m 666 $DEV/ptmx c 5 2
-ln -sf /proc/self/fd $DEV/fd
+# cleanup locale and manpage stuff, not needed to run in container
+toClean=('usr/share/locale' 'usr/share/man' 'usr/include')
+noExtract='usr/share/locale usr/share/man usr/include'
+for clean in ${toClean[@]}; do
+    rm -rf "$buildfolder/$clean"/*
+    noExtract="$noExtract $clean/*"
+done
+sed -e "s,^#NoExtract.*,NoExtract = $noExtract," \
+    -i "$buildfolder/etc/pacman.conf"
 
-tar --numeric-owner --xattrs --acls -C $ROOTFS -c . | docker import - luxas/archlinux
-docker run -t luxas/archlinux echo Success.
-rm -rf $ROOTFS
+# restore required locale stuff
+cp -a store-locale/* "$buildfolder/usr/share/locale/"
+rm -rf store-locale
+
+# generate locales for en_US
+sed -e 's/#en_US/en_US/g' -i "$buildfolder/etc/locale.gen"
+arch-chroot "$buildfolder" locale-gen
+
+# set default mirror
+echo 'Server = http://mirror.archlinuxarm.org/$arch/$repo' > "$buildfolder/etc/pacman.d/mirrorlist"
+
+# init keyring
+arch-chroot "$buildfolder" \
+    /bin/sh -c 'pacman-key --init; \
+        pacman-key --populate archlinux'
+
+imageid=$(tar --numeric-owner -C "$buildfolder" -c . | docker import - luxas/archlinux)
+docker tag $imageid luxas/archlinux:$(date +%Y%m%d)
+
+rm -rf "$buildfolder"
