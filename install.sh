@@ -27,13 +27,17 @@ echo "Updating the system..."
 time pacman -Syu --noconfirm
 
 echo "Now were going to install some packages"
-time pacman -S docker git samba rsync nmap --noconfirm
+time pacman -S docker git rsync nmap screen --noconfirm
+
+# samba salt
 
 echo "Now we can see how much those updates affected us."
 df -h
 
 echo "Set the timezone to Helsinki"
 timedatectl set-timezone Europe/Helsinki
+
+### SHOULD WE HAVE THIS ? ###
 
 echo "Git is very good software. Were going to use it."
 echo "We'll set up a bare repository with a live folder."
@@ -61,11 +65,12 @@ EOF
 
 chmod a+x post-receive
 
+### /SHOULD WE HAVE THIS ? ###
 
 echo "Docker needs configuration. Let's do it."
-systemctl enable docker.service salt-minion.service
+systemctl enable docker
 
-sed -e 's@/usr/bin/docker -d@/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375@' -i /usr/lib/systemd/system/docker.service
+sed -e 's@/usr/bin/docker -d@/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s overlay@' -i /usr/lib/systemd/system/docker.service
 
 echo "Make an 1GB swapfile"
 dd if=/dev/zero of=/swapfile bs=1M count=1024
@@ -102,6 +107,6 @@ systemctl enable sethostname.service
 
 
 echo "Setup an user account"
-useradd --create-home --shell /bin/bash -g users Pi
+useradd --create-home --shell /bin/bash -g users pi
 echo "pi:raspberry" | chpasswd
 

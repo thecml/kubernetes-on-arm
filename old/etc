@@ -1,0 +1,11 @@
+## Test Dockerfile
+cat > somefile <<EOF
+FROM alpine
+RUN apk add --update \
+	nodejs && \
+	rm -rf /var/cache/apk/* 
+
+ADD . /app
+WORKDIR /app
+CMD ["node", "index.js"]
+EOF

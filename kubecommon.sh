@@ -5,13 +5,15 @@
 # We'll set up kubernetes common parts (used for both master and minion)
 #
 #
-#
-#
-#
-#
-#
-#
-#
+# Content:
+# - build tools
+# - go
+#   - change path
+# - etcd
+# - flannel
+# - kubernetes
+#   - pause image
+# - build base images
 
 
 trap 'exit' ERR
@@ -21,7 +23,7 @@ echo "Again, check how much free space we have on our system, for later comparis
 df -h
 
 echo "Install compilation tools"
-pacman -S gcc make patch screen linux-raspberrypi-headers --noconfirm
+pacman -S gcc make patch linux-raspberrypi-headers upx --noconfirm
 
 
 
@@ -47,10 +49,10 @@ cd src
 # Should it be better to create a symlink?
 
 echo "Add go binaries to PATH"
-sed -e 's@PATH="@PATH="/lib/luxas/go/bin:@' -i /etc/profile
+sed -e 's@PATH="@PATH="/lib/luxas/go/bin:/lib/luxas/gopath/bin@' -i /etc/profile
 
 echo "Update our current PATH"
-export PATH="$PATH:/lib/luxas/go/bin"
+export PATH="$PATH:/lib/luxas/go/bin:/lib/luxas/gopath/bin"
 
 echo "Make GOPATH"
 mkdir /lib/luxas/gopath
@@ -118,6 +120,7 @@ EOF
 
 # Etcd took about 2-3 mins to compile
 
+## /ETCD ##
 
 ## FLANNEL ##
 
@@ -144,38 +147,96 @@ cd kubernetes
 # git checkout [version]
 
 
-# is it a must to remove sudo -E?
+
+
+# BUILD PAUSE IMG #
+
+# The pause img isn't working by default it's amd64 version
+# Let's build our own
+cd build/pause
+
+# go get github.com/pwaller/goupx
+# go install github.com/pwaller/goupx
+
+./prepare.sh
+
+docker build -t luxas/pause .
+
+# /BUILD PAUSE IMG #
+
+
+
+
+
+# remember to put --pod_infra_container_image="luxas/pause" on kubelet
+# apiserver ip = 0.0.0.0
+# apiserver --cors_allowed_origins=.*
+# is it a must to remove sudo -E? YES
 hack/local-up-cluster.sh
 
 # -------->>>>>>>>>>>>> own thread
 
 # Took about 10 min
 
+### /KUBERNETES ###
+
+
+## BUILDING BASE IMAGES ##
+
+### Solve this path
+
+./images/alpine/build.sh
+echo "Now our base image is built! 8.5 MB"
+
+## /BUILDING BASE IMAGES ##
 
 
 ## WEB SERVER ##
-# This could be in a docker container
+# This should be in a docker container
 
 pacman -S nodejs npm --noconfirm
 
-npm install bower -g
+npm install -g bower http-server
 
 cd www/master
 
 npm install
 
-sed -e 's@bower install"@bower install --allow-root"@' -i package.json
 
-cp shared/config/development.example.json shared/config/development.json
+
+# SETUP DEVELOPMENT ENVIROINMENT
+
+cd shared/config
+
+
+
+cd ../..
 
 npm start
 
-# ----------->>>>>>>>>>>>>> own thread
+# ----------->>>>>>>>>>>>>> own gulp thread
 
-npm install -g http-server
 
 # start web server
-# cd www/app
-# http-server -a 0.0.0.0 -p 8000
+cd www/app
+http-server -a 0.0.0.0 -p 8000
 
-# ---------->>>>>>>>>>> own thread
+# ---------->>>>>>>>>>> own www thread
+
+
+## KUBERNETES WEB MODS ##
+
+sed -e 's@bower install"@bower install --allow-root"@' -i www/master/package.json
+
+cp www/master/shared/config/development.example.json www/master/shared/config/development.json
+
+sed -e 's@"k8sApiServer": "/api/v1beta3"@"k8sApiServer": "http://localhost:8080/api/v1"@' -i www/master/shared/config/development.json
+sed -e 's@"cAdvisorProxy": ""@"cAdvisorProxy": "http://192.168.1.55:8080/api/v1/proxy/nodes/"@' -i www/master/shared/config/development.json
+
+
+
+# TODO Dockerize etcd, flanneld and kubernetes master components
+# TODO Dockerize web server
+# TODO Eventually build own docker binary
+# TODO System-docker
+# TODO Use salt
