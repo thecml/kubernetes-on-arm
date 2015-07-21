@@ -27,7 +27,7 @@ echo "Updating the system..."
 time pacman -Syu --noconfirm
 
 echo "Now were going to install some packages"
-time pacman -S docker git rsync nmap screen --noconfirm
+time pacman -S docker git rsync nmap screen make --noconfirm
 
 # samba salt
 
