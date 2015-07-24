@@ -1,16 +1,13 @@
+# We do not need any recommendations
 cat > /etc/apt/apt.conf <<EOF
 	APT::Install-Recommends "0" ; APT::Install-Suggests "0" ;
 EOF
 
-rm -rf /usr/share/man/?? /usr/share/man/??_*
+# Install apt-install
+chmod +x /usr/bin/apt-install
 
-# Huge space savings
-cp /usr/share/locale/en_GB /tmp
-rm -rf /usr/share/locale/*
-mv /tmp/en_GB /usr/share/locale/en_GB
+# Fix bug
+sync
 
-rm -rf /usr/share/doc/*
-
-chmod +x apt-install
-
+# And run
 apt-install wget git
