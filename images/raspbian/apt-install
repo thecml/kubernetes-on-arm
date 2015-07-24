@@ -1,0 +1,12 @@
+#!/bin/bash
+
+sudo apt-get update
+
+sudo apt-get install "$@" -y
+
+sudo apt-get autoclean
+
+sudo apt-get autoremove
+
+rm -r /var/cache/apt/* /var/lib/apt/lists/*
+

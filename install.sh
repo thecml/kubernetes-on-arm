@@ -61,6 +61,8 @@ cd hooks
 cat > post-receive <<EOF
 #!/bin/bash
 git --work-tree=/lib/luxas/master --git-dir=/lib/luxas/master.git checkout -f
+chmod a+x /lib/luxas/master/*.sh
+chmod a+x /lib/luxas/master/*/*/*.sh
 EOF
 
 chmod a+x post-receive
