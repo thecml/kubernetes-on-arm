@@ -22,11 +22,13 @@ cp /go/bin/go /usr/bin
 # Remove the go source
 rm -r /go
 
-# Make the gopath
+# Make the gopath, test if this exists
 cat >> /etc/profile <<EOF
 
 GOPATH="/usr/gopath"
 export GOPATH
 EOF
+
+mkdir /usr/gopath
 
 #Now we have go in our path
