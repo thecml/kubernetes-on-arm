@@ -7,7 +7,7 @@ EOF
 chmod +x /usr/bin/apt-install
 
 # Fix bug
-sync
+#sync
 
 # And run
-apt-install wget git
+#apt-install wget git
