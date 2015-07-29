@@ -1,0 +1,3 @@
+FROM luxas/alpine
+
+COPY ../

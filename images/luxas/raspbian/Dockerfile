@@ -9,6 +9,5 @@ RUN cp -r /usr/share/locale/en_GB /tmp && \
 
 
 COPY apt-install /usr/bin/
-COPY inbuild.sh /
 
-RUN /inbuild.sh && rm /inbuild.sh
+RUN chmod +x /usr/bin/apt-install

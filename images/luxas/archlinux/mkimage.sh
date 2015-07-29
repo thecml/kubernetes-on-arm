@@ -53,6 +53,10 @@ rm -rf store-locale
 sed -e 's/#en_US/en_US/g' -i "$buildfolder/etc/locale.gen"
 arch-chroot "$buildfolder" locale-gen
 
+# remove unnecessary folders
+rm -rf "$buildfolder/usr/share/doc"
+rm -rf "$buildfolder/usr/share/i18n"
+
 # set default mirror
 echo 'Server = http://mirror.archlinuxarm.org/$arch/$repo' > "$buildfolder/etc/pacman.d/mirrorlist"
 
@@ -61,7 +65,9 @@ arch-chroot "$buildfolder" \
     /bin/sh -c 'pacman-key --init; \
         pacman-key --populate archlinux'
 
+arch-chroot "$buildfolder" /bin/sh -c 'pacman -Syu --noconfirm'
+
 imageid=$(tar --numeric-owner -C "$buildfolder" -c . | docker import - luxas/archlinux)
-docker tag $imageid luxas/archlinux:$(date +%Y%m%d)
+#docker tag $imageid luxas/archlinux:$(date +%Y%m%d)
 
 rm -rf "$buildfolder"

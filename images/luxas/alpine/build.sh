@@ -10,6 +10,7 @@ sed -e "s@ubuntu-debootstrap:14.04@resin/rpi-raspbian@" -i Dockerfile
 sed -e "s@$(uname -m)@'armhf'@" -i mkimage.sh
 
 # Build the image to rootfs.tar.xz
+# TODO: this will eventually create a new, unnecessary image
 make
 
 # Step up and compile that rootfs.tar.xz image to a docker image

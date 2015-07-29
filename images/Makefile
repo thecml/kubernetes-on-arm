@@ -6,6 +6,10 @@ alpine:
 	./alpine/build.sh
 archlinux:
 	./archlinux/build.sh
+raspbian:
+	./raspbian/build.sh
+buildbian:
+	./buildbian/build.sh
 go:
 	./go/build.sh
 kubebuild:

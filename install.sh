@@ -27,7 +27,7 @@ echo "Updating the system..."
 time pacman -Syu --noconfirm
 
 echo "Now were going to install some packages"
-time pacman -S docker git rsync nmap screen make --noconfirm
+time pacman -S docker git rsync nmap screen make linux-raspberrypi-headers upx --noconfirm
 
 # samba salt
 
@@ -39,10 +39,8 @@ timedatectl set-timezone Europe/Helsinki
 
 ### SHOULD WE HAVE THIS ? ###
 
-echo "Git is very good software. Were going to use it."
-echo "We'll set up a bare repository with a live folder."
+echo "We'll set up a bare git repository with a live folder."
 
-cd /
 cd /lib
 
 mkdir luxas
@@ -70,9 +68,50 @@ chmod a+x post-receive
 ### /SHOULD WE HAVE THIS ? ###
 
 echo "Docker needs configuration. Let's do it."
-systemctl enable docker
+
+## SYSTEM DOCKER ##
+
+cat > /etc/systemd/system/system-docker.socket <<EOF
+[Unit]
+Description=Docker Socket for the API
+PartOf=system-docker.service
+
+[Socket]
+ListenStream=/var/run/system-docker.sock
+SocketMode=0660
+SocketUser=root
+SocketGroup=docker
+
+[Install]
+WantedBy=sockets.target
+EOF
+
+cat > /etc/systemd/system/system-docker.service <<EOF
+[Unit]
+Description=Docker Application Container Engine
+After=network.target system-docker.socket
+Requires=system-docker.socket
+
+[Service]
+ExecStart=/usr/bin/docker -d -H unix:///var/run/system-docker.sock -s overlay -p /var/run/system-docker.pid --iptables=false --ip-masq=false --bridge=none --graph=/var/lib/system-docker
+MountFlags=slave
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+
 
 sed -e 's@/usr/bin/docker -d@/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s overlay@' -i /usr/lib/systemd/system/docker.service
+sed -e 's@After=network.target docker.socket@After=network.target docker.socket system-docker.service@' -i /usr/lib/systemd/system/docker.service
+
+systemctl enable system-docker
+systemctl enable docker
+
+## SWAPFILE, REQUIRED WHEN COMPILING ##
 
 echo "Make an 1GB swapfile"
 dd if=/dev/zero of=/swapfile bs=1M count=1024
@@ -97,7 +136,6 @@ chmod 755 /usr/local/bin/sethostname.sh
 cat > /etc/systemd/system/sethostname.service <<EOF
 [Unit]
 Description=Set hostname to MAC address
-Before=salt-minion.service
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/sethostname.sh
@@ -105,10 +143,11 @@ ExecStart=/usr/local/bin/sethostname.sh
 WantedBy=multi-user.target
 EOF
 
-systemctl enable sethostname.service
+systemctl enable sethostname
 
 
 echo "Setup an user account"
 useradd --create-home --shell /bin/bash -g users pi
 echo "pi:raspberry" | chpasswd
 
+#reboot

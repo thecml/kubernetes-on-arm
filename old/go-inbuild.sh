@@ -10,3 +10,4 @@ EOF
 
 #Now we have go in our path
 mkdir /usr/gopath
+export GOPATH=/usr/gopath
