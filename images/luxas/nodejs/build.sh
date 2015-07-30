@@ -4,9 +4,9 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 docker build -t luxas/nodejs-build .
 
-../../utils/strip-image/strip-docker-image \
+../../../utils/strip-image/strip-docker-image \
 	-i luxas/nodejs-build \
-	-p nodejs \
+	-p node \
 	-t luxas/nodejs \
 	-f /etc/passwd \
 	-f /etc/group \

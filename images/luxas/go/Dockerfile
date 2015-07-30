@@ -1,6 +1,6 @@
 FROM luxas/raspbian
 
-COPY ../../version.sh /
+COPY version.sh /
 
 # Install build tools
 # Read go version
