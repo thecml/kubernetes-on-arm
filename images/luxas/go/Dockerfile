@@ -7,8 +7,9 @@ COPY version.sh /
 # Make directories
 # Download and extract go
 # And build
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh && \
-	source /version.sh && \
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+RUN source /version.sh && \
 	apt-install curl \
 	git \
 	upx \
