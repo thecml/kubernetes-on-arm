@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
 docker build -t luxas/nodejs-build .
 
 ../../utils/strip-image/strip-docker-image \

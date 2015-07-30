@@ -1,3 +1,5 @@
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
 # First, build
 docker build -t k8s/build .
 

@@ -1,3 +1,5 @@
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
 # Build the alpine image
 # Download the base image
 git clone https://github.com/mini-containers/base

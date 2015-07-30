@@ -1,3 +1,5 @@
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
 # Should be run on Rpi Arch Linux host
 
 #first, copy the pacman config
