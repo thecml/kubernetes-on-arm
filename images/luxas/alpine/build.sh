@@ -21,6 +21,6 @@ cd ..
 # Build the alpine image
 docker build -t luxas/alpine .
 
-docker rmi base-rootfs
+#docker rmi base-rootfs
 
-rm -r base
+#rm -r base
