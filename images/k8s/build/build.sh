@@ -6,7 +6,7 @@ cp ../../version.sh .
 docker build -t k8s/build .
 
 # Then copy out the binaries
-CID=$(docker run k8s/build)
+CID=$(docker run -d k8s/build)
 BIN="../_bin"
 OUT="$BIN/latest"
 
@@ -24,7 +24,7 @@ fi
 mkdir -p $OUT
 
 # Copy over all binaries
-docker cp $(CID):/build/bin/* $OUT
+docker cp $CID:/build/bin/* $OUT
 
 # Copy the versions file to our directory
 cp ../../version.sh $OUT/version.sh
