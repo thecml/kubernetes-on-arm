@@ -8,12 +8,12 @@ build: build_luxas build_k8s
 
 build_luxas:
 	# Base images
-	luxas/raspbian/build.sh
-	luxas/archlinux/build.sh
-	luxas/alpine/build.sh
+	#luxas/raspbian/build.sh
+	#luxas/archlinux/build.sh
+	#luxas/alpine/build.sh
 
 	# Langauges
-	luxas/nodejs/build.sh
+	#luxas/nodejs/build.sh
 	luxas/go/build.sh
 
 build_k8s:

@@ -6,6 +6,9 @@ docker build -t luxas/go .
 
 CID=$(docker run -d luxas/go)
 
-docker cp $CID:/goroot/bin/* _bin
+docker cp $CID:/goroot/bin .
 
-docker rm $CID
+rm -r _bin
+mv bin _bin
+
+#docker rm $CID

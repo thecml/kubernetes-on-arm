@@ -23,8 +23,12 @@ fi
 # Create the latest dir
 mkdir -p $OUT
 
-# Copy over all binaries
-docker cp $CID:/build/bin/* $OUT
+# Copy over all binaries, now the binaries are in _bin/latest/bin
+docker cp $CID:/build/bin $OUT
+
+# It shouldn't be like that, move everything to _bin/latest
+mv $OUT/bin/* $OUT
+
 
 # Copy the versions file to our directory
 cp ../../version.sh $OUT/version.sh
@@ -36,3 +40,4 @@ echo -e "BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $OUT/version.sh
 # Clean
 #docker rm $(CID)
 #docker rmi luxas/build-go
+#rm $OUT/bin

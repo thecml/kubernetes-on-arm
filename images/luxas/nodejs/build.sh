@@ -4,6 +4,8 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 docker build -t luxas/nodejs-build .
 
+# eventually remove some of these
+
 ../../../utils/strip-image/strip-docker-image \
 	-i luxas/nodejs-build \
 	-p node \
@@ -17,3 +19,5 @@ docker build -t luxas/nodejs-build .
 	-f /bin/mkdir \
 	-f /bin/ps \
 	-f /var/run 
+
+# docker rmi luxas/nodejs-build
