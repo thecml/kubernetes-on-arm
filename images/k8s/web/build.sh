@@ -1,1 +1,1 @@
-docker build -t luxas/kubweb .
+docker build -t k8s/web .

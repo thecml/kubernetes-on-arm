@@ -1,7 +1,10 @@
 FROM luxas/go
 
-COPY inbuild.sh /inbuild.sh
+# Copy the script and the version variables
+COPY inbuild.sh ../../version.sh /
 
-RUN ./inbuild.sh && rm /inbuild.sh
+# Run the build script and then remove them
+RUN ./inbuild.sh && \
+	rm /inbuild.sh /version.sh
 
 CMD ["/bin/echo", "Built!"]

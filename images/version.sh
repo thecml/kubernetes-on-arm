@@ -1,5 +1,7 @@
 # Specify which versions the binaries should have
 
-K8S_VERSION='v0.21'
-ETCD_VERSION='v2.0.4'
-FLANNEL_VERSION='v0.5.2'
+# Two options, 'latest', or a version number like '1.0.1'
+K8S_VERSION='0.21'
+ETCD_VERSION='2.0.4'
+FLANNEL_VERSION='0.5.2'
+GO_VERSION='1.4.2'

@@ -1,7 +1,5 @@
 FROM luxas/alpine
 
-COPY etcd etcdctl /usr/bin/
-
-RUN mkdir /var/lib/etcd
+COPY flanneld /usr/bin/
 
 #ENTRYPOINT ["/usr/bin/flanneld"]

@@ -2,7 +2,7 @@
 
 They follow these conventions:
 
-- **Directory name**: Folders under `images` are prefixes, and folders under them are the name of the image. Example: `luxas/alpine`.
+- **Directory name**: Images are named after their path. Example: in `images/luxas/alpine/build.sh` the image name should be `luxas/alpine`
 - **build.sh**: That script should build the docker image. Should be called from the host. Is called by the Makefile
 - **Makefile**: Is in the `images` directory. Use `make` to build everything.
 - **Dockerfile**: Of course, builds the docker image.
@@ -11,3 +11,4 @@ They follow these conventions:
 - **Extra files**: Extra help scipts or config files can be present in the directory
 - **mkimage.sh**: Builds an base image.
 - **onstart.sh**: The script, which is called when the container starts, e. g. starting a gulp thread and a http server
+- **clean.sh**: Cleans up all temporary images and obsolete binaries etc.

@@ -3,13 +3,22 @@ mkdir /build
 mkdir /build/bin
 cd /build
 
+# Get version variables
+source /version.sh
+
 ## ETCD ##
 
-# Download and use v2.0.4
-git clone https://github.com/coreos/etcd.git
-cd etcd
+# Determine how to get files
+if [ "$ETCD_VERSION" == "latest" ]
+then
+	# Download via git, this way were always in HEAD and on the master branch
+	git clone https://github.com/coreos/etcd.git
+else
+	# Download a gzipped archive and extract, much faster
+	curl -sSL -k https://github.com/coreos/etcd/archive/v$ETCD_VERSION.tar.gz | tar -C /build/etcd -xz
+fi
 
-git checkout v2.0.4
+cd etcd
 
 # Apply some 32-bit patches
 curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/raft.go.patch > raft.go.patch
@@ -25,12 +34,23 @@ patch store/watcher_hub.go < watcher_hub.go.patch
 # Copy over the binaries
 cp bin/* /build/bin
 
+## /ETCD ##
+
+
 cd /build
 
 ## FLANNEL ##
 
-# Download flannel
-git clone https://github.com/coreos/flannel.git
+# Determine how to get files
+if [ "$FLANNEL_VERSION" == "latest" ]
+then
+	# Download via git, this way were always in HEAD and on the master branch
+	git clone https://github.com/coreos/flannel.git
+else
+	# Download a gzipped archive and extract, much faster
+	curl -sSL -k https://github.com/coreos/flannel/archive/v$FLANNEL_VERSION.tar.gz | tar -C /build/flannel -xz
+fi
+
 cd flannel
 
 # And build
@@ -39,19 +59,37 @@ cd flannel
 # Copy over the binaries
 cp /bin/* /build/bin
 
+## /FLANNEL ##
+
 cd /build
 
 ### KUBERNETES ###
 
-# Download latest
-git clone https://github.com/GoogleCloudPlatform/kubernetes.git
+# Determine how to get files
+if [ "$K8S_VERSION" == "latest" ]
+then
+	# Download via git, this way were always in HEAD and on the master branch
+	git clone https://github.com/GoogleCloudPlatform/kubernetes.git
+else
+	# Download a gzipped archive and extract, much faster
+	curl -sSL -k https://github.com/GoogleCloudPlatform/kubernetes/archive/v$K8S_VERSION.tar.gz | tar -C /build/kubernetes -xz
+fi
+
 cd kubernetes
 
-# Use latest stable version
-git checkout v1.0.1
 
 # Build kubernetes binaries
 ./hack/build-go.sh
 
 # Copy over the binaries
 cp _output/local/bin/linux/arm/* /build/bin
+
+## PAUSE ##
+
+cd build/pause
+
+# Build the binary
+./prepare.sh
+
+# Copy over the binary
+cp pause /build/bin
