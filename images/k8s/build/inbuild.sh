@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Make the build dir
 mkdir /build /build/bin
 cd /build
