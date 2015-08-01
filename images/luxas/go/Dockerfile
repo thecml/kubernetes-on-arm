@@ -1,25 +1,14 @@
 FROM luxas/raspbian
 
-COPY version.sh /
+# Copy files
+COPY version.sh inbuild.sh /
 
-# Install build tools
-# Read go version
-# Make directories
-# Download and extract go
-# And build
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+# Make executable and run inbuild
+RUN chmod +x /version.sh /inbuild.sh && \
+	/inbuild.sh
 
-RUN source /version.sh && \
-	apt-install curl \
-	git \
-	upx \
-	gcc \
-	build-essential && \
-	mkdir /goroot /gopath && \
-	curl -sSL https://golang.org/dl/go$GO_VERSION.src.tar.gz | tar -xz -C /goroot --strip-components=1 && \
-	cd /goroot/src && ./make.bash
-
-#	if [ -z "$GO_VERSION" ]; then GO_VERSION=1.4.1; fi && \
-
+# Make goroot and gopath variables
 ENV GOROOT=/goroot GOPATH=/gopath
-ENV PATH $PATH:$GOROOT/bin:$GOPATH/bin
+
+# Hard-code the $PATH
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$GOROOT/bin:$GOPATH/bin

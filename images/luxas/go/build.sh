@@ -8,7 +8,9 @@ CID=$(docker run -d luxas/go)
 
 docker cp $CID:/goroot/bin .
 
-rm -r _bin
+# Kanske inte alltid finns
+rm -rf _bin
+
 mv bin _bin
 
 #docker rm $CID
