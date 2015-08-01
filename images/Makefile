@@ -14,7 +14,7 @@ build_luxas:
 
 	# Langauges
 	#luxas/nodejs/build.sh
-	luxas/go/build.sh
+	#luxas/go/build.sh
 
 build_k8s:
 	# Make binaries

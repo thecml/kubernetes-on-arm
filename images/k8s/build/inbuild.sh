@@ -1,6 +1,5 @@
 # Make the build dir
-mkdir /build
-mkdir /build/bin
+mkdir /build /build/bin
 cd /build
 
 # Get version variables
@@ -15,7 +14,8 @@ then
 	git clone https://github.com/coreos/etcd.git
 else
 	# Download a gzipped archive and extract, much faster
-	curl -sSL -k https://github.com/coreos/etcd/archive/v$ETCD_VERSION.tar.gz | tar -C /build/etcd -xz
+	curl -sSL -k https://github.com/coreos/etcd/archive/v$ETCD_VERSION.tar.gz | tar -C /build -xz
+	mv etcd* etcd
 fi
 
 cd etcd
@@ -48,7 +48,8 @@ then
 	git clone https://github.com/coreos/flannel.git
 else
 	# Download a gzipped archive and extract, much faster
-	curl -sSL -k https://github.com/coreos/flannel/archive/v$FLANNEL_VERSION.tar.gz | tar -C /build/flannel -xz
+	curl -sSL -k https://github.com/coreos/flannel/archive/v$FLANNEL_VERSION.tar.gz | tar -C /build -xz
+	mv flannel* flannel
 fi
 
 cd flannel
@@ -72,7 +73,8 @@ then
 	git clone https://github.com/GoogleCloudPlatform/kubernetes.git
 else
 	# Download a gzipped archive and extract, much faster
-	curl -sSL -k https://github.com/GoogleCloudPlatform/kubernetes/archive/v$K8S_VERSION.tar.gz | tar -C /build/kubernetes -xz
+	curl -sSL -k https://github.com/GoogleCloudPlatform/kubernetes/archive/v$K8S_VERSION.tar.gz | tar -C /build -xz
+	mv kubernetes* kubernetes
 fi
 
 cd kubernetes
