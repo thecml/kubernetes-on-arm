@@ -2,10 +2,10 @@
 read -p "Specify which Raspberry Pi were talking about: Raspberry Pi 1 [rpi] or Raspberry Pi 2 [rpi-2]" MACHINENAME
 
 
-mkpartition(){
+mkpartitions(){
 	# Here we "press" the keys in order, commanding fdisk to make a partition
-	echo "Now $1 is going to be partitioned"
-/sbin/fdisk $1 <<EOF
+	echo "Now $SDCARD is going to be partitioned"
+/sbin/fdisk $SDCARD <<EOF
 o
 p
 n
@@ -46,5 +46,5 @@ mountpartitions(){
 unmountpartitions(){
 	# Clean up
 	# Unmount boot and root
-	umount $_boot $_root
+	umount $BOOT $ROOT
 }
