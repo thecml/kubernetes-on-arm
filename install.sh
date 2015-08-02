@@ -42,26 +42,21 @@ timedatectl set-timezone Europe/Helsinki
 
 echo "We'll set up a bare git repository with a live folder."
 
-cd /lib
+# Make our folders for git versioning
+mkdir /lib/luxas /lib/luxas/luxcloud /lib/luxas/luxcloud.git
 
-mkdir luxas
-cd luxas
+# Move to our bare repo
+cd /lib/luxas/luxcloud.git
 
-# Our live folder
-mkdir master
-
-# Our git repo
-mkdir master.git
-cd master.git
-
+# Make version control
 git init --bare
 
 cd hooks
 cat > post-receive <<EOF
 #!/bin/bash
-git --work-tree=/lib/luxas/master --git-dir=/lib/luxas/master.git checkout -f
-find /lib/luxas/master/ -name "*.sh" -exec chmod +x {} \;
-chmod +x /lib/luxas/master/utils/strip-image/*
+git --work-tree=/lib/luxas/luxcloud --git-dir=/lib/luxas/luxcloud.git checkout -f
+find /lib/luxas/luxcloud -name "*.sh" -exec chmod +x {} \;
+chmod +x /lib/luxas/luxcloud/utils/strip-image/*
 EOF
 
 chmod a+x post-receive
