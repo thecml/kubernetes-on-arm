@@ -27,9 +27,10 @@ echo "Updating the system..."
 time pacman -Syu --noconfirm
 
 echo "Now were going to install some packages"
-time pacman -S docker git rsync nmap screen make linux-raspberrypi-headers upx --noconfirm
+time pacman -S docker git make --noconfirm
 
-# samba salt
+# for now, not necessary: rsync nmap screen
+# not needed now: samba salt
 
 echo "Now we can see how much those updates affected us."
 df -h
@@ -147,7 +148,7 @@ systemctl enable sethostname
 
 
 echo "Setup an user account"
-useradd --create-home --shell /bin/bash -g users pi
+useradd --create-home --shell /bin/bash -g users -G docker pi
 echo "pi:raspberry" | chpasswd
 
-#reboot
+reboot

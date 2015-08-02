@@ -16,33 +16,14 @@
 # Lucas Käldström 2015 (c)
 
 
-read -p "You are going to lose all your data on $1. Continue? [Y/n]" answer
+# pacman -S dotfstools wget
 
 
-# Here we "press" the keys in order, commanding fdisk to make a partition
-case $answer in 
-  [yY]* ) echo "Now $1 is going to be partitioned"
-          /sbin/fdisk $1 <<EOF
-o
-p
-n
-p
-1
-
-+100M
-t
-c
-n
-p
-2
 
 
-w
-EOF
-	 echo "Partitions OK!";;
-  * ) echo "Quitting..."
-      exit;;
-esac
+
+
+
 
 # Here, Arch Linux ARM have two files for downloading: ArchLinuxARM-rpi-latest.tar.gz and ArchLinuxARM-rpi-2-latest.tar.gz
 # The user chooses between them by writing "rpi" (without quotes) or "rpi-2"
@@ -52,14 +33,14 @@ read -p "Specify which Raspberry Pi were talking about: Raspberry Pi 1 [rpi] or 
 _part=$1                                          # /dev/sda 
 _part1=${1}1                                      # /dev/sda1
 _part2=${1}2                                      # /dev/sda2
-_tmp=/tmp/archscript                              # /tmp/archscript
-_boot=${_tmp}/boot                                # /tmp/archscript/boot
-_root=${_tmp}/root                                # /tmp/archscript/root
+TMPDIR=/tmp/archscript                              # /tmp/archscript
+BOOT=$TMPDIR/boot                                  # /tmp/archscript/boot
+_root=$TMPDIR/root                                  # /tmp/archscript/root
 _filename=ArchLinuxARM-${rpi}-latest.tar.gz       # ArchLinuxARM-rpi-2-latest.tar.gz
 
 
 # Make temp dirs
-mkdir $_tmp $_boot $_root
+mkdir $TMPDIR $_boot $_root
 
 echo "Tempdirectories made"
 
@@ -82,7 +63,7 @@ echo "EXT4 filesystem made"
 
 # Not sure why I have the first cd there, but anyway, go to temp dir
 cd /
-cd $_tmp
+cd $TMPDIR
 
 echo "Start getting Arch"
 
@@ -98,7 +79,7 @@ cd $_root
 
 # Untar the folders (bin, etc, usr, sbin... you know) from the downloaded file
 # I´m using absolute paths to be sure
-tar -zxf $_tmp/$_filename
+tar -zxf $TMPDIR/$_filename
 
 echo "Untarred Arch"
 
@@ -110,7 +91,7 @@ sync
 echo "Finished syncing"
 
 # Get back to the temp dir
-cd $_tmp
+cd $TMPDIR
 
 # Move everything in the folder boot to the partition boot
 mv $_root/boot/* $_boot
@@ -131,12 +112,12 @@ read -p "Should the downloaded file be removed? [Y/n]" remove
 
 # If we should remove it, remove. If not, move the file and then remove the temp dir
 case $remove in
-  [yY]* ) rm -r $_tmp
+  [yY]* ) rm -r $TMPDIR
 	  echo "Finished successfully!";;
 
   [nN]* ) read -p "Okay, where should I put it?" tarpath
-	  mv $_tmp/$_filename $tarpath
-	  rm -r $_tmp
+	  mv $TMPDIR/$_filename $tarpath
+	  rm -r $TMPDIR
 	  echo "Finished successfully!";;
 esac
 
