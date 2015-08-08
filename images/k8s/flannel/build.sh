@@ -16,4 +16,5 @@ docker build -t k8s/flannel-build .
 	-f /bin/sh \
 	-f /bin/mkdir \
 	-f /bin/ps \
-	-f /var/run 
+	-f /var/run
+	-f /flanneld

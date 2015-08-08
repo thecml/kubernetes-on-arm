@@ -1,5 +1,5 @@
 FROM luxas/raspbian
 
-COPY flanneld /usr/bin/
+COPY flanneld /
 
 #ENTRYPOINT ["/usr/bin/flanneld"]
