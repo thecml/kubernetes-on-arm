@@ -2,10 +2,9 @@ FROM luxas/nodejs
 
 VOLUME ["/www"]
 
-COPY onstart.sh /usr/bin/onstart.sh
+COPY onstart.sh /usr/bin/
 
-RUN mkdir /www && \
-	npm install -g bower http-server && \
+RUN npm install -g bower http-server && \
 	chmod +x /usr/bin/onstart.sh
 
 WORKDIR ["/www"]

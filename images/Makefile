@@ -1,38 +1,32 @@
-.PHONY: alpine archlinux go kubebuild nodejs kubweb all
+.PHONY: all build build_luxas build_k8s
 
-all: build
+all: build clean
 
 build: build_luxas build_k8s
 
-# This could be improved with docker in docker
+$HELPER=../utils/docker-utils.sh
 
+# This could be improved with docker in docker
 build_luxas:
 	# Base images
-	#luxas/raspbian/build.sh
-	#luxas/archlinux/build.sh
-	#luxas/alpine/build.sh
-
-	# Langauges
-	#luxas/nodejs/build.sh
-	#luxas/go/build.sh
+	$HELPER "build" "luxas"
 
 build_k8s:
-	# Make binaries
-	k8s/build/build.sh
+	$HELPER "build" "k8s" 
 
-	# Binary images
-	k8s/etcd/build.sh
-	k8s/flannel/build.sh
-	k8s/pause/build.sh
-
-	# Hyperkube
-	k8s/hyperkube/build.sh
-
-	# The web interface
-	k8s/web/build.sh
-
+export_all:
+	mkdir -p archive archive/$(date +%d%m%y)
+	$HELPER "export" "luxas" "archive/$(date +%d%m%y)"
+	$HELPER "export" "k8s" "archive/$(date +%d%m%y)"
 
 
 # Clean up everything, all ps -a all luxas and k8s images
 clean:
-	echo "Not Implemented"
+	docker rm $(docker ps -aq)
+
+	# foreach here
+	./luxas/raspbian/clean.sh
+	./luxas/nodejs/clean.sh
+	./luxas/alpine/clean.sh
+
+

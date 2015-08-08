@@ -1,7 +1,9 @@
 # TODO
 
  - investigate google/cadvisor
-
+ - Kommentera allt
+ - system-docker shortcut
+ - bättre alpine-build
 
 
 
@@ -9,7 +11,7 @@
  # shortcuts
 
  - dockerrm_s
- - dockerflat
+ - dockerclean?
 
 
 

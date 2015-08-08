@@ -14,3 +14,8 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 # Make all images
 make -C images
+
+
+
+docker save k8s/etcd | system-docker load
+docker save k8s/flannel | system-docker load

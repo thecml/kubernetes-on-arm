@@ -19,5 +19,3 @@ docker build -t luxas/nodejs-build .
 	-f /bin/mkdir \
 	-f /bin/ps \
 	-f /var/run 
-
-# docker rmi luxas/nodejs-build

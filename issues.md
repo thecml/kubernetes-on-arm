@@ -10,7 +10,7 @@
  - ENV PATH $PATH:/usr/bin -> echo $PATH -> :/usr/bin
  -  /bin/bash -c "source /version.sh; cat version.sh; echo $GO_VERSION" fails in build
  - DEFAULT PATH RASPBIAN: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
+ - 
 
 
 ## kubernetes

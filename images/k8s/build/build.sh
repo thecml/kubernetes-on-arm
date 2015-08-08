@@ -6,7 +6,7 @@ cp ../../version.sh .
 docker build -t k8s/build .
 
 # Then copy out the binaries
-CID=$(docker run -d k8s/build)
+CID=$(docker run -d k8s/build /bin/bash)
 BIN="../_bin"
 OUT="$BIN/latest"
 
@@ -34,10 +34,11 @@ mv $OUT/bin/* $OUT
 cp ../../version.sh $OUT/version.sh
 
 # And append the build date
-echo -e "BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $OUT/version.sh
+echo -e "\nBUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $OUT/version.sh
+
+rm -r $OUT/bin
 
 
 # Clean
 #docker rm $(CID)
 #docker rmi luxas/build-go
-#rm $OUT/bin

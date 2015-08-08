@@ -60,7 +60,7 @@ cd flannel
 ./build
 
 # Copy over the binaries
-cp /bin/* /build/bin
+cp bin/* /build/bin
 
 ## /FLANNEL ##
 

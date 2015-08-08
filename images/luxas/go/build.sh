@@ -4,7 +4,7 @@ cp ../../version.sh .
 
 docker build -t luxas/go .
 
-CID=$(docker run -d luxas/go)
+CID=$(docker run -d luxas/go /bin/bash)
 
 docker cp $CID:/goroot/bin .
 
