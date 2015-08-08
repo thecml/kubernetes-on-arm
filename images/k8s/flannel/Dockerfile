@@ -1,6 +1,5 @@
-FROM luxas/alpine
+FROM luxas/raspbian
 
 COPY flanneld /usr/bin/
-COPY ld-linux-armhf.so.3 /lib/
 
 #ENTRYPOINT ["/usr/bin/flanneld"]
