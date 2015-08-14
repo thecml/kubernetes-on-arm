@@ -2,8 +2,9 @@
 build_images()
 {
 	PREFIX=$1
+	IMAGES=$2
 
-	for IMAGE in ./$PREFIX/*
+	for IMAGE in $IMAGES
 	do
 	        if [[ -z $(docker images | grep "$PREFIX/$IMAGE") ]]
 	        then
@@ -32,5 +33,5 @@ if [[ "$1" == "export"]]
 then
 	export_images $2 $3
 elif [[ "$1" == "build" ]]
-	build_images $2
+	build_images $2 $3
 fi

@@ -5,6 +5,10 @@
 # Catch errors
 trap 'exit' ERR
 
+
+echo "Again, check how much free space we have on our system, for later comparision"
+df -h
+
 # Now we are in the current dir
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
@@ -50,26 +54,5 @@ docker run -d --net=host  -v /var/run/docker.sock:/var/run/docker.sock  k8s/hype
 
 
 # OK, Now the k8s cluster should be ready
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

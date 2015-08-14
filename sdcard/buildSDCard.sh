@@ -1,6 +1,6 @@
 
-# buildSDCard.sh [disc] [machine] [distro] [middleware]
-# buildSDCard.sh /dev/sdb rpi archlinux luxcloud
+# buildSDCard.sh [disc] [machine] [distro] [middleware] [middleware-parameter]
+# buildSDCard.sh /dev/sdb rpi archlinux luxcloud-master pimaster 
 
 
 if [ "$EUID" -ne 0 ]
@@ -39,6 +39,7 @@ mkdir $TMPDIR $BOOT $ROOT
 MACHINE=./machine/$2.sh
 DISTRO=./distro/$3.sh
 MIDDLEWARE=./middleware/$4.sh
+MIDDLEWARE_PARAM=$5
 
 # If machine doesn't exist
 if [ ! -f "$MACHINE" ]

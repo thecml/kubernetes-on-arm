@@ -99,15 +99,6 @@ LimitCORE=infinity
 WantedBy=multi-user.target
 EOF
 
-cat >> /root/.bashrc <<EOF
-system-docker(){
-	docker -H unix:///var/run/system-docker.sock $@
-}
-
-
-EOF
-
-
 
 sed -e 's@/usr/bin/docker -d@/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s overlay@' -i /usr/lib/systemd/system/docker.service
 sed -e 's@After=network.target docker.socket@After=network.target docker.socket system-docker.service@' -i /usr/lib/systemd/system/docker.service

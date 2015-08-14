@@ -1,0 +1,1 @@
+docker rmi k8s/flannel-build
