@@ -6,7 +6,7 @@ build: build_luxas build_k8s
 
 
 # include $HELPER could be used
-HELPER=../utils/docker-utils.sh
+HELPER :- "../utils/docker-utils.sh"
 
 # This could be improved with docker in docker
 build_luxas:
