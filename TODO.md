@@ -12,7 +12,6 @@
    -  --> rancheros/Dockerfile.base
  - testa att koppla alla rpis till hubben
  - sd card profile
- - make include dockerutils
  - make a common luxcloud "binary"
  - Makefile clean with test
  - insert a non-root user to raspbian and alpine
