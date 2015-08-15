@@ -1,5 +1,7 @@
 domiddleware(){
 
+	cd "$( dirname "${BASH_SOURCE[0]}" )"
+
 	# First, do the common things
 	source luxcloud-common.sh
 	docommon
