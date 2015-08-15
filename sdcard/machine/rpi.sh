@@ -3,6 +3,10 @@ read -p "Specify which Raspberry Pi were talking about: Raspberry Pi 1 [rpi] or 
 
 
 mkpartitions(){
+
+	# Make sure we have fdisk installed
+	require fdisk fdisk
+	
 	# Here we "press" the keys in order, commanding fdisk to make a partition
 	echo "Now $SDCARD is going to be partitioned"
 /sbin/fdisk $SDCARD <<EOF
@@ -27,6 +31,10 @@ EOF
 
 
 mountpartitions(){
+
+	# Require mkfs.vfat
+	require mkfs.vfat dosfstools
+
 	# Make boot filesystem
 	mkfs.vfat $PARTITION1
 

@@ -1,7 +1,9 @@
-
+#!/bin/bash
 # buildSDCard.sh [disc] [machine] [distro] [middleware] [middleware-parameter]
 # buildSDCard.sh /dev/sdb rpi archlinux luxcloud-master pimaster 
 
+# Catch errors
+trap 'exit' ERR
 
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
@@ -19,6 +21,29 @@ case $answer in
 		echo "Quitting..."
       	exit 1;;
 esac
+
+# Install a package 
+require()
+{
+	BINARY=$1
+	PACKAGE=$2
+
+	# If which didn't find the binary, install it
+	if [[ $(which $BINARY) == *"which: "* ]]
+	then
+		# Is pacman present?
+		if [[ $(which pacman) != *"which: "* ]]
+		then
+			pacman -S $PACKAGE --noconfirm
+			# Is apt-get present?
+		elif [[ $(which apt-get) != *"which: "* ]]
+			apt-get install -y $PACKAGE
+		else
+			echo "The required package $PACKAGE with the binary $BINARY isn't present now. Install it."
+			exit 1
+		fi
+	fi
+}
 
 
 
