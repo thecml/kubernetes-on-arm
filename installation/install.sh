@@ -122,7 +122,7 @@ EOF
 echo "Make custom startup file"
 cat > /usr/local/bin/sethostname.sh <<EOF
 #!/bin/sh
-hostnamectl set-hostname $(tr -d ':' < /sys/class/net/eth0/address)
+#hostnamectl set-hostname $(tr -d ':' < /sys/class/net/eth0/address)
 timedatectl set-timezone Europe/Helsinki
 EOF
 
@@ -141,6 +141,10 @@ EOF
 systemctl enable sethostname
 
 echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+
+source /usr/local/bin/luxcloud/config.sh
+
+hostnamectl set-hostname $HOSTNAME
 
 
 echo "Setup an user account"
