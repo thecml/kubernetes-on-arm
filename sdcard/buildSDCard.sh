@@ -37,6 +37,7 @@ require()
 			pacman -S $PACKAGE --noconfirm
 			# Is apt-get present?
 		elif [[ $(which apt-get) != *"which: "* ]]
+		then
 			apt-get install -y $PACKAGE
 		else
 			echo "The required package $PACKAGE with the binary $BINARY isn't present now. Install it."

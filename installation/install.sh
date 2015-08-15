@@ -140,9 +140,11 @@ EOF
 
 systemctl enable sethostname
 
+echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+
 
 echo "Setup an user account"
 useradd --create-home --shell /bin/bash -g users -G docker pi
 echo "pi:raspberry" | chpasswd
 
-reboot
+echo "Now you should reboot"

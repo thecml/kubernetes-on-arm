@@ -17,8 +17,15 @@ LUXDIR="/usr/local/bin/luxcloud"
 CONFIG="$LUXDIR/config.sh"
 source $CONFIG
 
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit 1
+fi
+
+
+
 usage(){
-	echo "Usage: \n 1: luxcloud install \n 2: luxcloud (build|import [dir]) \n 3: luxcloud setup \n Then your done!"
+	echo -e "Usage: \n 1: luxcloud install \n 2: luxcloud (build|import [dir]) \n 3: luxcloud setup \nThen your done!"
 }
 
 install() {
@@ -36,6 +43,10 @@ install() {
 
 	# Next is step 1
 	writestep 1
+
+	# Reboot for changes to take effect, not sure if necessary but anyway
+	echo "Rebooting..."
+	reboot
 }
 build(){
 	# Check that we should do this now
@@ -47,7 +58,7 @@ build(){
 		# Build them and record the time
 		time make -C /lib/luxas/luxcloud/images
 	else
-		echo "You have to push the luxcloud source to the git directory. \n\n You may also use luxcloud import [dir] to populate images."
+		echo -e "You have to push the luxcloud source to the git directory. \n\n You may also use luxcloud import [dir] to populate images."
 		exit 1
 	fi
 
@@ -65,7 +76,7 @@ import(){
 	# Import every tar.gz? file in IMPORTDIR to docker
 	IMPORTDIR=$1
 
-	for IMAGE in $IMPORTDIR/*
+	for IMAGE in $IMPORTDIR/*.tar
 	do
 		docker load -i $IMPORTDIR/$IMAGE
 	done
@@ -92,18 +103,15 @@ setup(){
 }
 
 spaceused(){
-	spaceused=$(df -h | grep root | awk '{print $3}')
-	echo "SPACE_USED_$1='$spaceused' \n" >> $CONFIG
+	spaceused=$(df | grep root | awk '{print $3}')
+	echo -e "SPACE_USED_$1='$spaceused' \n" >> $CONFIG
 }
 
 checkstep(){
-	if [[ "$NEXT_STEP" = "$1" ]]
-	then
-		# OK
-	elif [[ "$NEXT_STEP" = 3 ]]
+	if [[ "$NEXT_STEP" = 3 ]]
 		echo "You are done!"
 		exit 1
-	else
+	elif [[ "$NEXT_STEP" != "$1" ]]
 		echo "You have to run the scripts in right order. Check usage for more info."
 		exit 1
 	fi
@@ -113,7 +121,7 @@ writestep(){
 	if [ -z "$NEXT_STEP" ]
 	then
 		#NEXT_STEP is unset, write to file
-		echo "NEXT_STEP=$1 \n" > $CONFIG
+		echo -e "NEXT_STEP=$1 \n" >> $CONFIG
 	else
 		# Read current step and write the new one
 		sed -e "s@NEXT_STEP=$NEXT_STEP@NEXT_STEP=$1@" -i $CONFIG

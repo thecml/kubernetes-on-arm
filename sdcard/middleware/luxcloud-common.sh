@@ -18,7 +18,7 @@ docommon(){
 	cp $CURRENT_INSTALLATION_DIR/luxcloud.sh $BINDIR
 
 	# Rename luxcloud.sh to luxcloud
-	mv $BINDIR/luxcloud.sh $BINDIR/luxcloud
+	mv $BINDIR/luxcloud.sh $BINDIR/lux
 
 	# Remember when we built the sd card
 	echo -e "SD_CARD_BUILD_DATE=\"$(date +%d%m%y)\" \n" > $LUXDIR/config.sh
