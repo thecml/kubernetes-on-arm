@@ -59,7 +59,7 @@ build(){
 
         # Then build the image itself
         echo "Installing: $1"
-        ./$1/build.sh
+        time ./$1/build.sh
     else
         echo "Already installed: $1"
     fi

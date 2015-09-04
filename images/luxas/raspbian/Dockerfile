@@ -2,6 +2,8 @@ FROM resin/rpi-raspbian
 
 COPY apt-install /usr/bin/
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Backup English, not sure if necessary, but anyway
 # Then remove unused stuff, huge space savings
 RUN cp -r /usr/share/locale/en_GB /tmp && \

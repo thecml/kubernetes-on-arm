@@ -13,7 +13,7 @@ IMAGE=""
 
 
 install:
-	${DEPSCRIPT} "$IMAGE"
+	${DEPSCRIPT} "$(IMAGE)"
 
 # This could be improved with docker in docker
 build_luxas:
