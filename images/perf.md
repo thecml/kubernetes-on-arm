@@ -6,4 +6,5 @@
 - luxas/go: 1210 s
 
 
-- k8s/build: 
+- k8s/build: 2208 s
+- k8s/hyperkube: 227 s
