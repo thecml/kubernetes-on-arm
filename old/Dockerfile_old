@@ -1,7 +1,0 @@
-FROM luxas/alpine
-MAINTAINER Lucas Käldström <lucas.kaldstrom@hotmail.co.uk>
-
-COPY ./prebuild/bin/node /usr/local/bin/
-COPY ./prebuild/bin/node_modules/ /usr/local/lib/node_modules/
-
-RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm

@@ -49,8 +49,9 @@ then
 	export_images $2 $3
 elif [[ "$1" == "build" ]]
 then
-	build_images $2 $3
+	# Important to quote the last param, to forward spaces in the string
+	build_images $2 "$3"
 elif [[ "$1" == "clean" ]]
 then
-	clean_build $2
+	clean_build "$2"
 fi

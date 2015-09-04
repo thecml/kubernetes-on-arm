@@ -21,7 +21,7 @@ then
 fi
 
 # Create the latest dir
-mkdir -p $OUT
+mkdir -p $BIN $OUT
 
 # Copy over all binaries, now the binaries are in _bin/latest/bin
 docker cp $CID:/build/bin $OUT

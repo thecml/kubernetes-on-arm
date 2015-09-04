@@ -7,8 +7,13 @@ build: build_luxas build_k8s
 
 # include $HELPER could be used
 HELPER="../utils/dockerutils.sh"
+DEPSCRIPT="./dependencies.sh"
 DATE=$(shell date +%d%m%y)
+IMAGE=""
 
+
+install:
+	${DEPSCRIPT} "$IMAGE"
 
 # This could be improved with docker in docker
 build_luxas:

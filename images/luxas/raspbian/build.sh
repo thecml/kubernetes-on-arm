@@ -1,7 +1,7 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 # Build it
-docker build -t luxas/raspbian-build .
+docker build -t build/raspbian .
 
 # Flatten that image
-../../../utils/flatten-image/flatten-image.sh luxas/raspbian-build luxas/raspbian
+../../../utils/flatten-image/flatten-image.sh build/raspbian luxas/raspbian

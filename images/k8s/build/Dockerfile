@@ -4,5 +4,4 @@ FROM luxas/go
 COPY inbuild.sh version.sh /
 
 # Run the build script and then remove them
-RUN ./inbuild.sh && \
-	rm /inbuild.sh /version.sh
+RUN ./inbuild.sh

@@ -16,7 +16,7 @@
 
 ## kubernetes
  - cadvisor unsupported #8424
- - why is controller-manager --machines present
+ - //why is controller-manager --machines present
  - socket operation on non-socket /luxas #
  - kubernetes/pause platform dependent #
 
@@ -34,5 +34,6 @@
  - build on own machine
  - ls dist/artifacts build error
  - Raspberry Pi support
+ - 
 
 

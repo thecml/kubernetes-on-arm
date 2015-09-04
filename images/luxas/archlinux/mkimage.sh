@@ -68,6 +68,5 @@ arch-chroot "$buildfolder" \
 arch-chroot "$buildfolder" /bin/sh -c 'pacman -Syu --noconfirm'
 
 imageid=$(tar --numeric-owner -C "$buildfolder" -c . | docker import - luxas/archlinux)
-#docker tag $imageid luxas/archlinux:$(date +%Y%m%d)
 
 rm -rf "$buildfolder"

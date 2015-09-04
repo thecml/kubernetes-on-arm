@@ -72,15 +72,20 @@ cd /build
 if [ "$K8S_VERSION" == "latest" ]
 then
 	# Download via git, this way were always in HEAD and on the master branch
-	git clone https://github.com/GoogleCloudPlatform/kubernetes.git
+	git clone https://github.com/kubernetes/kubernetes.git
 else
 	# Download a gzipped archive and extract, much faster
-	curl -sSL -k https://github.com/GoogleCloudPlatform/kubernetes/archive/v$K8S_VERSION.tar.gz | tar -C /build -xz
+	curl -sSL -k https://github.com/kubernetes/kubernetes/archive/v$K8S_VERSION.tar.gz | tar -C /build -xz
 	mv kubernetes* kubernetes
 fi
 
 cd kubernetes
 
+## PATCHES
+
+# Now it should be faster
+sed -e "@ hyperkube@ @" -i hack/lib/golang.sh
+sed -e '@"${KUBE_TEST_TARGETS[@]}"@ @' -i hack/lib/golang.sh
 
 # Build kubernetes binaries
 ./hack/build-go.sh

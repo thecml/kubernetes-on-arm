@@ -19,3 +19,6 @@ curl -sSL https://golang.org/dl/go$GO_VERSION.src.tar.gz | tar -xz -C /goroot --
 # And build
 cd /goroot/src
 ./make.bash
+
+# Install godep, often required
+go get github.com/tools/godep 

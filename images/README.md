@@ -1,8 +1,8 @@
-## README FOR THE IMAGES ##
+# README FOR THE IMAGES
 
 They follow these conventions:
 
-- **Directory name**: Images are named after their path. Example: in `images/luxas/alpine/build.sh` the image name should be `luxas/alpine`
+- **Directory name**: Images are named after their path. Example: in `images/**luxas/alpine**/build.sh` the image name should be `luxas/alpine`
 - **build.sh**: That script should build the docker image. Should be called from the host. Is called by the Makefile
 - **Makefile**: Is in the `images` directory. Use `make` to build everything.
 - **Dockerfile**: Of course, builds the docker image.

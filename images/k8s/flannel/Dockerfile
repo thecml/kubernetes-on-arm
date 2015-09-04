@@ -1,5 +1,4 @@
 FROM luxas/raspbian
 
 COPY flanneld /
-
-#ENTRYPOINT ["/usr/bin/flanneld"]
+RUN apt-install iptables
