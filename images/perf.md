@@ -8,6 +8,7 @@
 
 - luxas/go: 1210 s
 - luxas/nodejs: 16 s
+- luxas/registry: ?
 
 
 - k8s/build: 2208 s
@@ -15,3 +16,4 @@
 - k8s/etcd: 13 s
 - k8s/flannel: 126 s
 - k8s/pause: 1 s
+- k8s/web: ?

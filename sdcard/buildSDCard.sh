@@ -1,6 +1,6 @@
 #!/bin/bash
 # buildSDCard.sh [disc] [machine] [distro] [middleware] [middleware-parameter]
-# buildSDCard.sh /dev/sdb rpi archlinux -qm luxcloud-master -p pimaster 
+# buildSDCard.sh /dev/sdb rpi archlinux luxcloud-master pimaster 
 
 ########################## HELPERS        ##############################
 
@@ -53,8 +53,8 @@ trap 'exit' ERR
 ########################## SECURITY CHECKS ##############################
 
 # Root is required
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
   exit 1
 fi
 
@@ -91,19 +91,9 @@ ROOT=$TMPDIR/root
 FILES=$TMPDIR/files
 
 # Read optional parameters
-MIDDLEWARE=
-MIDDLEWARE_PARAM=
+MIDDLEWARE=$4
+MIDDLEWARE_PARAM=$5
 QUIET=0
-while getopts "qm:p:" opt; do
-	case $opt in
-		q) 
-			$QUIET=1;;
-		m)
-			$MIDDLEWARE=$OPTARG;;
-		p)
-			$MIDDLEWARE_PARAM=$OPTARG;;
-	esac
-done
 
 
 if [[ $QUIET = 0 ]]; then
