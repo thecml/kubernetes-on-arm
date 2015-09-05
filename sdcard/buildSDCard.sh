@@ -94,19 +94,19 @@ FILES=$TMPDIR/files
 MIDDLEWARE=
 MIDDLEWARE_PARAM=
 QUIET=0
-while getopts "qm:p:s:" opt; do
+while getopts "qm:p:" opt; do
 	case $opt in
 		q) 
-			QUIET=1;;
+			$QUIET=1;;
 		m)
-			MIDDLEWARE=$OPTARG;;
+			$MIDDLEWARE=$OPTARG;;
 		p)
-			MIDDLEWARE_PARAM=$OPTARG;;
+			$MIDDLEWARE_PARAM=$OPTARG;;
 	esac
 done
 
 
-if [[ $QUIET == 0 ]]; then
+if [[ $QUIET = 0 ]]; then
 
 	# Security check
 	read -p "You are going to lose all your data on $1. Continue? [Y/n]" answer
@@ -134,8 +134,8 @@ MACHINES=(./machine/*/$MACHINENAME.sh)
 OSES=(./os/*/$OSNAME.sh)
 MIDDLEWARES=(./middleware/*/$MIDDLEWARE.sh)
 
-if [[ (${#MACHINES[@]} != 1 || ${#OSES[@]} != 1 || ${#MIDDLEWARES[@]} > 1) && ( -f ${MACHINES[0]} && -f ${OSES[0]} ) ]]; then
-	echo "In ./machine/ and ./os/ (and eventually ./middleware/), all .sh files should have unique names"
+if [[ ${#MACHINES[@]} > 1 || ${#OSES[@]} > 1 || ${#MIDDLEWARES[@]} > 1 || ! -f ${MACHINES[0]} || ! -f ${OSES[0]} ]]; then
+	echo "In ./machine/ and ./os/ (and eventually ./middleware/), all .sh files should have unique names and exist"
 	exit 1
 fi
 
@@ -159,8 +159,12 @@ source ${OSES[0]}
 # Mount them
 mountpartitions
 
+echo "Partitions mounted"
+
 # Download a tar file and extract it, requires $MACHINENAME
 initos
+
+echo "OS written to SD Card"
 
 # Copy over all files to the temp files directory
 if [[ -d $(dirname ${MACHINES[0]})/files ]]; then
@@ -172,6 +176,8 @@ fi
 
 # If the middleware exists
 if [[ -f ${MIDDLEWARES[0]} ]]; then
+
+	echo "Middleware found"
 
 	if [[ -d $(dirname ${MIDDLEWARES[0]})/files ]]; then
 		cp $(dirname ${MIDDLEWARES[0]})/files/* $FILES

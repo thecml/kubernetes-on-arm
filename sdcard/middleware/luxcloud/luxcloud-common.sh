@@ -19,14 +19,10 @@ docommon(){
 	mkdir -p $LUXDIR
 
 	# Copy install.sh to the luxcloud dir
-	cp $FILES/install_lux.sh $LUXDIR
+	cp $FILES/install_lux.sh $LUXDIR/install.sh
 
 	# And the wrapper to the bin dir
-	cp $FILES/lux.sh $BINDIR
-
-	# Rename lux.sh to lux
-	mv $BINDIR/lux.sh $BINDIR/lux
-	mv $LUXDIR/install_lux.sh $BINDIR/install.sh
+	cp $FILES/lux.sh $BINDIR/lux
 
 	# Populate config.sh
 	cat > $LUXDIR/config.sh <<EOF
