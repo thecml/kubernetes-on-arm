@@ -2,33 +2,31 @@
 # buildSDCard.sh [disc] [machine] [distro] [middleware] [middleware-parameter]
 # buildSDCard.sh /dev/sdb rpi archlinux -qm luxcloud-master -p pimaster 
 
-# Catch errors
-trap 'exit' ERR
+########################## HELPERS        ##############################
 
-########################## SECURITY CHECKS ##############################
+# Install a package 
+require()
+{
+	BINARY=$1
+	PACKAGE=$2
 
-# Root is required
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
-  exit 1
-fi
-
-# At least three arguments should be present
-if [ $# < 3 ]; then
-	echo "You must specify at least three arguments."
-	usage
-	exit 1
-fi
-
-# Require fdisk to be installed
-require fdisk fdisk
-
-# Check that it really is a disk
-if [[ -z $(fdisk -l | grep "$1") ]] 
-then
-	echo "The disc $1 doesn't exist. Compare with 'fdisk -l'"
-	exit 1
-fi
+	# If which didn't find the binary, install it
+	if [[ $(which $BINARY) == *"which: "* ]]
+	then
+		# Is pacman present?
+		if [[ $(which pacman) != *"which: "* ]]
+		then
+			pacman -S $PACKAGE --noconfirm
+			# Is apt-get present?
+		elif [[ $(which apt-get) != *"which: "* ]]
+		then
+			apt-get install -y $PACKAGE
+		else
+			echo "The required package $PACKAGE with the binary $BINARY isn't present now. Install it."
+			exit 1
+		fi
+	fi
+}
 
 ########################## USAGE ##############################
 
@@ -47,6 +45,37 @@ Additional options:
 
 EOF
 }
+
+
+# Catch errors
+trap 'exit' ERR
+
+########################## SECURITY CHECKS ##############################
+
+# Root is required
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit 1
+fi
+
+# At least three arguments should be present
+if [[ "$#" < 3 ]]; then
+	echo "You must specify at least three arguments."
+	usage
+	exit 1
+fi
+
+# Require fdisk to be installed
+require fdisk fdisk
+
+# Check that it really is a disk
+if [[ -z $(fdisk -l | grep "$1") ]] 
+then
+	echo "The disc $1 doesn't exist. Compare with 'fdisk -l'"
+	exit 1
+fi
+
+
 
 ########################## OPTIONS ##############################
 
@@ -105,7 +134,7 @@ MACHINES=(./machine/*/$MACHINENAME.sh)
 OSES=(./os/*/$OSNAME.sh)
 MIDDLEWARES=(./middleware/*/$MIDDLEWARE.sh)
 
-if [[ (${#MACHINES[@]} != 1 || ${#OSES[@]} != 1 || ${#MIDDLEWARES[@]} > 1) && ( -f ${MACHINES[0]} && -f ${OSES[0]} ]]; then
+if [[ (${#MACHINES[@]} != 1 || ${#OSES[@]} != 1 || ${#MIDDLEWARES[@]} > 1) && ( -f ${MACHINES[0]} && -f ${OSES[0]} ) ]]; then
 	echo "In ./machine/ and ./os/ (and eventually ./middleware/), all .sh files should have unique names"
 	exit 1
 fi
@@ -134,13 +163,20 @@ mountpartitions
 initos
 
 # Copy over all files to the temp files directory
-cp $(dirname ${MACHINES[0]})/files/* $FILES
-cp $(dirname ${OSES[0]})/files/* $FILES
+if [[ -d $(dirname ${MACHINES[0]})/files ]]; then
+	cp $(dirname ${MACHINES[0]})/files/* $FILES
+fi
+if [[ -d $(dirname ${OSES[0]})/files ]]; then
+	cp $(dirname ${OSES[0]})/files/* $FILES
+fi
 
 # If the middleware exists
 if [[ -f ${MIDDLEWARES[0]} ]]; then
 
-	cp $(dirname ${MIDDLEWARES[0]})/files/* $FILES
+	if [[ -d $(dirname ${MIDDLEWARES[0]})/files ]]; then
+		cp $(dirname ${MIDDLEWARES[0]})/files/* $FILES
+	fi
+
 	source ${MIDDLEWARES[0]}
 	copyfiles
 fi
@@ -150,28 +186,3 @@ unmountpartitions
 
 # Remove the temp filesystem
 rm -r $TMPDIR
-
-
-# Install a package 
-require()
-{
-	BINARY=$1
-	PACKAGE=$2
-
-	# If which didn't find the binary, install it
-	if [[ $(which $BINARY) == *"which: "* ]]
-	then
-		# Is pacman present?
-		if [[ $(which pacman) != *"which: "* ]]
-		then
-			pacman -S $PACKAGE --noconfirm
-			# Is apt-get present?
-		elif [[ $(which apt-get) != *"which: "* ]]
-		then
-			apt-get install -y $PACKAGE
-		else
-			echo "The required package $PACKAGE with the binary $BINARY isn't present now. Install it."
-			exit 1
-		fi
-	fi
-}

@@ -4,14 +4,12 @@ BINDIR=$ROOT/usr/local/bin
 LUXDIR=$BINDIR/luxcloud
 
 docommon(){
-	# cd to sdcard/middleware
-	cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 	REQUIRED_FILES="install_lux.sh k8s-master.sh k8s-minion.sh lux.sh shorties.sh"
 
 	for FILE in $REQUIRED_FILES
 	do
-		if [[ ! -f $FILE ]]; then
+		if [[ ! -f $FILES/$FILE ]]; then
 			echo "Error: Middleware luxcloud requires the following file: $FILE. Use a machine or os that provides those files"
 			exit 1;
 		fi

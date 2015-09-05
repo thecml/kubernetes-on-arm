@@ -1,9 +1,12 @@
-domiddleware(){
 
-	cd "$( dirname "${BASH_SOURCE[0]}" )"
+# Setup variables
+BINDIR=$ROOT/usr/local/bin
+LUXDIR=$BINDIR/luxcloud
+
+copyfiles(){
 
 	# First, do the common things
-	source luxcloud-common.sh
+	source "$( dirname "${BASH_SOURCE[0]}" )"/luxcloud-common.sh
 	docommon
 
 	# Copy over the k8s master script

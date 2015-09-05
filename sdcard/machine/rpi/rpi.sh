@@ -1,1 +1,1 @@
-source rpi-common.sh
+source "$( dirname "${BASH_SOURCE[0]}" )"/rpi-common.sh
