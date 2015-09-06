@@ -85,7 +85,7 @@ cd kubernetes
 
 # Now it should be faster
 sed -e "s@ hyperkube@ @" -i hack/lib/golang.sh
-sed -e 's@"${KUBE_TEST_TARGETS[@]}"@ @' -i hack/lib/golang.sh
+sed -e "s@(kube::golang::test_targets)@()@" -i hack/lib/golang.sh
 
 # Build kubernetes binaries
 ./hack/build-go.sh

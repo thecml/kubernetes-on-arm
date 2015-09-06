@@ -142,7 +142,7 @@ systemctl restart sshd
 source /usr/local/bin/luxcloud/config.sh
 
 # Only set if its specified
-if [[ -z "$HOSTNAME" ]]
+if [[ ! -z "$HOSTNAME" ]]
 then
 	hostnamectl set-hostname $HOSTNAME
 fi
