@@ -7,4 +7,5 @@ RUN GOPATH=$GOPATH/src/github.com/docker/distribution/Godeps/_workspace:$GOPATH 
 	cd /gopath/src/github.com/docker && \
 	curl -sSL https://github.com/docker/distribution/archive/v2.1.1.tar.gz | tar -xz && \
 	mv dist* distribution && \
+	cd distribution && \
 	make PREFIX=/gopath clean binaries

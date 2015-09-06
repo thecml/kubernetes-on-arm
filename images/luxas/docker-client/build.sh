@@ -2,6 +2,8 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+source ../../version.sh
+
 docker build -t build/docker-client .
 
 
@@ -9,7 +11,7 @@ docker build -t build/docker-client .
 ../../../utils/strip-image/strip-docker-image \
 	-i build/docker-client \
 	-p docker \
-	-t luxas/docker-client \
+	-t luxas/docker-client:$(LUX_VERSION) \
 	-f /etc/passwd \
 	-f /etc/group \
 	-f '/lib/*/libnss*' \

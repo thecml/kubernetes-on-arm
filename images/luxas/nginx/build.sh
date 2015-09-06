@@ -1,3 +1,5 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-docker build -t luxas/nginx .
+source ../../version.sh
+
+docker build -t luxas/nginx:$(LUX_VERSION) .

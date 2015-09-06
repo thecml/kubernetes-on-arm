@@ -8,7 +8,7 @@
 
 - luxas/go: 1210 s
 - luxas/nodejs: 16 s
-- luxas/registry: ?
+- luxas/registry: 350 s
 
 
 - k8s/build: 2208 s

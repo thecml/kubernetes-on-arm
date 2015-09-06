@@ -1,4 +1,7 @@
 #!/bin/bash
+
+source ../../version.sh
+
 (( EUID != 0 )) && echo 'This script must be run as root.' && exit 1
 set -e
 
@@ -67,6 +70,6 @@ arch-chroot "$buildfolder" \
 
 arch-chroot "$buildfolder" /bin/sh -c 'pacman -Syu --noconfirm'
 
-imageid=$(tar --numeric-owner -C "$buildfolder" -c . | docker import - luxas/archlinux)
+imageid=$(tar --numeric-owner -C "$buildfolder" -c . | docker import - luxas/archlinux:$(LUX_VERSION))
 
 rm -rf "$buildfolder"

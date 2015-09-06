@@ -25,6 +25,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 #rm -r base
 
+source ../../version.sh
 
 # Build the alpine on the host
 ./mkimage.sh
@@ -33,4 +34,4 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 mv /tmp/rootfs.tar.xz .
 
 # Build the real image
-docker build -t luxas/alpine .
+docker build -t luxas/alpine:$(LUX_VERSION) .

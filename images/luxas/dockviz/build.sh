@@ -1,5 +1,7 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+source ../../version.sh
+
 # Start the build
 docker build -t build/dockviz .
 
