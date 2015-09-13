@@ -11,5 +11,5 @@ RUN cp -r /usr/share/locale/en_GB /tmp && \
 	mv /tmp/en_GB /usr/share/locale/en_GB && \
 	chmod +x /usr/bin/apt-install && \
 	sync && \
-	apt-install nano
+	apt-install nano curl
 # Nano is good to have

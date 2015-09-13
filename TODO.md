@@ -1,7 +1,6 @@
 # TODO
 
  - investigate google/cadvisor
-   - build for kubemaster
  - Kommentera allt
  - rancher os-images build
    - os-base
@@ -14,10 +13,22 @@
  //- controller-manager --machines specification, for it to come up
  - enable internet for flannel containers docker --ip-masq=false, flannel --ip-masq
  - why doesn't systemd time synchronization work?
- - commit rancheros power.go patch
+ - commit rancheros power.go patch OK
 
 
 
+## TODO 11/9 -->
+- docker registry up
+- k8s in systemd
+- dhcp for master node
+
+
+
+
+
+
+
+Failed to create pod infra container: DNS ResolvConfPath specified but does not exist. It could not be updated: /var/lib/docker/containers/726c0ba32f80c452c6d794bd89aa31531022586ae443efd8ed708fdec9ea15be/resolv.conf; Skipping pod "k8s-master-k8smaster_default"
 
  # shortcuts
 

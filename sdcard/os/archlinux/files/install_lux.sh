@@ -93,9 +93,17 @@ LimitCORE=infinity
 WantedBy=multi-user.target
 EOF
 
+# Default docker, used to pull some images
+cat > /etc/systemd/system/docker.service.d/luxcloud.conf <<EOF
+[Unit]
+After=system-docker.service
 
-sed -e 's@/usr/bin/docker -d@/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s overlay@' -i /usr/lib/systemd/system/docker.service
-sed -e 's@After=network.target docker.socket@After=network.target docker.socket system-docker.service@' -i /usr/lib/systemd/system/docker.service
+[Service]
+ExecStart=
+ExecStart=/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s overlay
+EOF
+#sed -e 's@/usr/bin/docker -d@/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s overlay@' -i /usr/lib/systemd/system/docker.service
+#sed -e 's@After=network.target docker.socket@After=network.target docker.socket system-docker.service@' -i /usr/lib/systemd/system/docker.service
 
 systemctl enable system-docker
 systemctl enable docker

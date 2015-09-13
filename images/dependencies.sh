@@ -2,7 +2,7 @@ BASE=("luxas/raspbian" "luxas/alpine" "luxas/archlinux")
 DEPS=(
 	# ON RASPBIAN
 	"luxas/go:luxas/raspbian" 
-	
+	"luxas/bench:luxas/raspbian"
 
 	# ON NODE
 	"k8s/web:luxas/nodejs"

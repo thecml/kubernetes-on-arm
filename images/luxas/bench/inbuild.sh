@@ -1,11 +1,5 @@
 #!/bin/bash
 
-apt-install build-essential \
-			gcc \
-			unzip \
-			curl
-
-
 whets(){
 	cat $1 | grep "MWIPS" | awk '{print "WHETSTONE " $2 "\n"}'
 }
@@ -39,16 +33,8 @@ busspeed(){
 	cat $1 | grep " 65536 " | awk '{print "BUSHIGH " $7 "\n"}'
 }
 
-if [[ -z $NORMAL ]]; then
-	curl -sSL http://www.roylongbottom.org.uk/Raspberry_Pi_Benchmarks.zip > test.zip
-	unzip test.zip
 
-	mv Raspberry* bench
-fi
-rm -r /perf
-mkdir -p /perf
-
-cd "bench/Source Code"
+cd "/bench/Source Code"
 
 
 OPTS=
@@ -66,7 +52,7 @@ TESTS=(
 	"linpack.c:cpuidc.c, linpackdp, Linpack.txt"
 	"linpacksp.c:cpuidc.c, linpacksp, Linpack.txt"
 	"dhry.h:dhry_1.c:dhry_2.c:cpuidc.c, dhrystone, Dhry.txt"
-	"memspeed.c:cpuidc.c, memspeed, memSpeed.txt, MB:512"
+	"memspeed.c:cpuidc.c, memspeed, memSpeed.txt, MB:256"
 	"lloops2.c:cpuidc.c, liverloops, LLloops.txt"
 	"busspeed.c:cpuidc.c, busspeed, busSpeed.txt"
 )
@@ -81,7 +67,7 @@ for TESTSTR in "${TESTS[@]}"; do
 	ARG="${ARG//:/ }"
 
 	if [[ -z $NORMAL ]]; then
- 		{ time gcc $FILES $OPTS -o $OUTPUT; } 2>> /perf/tid.log
+ 		{ time gcc $FILES $OPTS -o $OUTPUT; } 2>> /perf/compiletid.log
 
 		./$OUTPUT $ARG <<EOF
 
@@ -92,8 +78,21 @@ EOF
 	echo "" >> /perf/perf.log
 	echo "Done with $OUTPUT"
 done
+
+
+cd /perf
+
+# Compile the program
+{ g++ -std=c++11 main.cpp -o compute 2>&1; } 2>> /perf/compiletid.log
+
+cat compiletid.log | grep "real" | grep -o "[0-9]m[0-9]*" >> tid.log
+
+# Calculate the results of the benchmarks
+./compute
+
+
 exit 0
 
 
 
-#g++ -std=c++11 main.cpp -o demo 2>&1
+
