@@ -91,6 +91,7 @@ TOREMOVE=(
 	"cmd/kube-controller-manager"
 	"cmd/kubelet"
 	"cmd/linkcheck"
+	"cmd/kubernetes"
 	"plugin/cmd/kube-scheduler"
 
 	"kube-apiserver"
@@ -105,7 +106,6 @@ TOREMOVE=(
     "cmd/genconversion"
     "cmd/gendeepcopy"
     "cmd/genswaggertypedocs"
-    "examples/k8petstore/web-server"
     "github.com/onsi/ginkgo/ginkgo"
     "test/e2e/e2e.test"
 )
