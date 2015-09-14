@@ -3,7 +3,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 source ../../version.sh
 
 # Build the registry binary, prefix the image with build for easy removing if necessary
-docker build -t build/registry: -f Dockerfile.build .
+docker build -t build/registry -f Dockerfile.build .
 
 # Run the container
 CID=$(docker run -d build/registry /bin/bash)

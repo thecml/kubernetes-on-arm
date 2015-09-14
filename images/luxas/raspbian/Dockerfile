@@ -9,7 +9,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN cp -r /usr/share/locale/en_GB /tmp && \
 	rm -rf /usr/share/man/?? /usr/share/man/??_* /usr/share/doc/* /usr/share/locale/* && \
 	mv /tmp/en_GB /usr/share/locale/en_GB && \
-	sudo apt-get autoremove
 	chmod +x /usr/bin/apt-install && \
 	sync && \
 	apt-install nano curl

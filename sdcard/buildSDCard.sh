@@ -11,7 +11,7 @@ require()
 	PACKAGE=$2
 
 	# If which didn't find the binary, install it
-	if [[ $(which $BINARY) == *"which: "* ]]
+	if [[ ! -e $(which $BINARY) ]]
 	then
 		# Is pacman present?
 		if [[ $(which pacman) != *"which: "* ]]
@@ -33,15 +33,21 @@ require()
 usage(){
 	cat <<EOF
 Welcome to buildSDCard!
+This script will allow you to:
+	- Write an os to a sd card
+	- Customize for a specific type of board (e. g. rpi, banana pi)
+	- Insert files and configuration via a middleware, so your os works out-of-the-box!
 
 Required arguments:
 
 ./buildSDCard.sh [disc or sd card] [machine] [os]
 
-Additional options:
-	-q: Quiet or non-interactive. Do not ask the user for anything
-	-m: A middleware to use for copying files to the sd card
-	-p: A middleware parameter. Middleware-specific
+Optional arguments:
+
+./buildSDCard.sh [disc or sd card] [machine] [os] [middleware] [middleware-parameter]
+
+Example:
+./buildSDCard.sh /dev/sdb rpi-2 archlinux luxcloud-master pimaster 
 
 EOF
 }

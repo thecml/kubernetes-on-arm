@@ -83,20 +83,47 @@ cd kubernetes
 
 ## PATCHES
 
-  
+
+# Do not build these
+TOREMOVE=(
+	"cmd/kube-proxy"
+	"cmd/kube-apiserver"
+	"cmd/kube-controller-manager"
+	"cmd/kubelet"
+	"cmd/linkcheck"
+	"plugin/cmd/kube-scheduler"
+
+	"kube-apiserver"
+	"kube-controller-manager"
+	"kube-scheduler"
+
+	"cmd/integration"
+	"cmd/gendocs"
+    "cmd/genman"
+    "cmd/mungedocs"
+    "cmd/genbashcomp"
+    "cmd/genconversion"
+    "cmd/gendeepcopy"
+    "cmd/genswaggertypedocs"
+    "examples/k8petstore/web-server"
+    "github.com/onsi/ginkgo/ginkgo"
+    "test/e2e/e2e.test"
+)
   
 # Now it should be faster
 # Do not build these statically, (or at all btw)
-sed -e "s@ kube-apiserver@ @" -i hack/lib/golang.sh
-sed -e "s@ kube-controller-manager@ @" -i hack/lib/golang.sh
-sed -e "s@ kube-scheduler@ @" -i hack/lib/golang.sh
 
-# Build kubectl statically
+for STR in "${TOREMOVE[@]}"; do
+	sed -e "s@ $STR@@" -i hack/lib/golang.sh
+done
+
+
+# Build kubectl statically, instead of hyperkube
 sed -e "s@ hyperkube@ kubectl@" -i hack/lib/golang.sh
 
 # Do not build test targets
-sed -e 's@(kube::golang::test_targets)@()@' -i hack/lib/golang.sh
-sed -e 's@(kube::golang::server_targets)@($(echo "cmd/hyperkube"))@' -i hack/lib/golang.sh
+#sed -e 's@(kube::golang::test_targets)@()@' -i hack/lib/golang.sh
+#sed -e 's@(kube::golang::server_targets)@($(echo "cmd/hyperkube"))@' -i hack/lib/golang.sh
 
 
 

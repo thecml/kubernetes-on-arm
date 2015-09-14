@@ -27,13 +27,7 @@ if [ "$EUID" -ne 0 ]
 fi
 
 # Error handler
-trap 'onerror' ERR
-
-onerror()
-{
-	echo "Unhandled error!"
-	exit 1
-}
+trap 'exit' ERR
 
 usage(){
 	echo -e "Usage: \n 1: luxcloud install \n 2: luxcloud (build|import [dir]) \n 3: luxcloud setup \nThen your done!"
@@ -55,11 +49,15 @@ install() {
 	# Next is step 1
 	writestep 1
 
-	# Reboot for changes to take effect, not sure if necessary but anyway
-	#echo "Rebooting..."
-	#reboot
+	# Reboot for changes to take effect, IS REQUIRED FOR DOCKER TO FUNCTION
+	echo "Rebooting..."
+	reboot
 }
 build(){
+
+	if [[ $# = 0 &&  -d "/lib/luxas/luxcloud/images" ]]; then
+        /lib/luxas/luxcloud/images/build.sh
+    fi
 	# Check that we should do this now
 	checkstep 1
 
@@ -67,7 +65,7 @@ build(){
 	if [ -d "/lib/luxas/luxcloud/images" ]
 	then
 		# Build them and record the time
-		time /lib/luxas/luxcloud/images/build.sh all
+		time /lib/luxas/luxcloud/images/build.sh $1
 	else
 		echo -e "You have to push the luxcloud source to the git directory. \n\n You may also use luxcloud import [dir] to populate images."
 		exit 1
@@ -179,7 +177,7 @@ case $1 in
 	'install')
 		install;;
 	'build')
-		build;;
+		build $2;;
 	'import')
 		import $2;;
 	'setup')

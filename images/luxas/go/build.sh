@@ -9,7 +9,7 @@ cp ../../version.sh .
 docker build -t luxas/go:$LUX_VERSION .
 
 # Make the filesystem
-CID=$(docker run -d luxas/go /bin/bash)
+CID=$(docker run -d luxas/go:$LUX_VERSION /bin/bash)
 
 # Get go and gofmt
 docker cp $CID:/goroot/bin .

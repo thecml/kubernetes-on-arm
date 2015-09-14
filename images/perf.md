@@ -21,7 +21,9 @@
 To get k8s up and running from scratch: 4060 s, 1h 7m 40s
 
 ## 0.4.1
+ - luxas/raspbian: 224 s
+ - luxas/alpine: 39 s
 
+ - luxas/go: 960 s
 
-
-
+ - k8s/build: 

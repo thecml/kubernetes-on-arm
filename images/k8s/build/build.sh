@@ -8,7 +8,7 @@ cp ../../version.sh .
 docker build -t k8s/build:$LUX_VERSION .
 
 # Then copy out the binaries
-CID=$(docker run -d k8s/build /bin/bash)
+CID=$(docker run -d k8s/build:$LUX_VERSION /bin/bash)
 BIN="../_bin"
 OUT="$BIN/latest"
 

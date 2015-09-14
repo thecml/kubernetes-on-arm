@@ -93,6 +93,8 @@ LimitCORE=infinity
 WantedBy=multi-user.target
 EOF
 
+mkdir /etc/systemd/system/docker.service.d
+
 # Default docker, used to pull some images
 cat > /etc/systemd/system/docker.service.d/luxcloud.conf <<EOF
 [Unit]

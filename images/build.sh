@@ -2,6 +2,8 @@
 # How this build works
 # This is a replacement for the Makefile
 
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
 build_dep(){
     IMAGE=$1
 
@@ -36,6 +38,8 @@ build(){
         # Then build the image itself
         echo "Installing: $1"
         time ./$1/build.sh
+
+        docker tag "$1":$LUX_VERSION "$1":latest
     else
         echo "Already installed: $1"
     fi
@@ -115,9 +119,6 @@ case $1 in
 		exit;;
 	"clean") 
 		clean
-		exit;;
-	*)
-		usage
 		exit;;
 esac
 
