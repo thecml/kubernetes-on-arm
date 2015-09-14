@@ -11,7 +11,7 @@ docker build -t build/docker-client .
 ../../../utils/strip-image/strip-docker-image \
 	-i build/docker-client \
 	-p docker \
-	-t luxas/docker-client:$(LUX_VERSION) \
+	-t luxas/docker-client:$LUX_VERSION \
 	-f /etc/passwd \
 	-f /etc/group \
 	-f '/lib/*/libnss*' \

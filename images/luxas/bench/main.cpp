@@ -155,6 +155,9 @@ int main()
 	  		compileTime = compileTime + stoi(arr[0]) * 60 + stoi(arr[1]);
 	  	}
 	}
+	else cout << "Unable to open file: tid.log";
+	mytime.close();
+
 
 	ramflops = (tmp_ramflopslo + tmp_ramflopshi) / 2;
 	rammips = (tmp_rammipslo + tmp_busspeedhi) / 2;
@@ -182,21 +185,21 @@ int main()
 
 	int 
 		// CPU
-		res_whetstone = whetstone / comp_whetstone * 100,
-		res_dhrystone = dhrystone / comp_dhrystone * 100,
-		res_linpacksp = linpacksp / comp_linpacksp * 100,
-		res_linpackdp = linpackdp / comp_linpackdp * 100,
-		res_liverloops = liverloops / comp_liverloops * 100,
+		res_whetstone = whetstone / (float)comp_whetstone * 100,
+		res_dhrystone = dhrystone / (float)comp_dhrystone * 100,
+		res_linpacksp = linpacksp / (float)comp_linpacksp * 100,
+		res_linpackdp = linpackdp / (float)comp_linpackdp * 100,
+		res_liverloops = liverloops / (float)comp_liverloops * 100,
 
 		// RAM
-		res_l1flops = l1flops / comp_l1flops * 100,
-		res_l2flops = l2flops / comp_l2flops * 100,
-		res_ramflops = ramflops / comp_ramflops * 100,
-		res_rammips = rammips / comp_rammips * 100,
-		res_busspeed = busspeed / comp_busspeed * 100,
+		res_l1flops = l1flops / (float)comp_l1flops * 100,
+		res_l2flops = l2flops / (float)comp_l2flops * 100,
+		res_ramflops = ramflops / (float)comp_ramflops * 100,
+		res_rammips = rammips / (float)comp_rammips * 100,
+		res_busspeed = busspeed / (float)comp_busspeed * 100,
 
 		// REAL
-		res_compileTime = compileTime / comp_compileTime * 100;
+		res_compileTime = comp_compileTime / (float)compileTime * 100;
 
 
 	int res_cpu = (res_whetstone + res_dhrystone + res_linpacksp + res_linpackdp + res_liverloops) / 5,
@@ -205,7 +208,7 @@ int main()
 
 	int overall_result = (res_cpu + res_ram + res_real) / 3;
 
-	ofstream json ("sum.json");
+	ofstream json ("results.json");
 
 	json << "{" << endl;
 	json <<	"	'overall': '" + to_string(overall_result) + "'," << endl;

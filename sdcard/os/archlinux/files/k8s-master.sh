@@ -14,9 +14,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 # Eventually get k8s/etcd to docker via pull
 
-# Load the images which is necessary
-docker save k8s/etcd | system-docker load
-docker save k8s/flannel | system-docker load
+
 
 # Get etcd container hash
 #ETCD=$(system-docker run -d --net=host k8s/etcd)
@@ -121,6 +119,10 @@ EOF
 #sed -e "s@-s overlay@-s overlay --bip=$FLANNEL_SUBNET --mtu=$FLANNEL_MTU@" -i /usr/lib/systemd/system/docker.service
 
 
+# Load the images which is necessary
+docker save k8s/etcd | system-docker load
+docker save k8s/flannel | system-docker load
+
 systemctl stop docker.service docker.socket
 
 # Bring the docker bridge down
@@ -135,6 +137,7 @@ systemctl daemon-reload
 # Start it again
 systemctl enable flannel etcd master-k8s registry
 systemctl start etcd flannel docker master-k8s registry
+
 
 # Start k8s master components, is working
 #docker run -d --net=host  -v /var/run/docker.sock:/var/run/docker.sock  k8s/hyperkube /hyperkube kubelet --pod_infra_container_image="k8s/pause" --api-servers=http://localhost:8080 --v=2 --address=0.0.0.0 --enable-server --hostname-override=$(hostname -i | awk '{print $1}') --config=/etc/kubernetes/manifests-multi

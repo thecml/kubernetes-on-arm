@@ -83,9 +83,22 @@ cd kubernetes
 
 ## PATCHES
 
+  
+  
 # Now it should be faster
-sed -e "s@ hyperkube@ @" -i hack/lib/golang.sh
-sed -e "s@(kube::golang::test_targets)@()@" -i hack/lib/golang.sh
+# Do not build these statically, (or at all btw)
+sed -e "s@ kube-apiserver@ @" -i hack/lib/golang.sh
+sed -e "s@ kube-controller-manager@ @" -i hack/lib/golang.sh
+sed -e "s@ kube-scheduler@ @" -i hack/lib/golang.sh
+
+# Build kubectl statically
+sed -e "s@ hyperkube@ kubectl@" -i hack/lib/golang.sh
+
+# Do not build test targets
+sed -e 's@(kube::golang::test_targets)@()@' -i hack/lib/golang.sh
+sed -e 's@(kube::golang::server_targets)@($(echo "cmd/hyperkube"))@' -i hack/lib/golang.sh
+
+
 
 # Build kubernetes binaries
 ./hack/build-go.sh

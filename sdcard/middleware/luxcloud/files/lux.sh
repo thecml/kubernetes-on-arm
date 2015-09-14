@@ -67,7 +67,7 @@ build(){
 	if [ -d "/lib/luxas/luxcloud/images" ]
 	then
 		# Build them and record the time
-		time make -C /lib/luxas/luxcloud/images
+		time /lib/luxas/luxcloud/images/build.sh all
 	else
 		echo -e "You have to push the luxcloud source to the git directory. \n\n You may also use luxcloud import [dir] to populate images."
 		exit 1

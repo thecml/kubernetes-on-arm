@@ -4,7 +4,7 @@ source ../../version.sh
 
 cp ../_bin/latest/flanneld .
 
-docker build -t k8s/flannel:$(LUX_VERSION) .
+docker build -t k8s/flannel:$LUX_VERSION .
 
 #../../../utils/strip-image/strip-docker-image \
 #	-i k8s/flannel-build \

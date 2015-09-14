@@ -70,6 +70,6 @@ arch-chroot "$buildfolder" \
 
 arch-chroot "$buildfolder" /bin/sh -c 'pacman -Syu --noconfirm'
 
-imageid=$(tar --numeric-owner -C "$buildfolder" -c . | docker import - luxas/archlinux:$(LUX_VERSION))
+imageid=$(tar --numeric-owner -C "$buildfolder" -c . | docker import - luxas/archlinux:$LUX_VERSION)
 
 rm -rf "$buildfolder"

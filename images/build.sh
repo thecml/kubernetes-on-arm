@@ -27,7 +27,7 @@ build_dep(){
 # Build an image
 build(){
 	# Does that image exist?
-    if [[ -z $(docker images | grep "$1") ]]; then
+    if [[ -z $(docker images | grep "$1" | grep "$LUX_VERSION") ]]; then
 
     	# First, build all this image's dependencies
         echo "To install: $1"
@@ -92,15 +92,6 @@ build_prefix()
 }
 
 
-export_images()
-{
-
-}
-
-import_images()
-{
-
-}
 
 clean()
 {
@@ -125,10 +116,15 @@ case $1 in
 	"clean") 
 		clean
 		exit;;
+	*)
+		usage
+		exit;;
 esac
 
-if [[ $# = 1 && -d ./$1 ]]; then
+if [[ $# = 1 && -z $(echo $1 | grep "/") ]]; then
 	build_prefix $1
+elif [[ $# = 0 ]]; then
+    usage
 else
 	for IMG in "$@"
 	do

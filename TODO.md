@@ -10,16 +10,15 @@
  - testa att koppla alla rpis till hubben
  - make a common luxcloud "binary"
  - insert a non-root user to raspbian and alpine
- //- controller-manager --machines specification, for it to come up
  - enable internet for flannel containers docker --ip-masq=false, flannel --ip-masq
- - why doesn't systemd time synchronization work?
+ - why doesn't systemd time synchronization work? OK 
  - commit rancheros power.go patch OK
 
 
 
 ## TODO 11/9 -->
-- docker registry up
-- k8s in systemd
+- docker registry up OK, testing service
+- k8s in systemd, ongoing
 - dhcp for master node
 
 

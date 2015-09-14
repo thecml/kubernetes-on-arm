@@ -24,9 +24,9 @@ echo "Updating the system..."
 time pacman -Syu --noconfirm
 
 echo "Now were going to install some packages"
-time pacman -S docker git make --noconfirm
+time pacman -S docker git make nmap --noconfirm
 
-# for now, not necessary: rsync nmap screen
+# for now, not necessary: rsync screen
 # not needed now: samba salt
 
 echo "Set the timezone to Helsinki"
@@ -105,8 +105,8 @@ EOF
 #sed -e 's@/usr/bin/docker -d@/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s overlay@' -i /usr/lib/systemd/system/docker.service
 #sed -e 's@After=network.target docker.socket@After=network.target docker.socket system-docker.service@' -i /usr/lib/systemd/system/docker.service
 
-systemctl enable system-docker
-systemctl enable docker
+systemctl enable system-docker docker
+systemctl restart system-docker docker
 
 ## SWAPFILE, REQUIRED WHEN COMPILING ##
 
@@ -121,30 +121,8 @@ cat >> /etc/fstab <<EOF
 EOF
 
 
-echo "Make custom startup file"
-cat > /usr/local/bin/sethostname.sh <<EOF
-#!/bin/sh
-#hostnamectl set-hostname $(tr -d ':' < /sys/class/net/eth0/address)
-timedatectl set-timezone Europe/Helsinki
-EOF
-
-chmod 755 /usr/local/bin/sethostname.sh
-
-cat > /etc/systemd/system/sethostname.service <<EOF
-[Unit]
-Description=Set hostname to MAC address
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/sethostname.sh
-[Install]
-WantedBy=multi-user.target
-EOF
-
-systemctl enable sethostname
-
-
-echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
-systemctl restart sshd
+#echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+#systemctl restart sshd
 
 
 source /usr/local/bin/luxcloud/config.sh

@@ -6,7 +6,7 @@ source ../../version.sh
 cp ../../version.sh .
 
 # Build the image
-docker build -t luxas/go:$(LUX_VERSION) .
+docker build -t luxas/go:$LUX_VERSION .
 
 # Make the filesystem
 CID=$(docker run -d luxas/go /bin/bash)

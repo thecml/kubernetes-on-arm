@@ -1,0 +1,20 @@
+echo "Make custom startup file"
+#cat > /usr/local/bin/sethostname.sh <<EOF
+#!/bin/sh
+#hostnamectl set-hostname $(tr -d ':' < /sys/class/net/eth0/address)
+#timedatectl set-timezone Europe/Helsinki
+#EOF
+
+chmod 755 /usr/local/bin/sethostname.sh
+
+cat > /etc/systemd/system/sethostname.service <<EOF
+[Unit]
+Description=Set hostname to MAC address
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/sethostname.sh
+[Install]
+WantedBy=multi-user.target
+EOF
+
+#systemctl enable sethostname

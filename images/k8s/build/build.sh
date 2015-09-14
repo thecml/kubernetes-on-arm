@@ -5,7 +5,7 @@ source ../../version.sh
 cp ../../version.sh .
 
 # First, build
-docker build -t k8s/build:$(LUX_VERSION) .
+docker build -t k8s/build:$LUX_VERSION .
 
 # Then copy out the binaries
 CID=$(docker run -d k8s/build /bin/bash)

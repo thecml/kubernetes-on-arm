@@ -18,10 +18,10 @@ memspeed(){
 	cat $1 | grep " 8 " | awk '{print "L1 " $2 " " $3 " " $5 " " $6 "\n"}'
 	cat $1 | grep " 32 " | awk '{print "L2 " $2 " " $3 " " $5 " " $6 "\n"}' | grep "[a-z]" -v
 	cat $1 | grep " 256 " | awk '{print "RAMLOW " $2 " " $3 " " $5 " " $6 "\n"}'
-	cat $1 | grep " 524288 " | awk '{print "RAMHIGH " $2 " " $3 " " $5 " " $6 "\n"}'
+	cat $1 | grep " 262144 " | awk '{print "RAMHIGH " $2 " " $3 " " $5 " " $6 "\n"}'
 
 	cat $1 | grep " 256 " | awk '{print "MIPSLOW " $4 " " $7 " " $10  "\n"}'
-	cat $1 | grep " 524288 " | awk '{print "MIPSHIGH " $4 " " $7 " " $10  "\n"}'
+	cat $1 | grep " 262144 " | awk '{print "MIPSHIGH " $4 " " $7 " " $10  "\n"}'
 }
 
 liverloops(){
@@ -80,6 +80,44 @@ EOF
 done
 
 
+## OTHER TESTS
+
+
+openssl speed
+
+
+
+dd if=/dev/mmcblk0 of=/dev/null bs=32M count=100 iflag=direct
+dd if=/dev/mmcblk0 of=/dev/null bs=4M count=1000 iflag=direct
+
+for (( i = 0; i < 3; i++ )); do
+	hdparm -t /dev/mmcblk0
+done
+
+for (( i = 0; i < 3; i++ )); do
+	hdparm -T /dev/mmcblk0
+done
+
+
+
+
+root@d9774a0e2bde:/perf# cat openssl.log | grep "md5  "
+md5               4010.69k    13568.87k    36296.79k    62836.39k    79675.39k
+root@d9774a0e2bde:/perf# cat openssl.log | grep "md4  "
+md4               5115.46k    18222.93k    48296.11k    82339.16k   103099.05k
+root@d9774a0e2bde:/perf# cat openssl.log | grep "sha1  "
+sha1              4108.10k    11939.86k    26102.27k    37524.14k    42898.77k
+root@d9774a0e2bde:/perf# cat openssl.log | grep "aes-256 cbc  "
+aes-256 cbc      15229.66k    16226.14k    16523.22k    16571.05k    16566.95k
+root@d9774a0e2bde:/perf# cat openssl.log | grep "sha512  "
+sha512            1525.65k     6114.39k     8616.11k    11741.53k    13107.20k
+root@d9774a0e2bde:/perf# cat openssl.log | grep "aes-256 ige  "
+aes-256 ige      13945.87k    15400.92k    15852.12k    16015.70k    16009.90k
+
+
+
+
+
 cd /perf
 
 # Compile the program
@@ -87,12 +125,14 @@ cd /perf
 
 cat compiletid.log | grep "real" | grep -o "[0-9]m[0-9]*" >> tid.log
 
+cat tid.log | tr '\n' ' '
+
 # Calculate the results of the benchmarks
 ./compute
 
+echo "Results is in /perf/results.json"
+
+cat /perf/results.json
 
 exit 0
-
-
-
 

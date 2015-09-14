@@ -16,6 +16,6 @@ mkdir -p _bin
 docker cp $CID:/gopath/bin/registry _bin
 
 # Build the real image
-docker build -t luxas/registry:$(LUX_VERSION) .
+docker build -t luxas/registry:$LUX_VERSION .
 
 docker rm $CID

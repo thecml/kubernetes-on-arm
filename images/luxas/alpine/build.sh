@@ -34,6 +34,6 @@ source ../../version.sh
 mv /tmp/rootfs.tar.xz .
 
 # Build the real image
-docker build -t luxas/alpine:$(LUX_VERSION) .
+docker build -t luxas/alpine:$LUX_VERSION .
 
 rm rootfs.tar.xz
