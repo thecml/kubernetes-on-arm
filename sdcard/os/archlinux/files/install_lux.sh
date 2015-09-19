@@ -9,13 +9,9 @@
 # - (Allow root login via ssh)
 # - Set specified hostname
 # - Make the user pi
-#
-#
-#
 
 
 trap 'exit' ERR
-
 
 
 echo "This script will run for about 3 min, depending on how updated your system is"
@@ -121,11 +117,6 @@ swapon /swapfile
 cat >> /etc/fstab <<EOF
 /swapfile  none  swap  defaults  0  0
 EOF
-
-
-#echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
-#systemctl restart sshd
-
 
 source /usr/local/bin/luxcloud/config.sh
 

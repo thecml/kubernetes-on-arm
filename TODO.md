@@ -17,8 +17,8 @@
 
 
 ## TODO 11/9 -->
-- docker registry up OK, testing service
-- k8s in systemd, ongoing
+- docker registry up OK, testing service DONE
+- k8s in systemd, ongoing, DONE
 - dhcp for master node
 
 

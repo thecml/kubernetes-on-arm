@@ -30,7 +30,13 @@ fi
 trap 'exit' ERR
 
 usage(){
-	echo -e "Usage: \n 1: luxcloud install \n 2: luxcloud (build|import [dir]) \n 3: luxcloud setup \nThen your done!"
+	cat <<EOF
+	Usage: 
+	 1: lux install 
+	 2: lux (build|import [dir])
+	 3: lux setup 
+	Then your done!
+EOF
 }
 
 install() {
