@@ -4,24 +4,23 @@ ENV DEBIAN_FRONTEND=noninteractive \
 	HOME=/home/pi
 
 
-RUN apt-install --force-yes --no-install-recommends \
+RUN apt-install \
         supervisor \
         sudo \
         net-tools \
         lxde x11vnc xvfb \
         gtk2-engines-murrine \
-        chromium \
         xrdp
 
 EXPOSE 3389
 
-COPY supervisord.conf startup.sh /
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN useradd --create-home --shell /bin/bash --user-group --groups adm,sudo pi && \
 	echo "pi:raspberry" | chpasswd && \
 	mkdir /var/run/sshd && \
-	mkdir /root/.vnc
+	mkdir /home/pi/.vnc
 
 WORKDIR /home/pi
 
-ENTRYPOINT ["/usr/bin/supervisord", "-c", "/supervisord.conf"]
+CMD ["/usr/bin/supervisord","-n"]

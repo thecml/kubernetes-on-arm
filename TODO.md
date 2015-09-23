@@ -15,13 +15,15 @@
  - commit rancheros power.go patch OK
 
 
-
-## TODO 11/9 -->
 - docker registry up OK, testing service DONE
 - k8s in systemd, ongoing, DONE
-- dhcp for master node
-
-
+## TODO 11/9 -->
+- dhcp for master node ???
+- docker bench for security
+- banana pi up
+- k8s working q new node (lux)
+- ssl cert => docker, apiserver, registry
+- skydns k8s
 
 
 
