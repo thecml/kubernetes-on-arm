@@ -1,11 +1,11 @@
 
 # Setup variables
-BINDIR=$ROOT/usr/local/bin
-LUXDIR=$BINDIR/luxcloud
+LUXDIR=$ROOT/var/lib/luxcloud
+BINDIR=$ROOT/usr/bin
 
 docommon(){
 
-	REQUIRED_FILES="install_lux.sh k8s-master.sh k8s-minion.sh lux.sh shorties.sh"
+	REQUIRED_FILES="install_lux.sh k8s-master.sh k8s-minion.sh lux.sh shorties.sh refresh.sh"
 
 	for FILE in $REQUIRED_FILES
 	do
@@ -20,6 +20,7 @@ docommon(){
 
 	# Copy install.sh to the luxcloud dir
 	cp $FILES/install_lux.sh $LUXDIR/install.sh
+	cp $FILES/refresh.sh $LUXDIR
 
 	# And the wrapper to the bin dir
 	cp $FILES/lux.sh $BINDIR/lux

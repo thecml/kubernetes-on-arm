@@ -4,26 +4,28 @@
 
 
 # Usage: 
-# luxcloud install
-# luxcloud (build|import|get)
-# luxcloud setup
+# lux install
+# lux (build|import|get)
+# lux setup
 
-# luxcloud edit
+# lux edit
 
-# luxcloud export
+# lux export
 
-# luxcloud stats
-# luxcloud usage
-# luxcloud upgrade?
-# luxcloud version?
+# lux stats
+# lux usage
+# lux upgrade?
+# lux refresh?
+# lux version?
 
-LUXDIR="/usr/local/bin/luxcloud"
+LUXDIR="/var/lib/luxcloud"
+SOURCEDIR="/lib/luxas/luxcloud"
 CONFIG="$LUXDIR/config.sh"
 source $CONFIG
 
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
-  exit 1
+if [ "$EUID" -ne 0 ]; then
+	echo "Please run as root"
+  	exit 1
 fi
 
 # Error handler
@@ -33,112 +35,117 @@ usage(){
 	cat <<EOF
 	Usage: 
 	 1: lux install 
-	 2: lux (build|import [dir])
+	 2: lux (build|import [archive])
 	 3: lux setup 
 	Then your done!
+
+	Other commands:
+		lux info - Displays important info about the computer and enviroinment
+		lux prodstate - Benchmarks if it could be taken to production
+		lux edit - Edits the config file via nano
+		
 EOF
 }
 
 install() {
-	# Check that we haven't done this before
-	checkstep 0
 
-	# Check how much space there is now
-	spaceused 0
+	# If this file doesn't exist, install
+	if [[ ! -f $LUXDIR/.installed ]]; then
+		# Check how much space there is now
+		spaceused 0
 
-	# Install all packages
-	time $LUXDIR/install.sh
+		# Install all packages
+		time $LUXDIR/install.sh
 
-	# And after
-	spaceused 1
+		# And after
+		spaceused 1
 
-	# Next is step 1
-	writestep 1
+		# Make sure we can't directly install again
+		touch $LUXDIR/.installed
 
-	# Reboot for changes to take effect, IS REQUIRED FOR DOCKER TO FUNCTION
-	echo "Rebooting..."
-	reboot
-}
-build(){
-
-	if [[ $# = 0 &&  -d "/lib/luxas/luxcloud/images" ]]; then
-        /lib/luxas/luxcloud/images/build.sh
-    fi
-	# Check that we should do this now
-	checkstep 1
-
-	# Check if the images directory is present, so we may build the images
-	if [ -d "/lib/luxas/luxcloud/images" ]
-	then
-		# Build them and record the time
-		time /lib/luxas/luxcloud/images/build.sh $1
+		# Reboot for changes to take effect, IS REQUIRED FOR DOCKER TO FUNCTION
+		echo "Rebooting..."
+		reboot
 	else
-		echo -e "You have to push the luxcloud source to the git directory. \n\n You may also use luxcloud import [dir] to populate images."
+		echo -e "It seems like you have run this command before. You should run 'lux refresh' instead. \n To run 'lux install' again, simply 'rm $LUXDIR/.installed'"
 		exit 1
 	fi
+}
 
-	# Check how much is now used
-	spaceused 2
+build(){
 
-	# Next is step 2
-	writestep 2
+	#If we have installed core packages
+	if [[ -f $LUXDIR/.installed ]]; then
+
+		# Check if the images directory is present, so we may build the images
+		if [[ $# = 0 && -d "$SOURCEDIR/images" ]]; then
+
+			# Only print usage
+			$SOURCEDIR/images/build.sh
+
+		elif [[ -d "$SOURCEDIR/images" ]]; then
+
+			# Build them and record the time
+			time $SOURCEDIR/images/build.sh "$@"
+
+			# Check how much is now used
+			spaceused 2
+		else
+			echo -e "You have to push the luxcloud source to the git directory. \n\n You may also use luxcloud import [dir] to populate images."
+			exit 1
+		fi
+	else
+		echo -e "It is recommended that you install the core packages via 'lux install' before running this command.\n If you know what you are doing, run: 'touch $LUXDIR/.installed', to proceed"
+		exit 1
+	fi
 }
 
 import(){
-	# Check that we should do this now
-	checkstep 1
 
-	# Import every tar file in IMPORTDIR to docker
-	IMPORTDIR=$1
-
-	for IMAGE in $IMPORTDIR/*.tar
-	do
-		docker load -i $IMPORTDIR/$IMAGE
-	done
+	# Import this tar file, with one or many images
+	time docker load -i $1
 	
 	# Check how much is now used
 	spaceused 2
-
-	# Next is step 2
-	writestep 2
-}
-
-get(){
-	# Check that we should do this now
-	checkstep 1
-
-	# Import every image in $IMAGES from specified registry
-	REGISTRY=$1
-	IMAGES="$2"
-
-	for IMAGE in $IMPORTDIR/*.tar
-	do
-		docker load -i $IMPORTDIR/$IMAGE
-	done
-	
-	# Check how much is now used
-	spaceused 2
-
-	# Next is step 2
-	writestep 2
 }
 
 setup(){
-	# Check that we should do this now
-	checkstep 2
 
 	# Setup kubernetes, (etcd) and flannel
 	time $LUXDIR/k8s.sh
 
 	# Check how much is now used
 	spaceused 3
-
-	# Next is step 3
-	writestep 3
 }
 
 edit(){
 	nano $CONFIG
+}
+
+info(){
+
+	echo "Lux version on sd card build: $LUX_VERSION"
+	LUX_VERSION=""
+
+	if [[ -d $SOURCEDIR ]]; then
+		source $SOURCEDIR/images/version.sh
+		echo "Current luxcloud version in source: $LUX_VERSION"
+	fi
+
+	echo "Architecture: $(uname -m)" 
+
+	echo "Processors:"
+	cat /proc/cpuinfo | grep "model name"
+
+	echo "RAM Memory: $(free -m | grep Mem | awk '{print $2}') MiB"
+	echo "Free RAM Memory: $(free -m | grep Mem | awk '{print $3}') MiB"
+	echo "Kernel: $(uname) $(uname -r | grep -o "[0-9.]*" | grep "[.]")"
+	
+	#pacman --version
+	#systemctl --version
+}
+prodstate(){
+	/var/lib/docker-bench/docker-bench-security.sh
 }
 
 
@@ -152,46 +159,30 @@ spaceused(){
 	echo -e "SPACE_USED_$1='$spaceused' \n" >> $CONFIG
 }
 
-checkstep(){
-	if [[ "$NEXT_STEP" = 3 ]]
-	then
-		echo "You are done!"
-		exit 1
-	elif [[ "$NEXT_STEP" != "$1" ]]
-	then
-		echo "You have to run the scripts in right order. Check usage for more info."
-		exit 1
-	fi
-}
-
-writestep(){
-	if [ -z "$NEXT_STEP" ]
-	then
-		#NEXT_STEP is unset, write to file
-		echo -e "NEXT_STEP=$1 \n" >> $CONFIG
-	else
-		# Read current step and write the new one
-		sed -e "s@NEXT_STEP=$NEXT_STEP@NEXT_STEP=$1@" -i $CONFIG
-	fi
-}
-
 #####################################################                                            ###############################################
 #####################################################                 WHAT TO START				 ###############################################
 #####################################################                                            ###############################################
 
-case $1 in
+ACTION=$1
+shift
+
+case $ACTION in
 	'install')
 		install;;
 	'build')
-		build $2;;
+		build "$@";;
 	'import')
-		import $2;;
+		import $1;;
 	'setup')
 		setup;;
 	'status')
 		status;;
 	'edit')
 		edit;;
+	'info')
+		info;;
+	'prodstate')
+		info;;
 	*)
 		usage;;
 esac

@@ -1,1 +1,0 @@
-../buildSDCard.sh $1 rpi archlinux -qm $2 -p $3

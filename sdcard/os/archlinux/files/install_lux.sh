@@ -98,7 +98,7 @@ After=system-docker.service
 
 [Service]
 ExecStart=
-ExecStart=/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s overlay
+ExecStart=/usr/bin/docker -d -H unix:///var/run/docker.sock -s overlay
 EOF
 #sed -e 's@/usr/bin/docker -d@/usr/bin/docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s overlay@' -i /usr/lib/systemd/system/docker.service
 #sed -e 's@After=network.target docker.socket@After=network.target docker.socket system-docker.service@' -i /usr/lib/systemd/system/docker.service
@@ -125,6 +125,12 @@ if [[ ! -z "$HOSTNAME" ]]
 then
 	hostnamectl set-hostname $HOSTNAME
 fi
+
+# Benchmark docker
+mkdir /var/lib/docker-bench
+git clone https://github.com/docker/docker-bench-security /var/lib/docker-bench
+
+
 
 echo "Setup an user account"
 useradd --create-home --shell /bin/bash -g users -G docker pi

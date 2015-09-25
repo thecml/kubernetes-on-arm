@@ -8,7 +8,8 @@ apt-install curl \
 			git \
 			upx \
 			gcc \
-			build-essential
+			build-essential \
+			mercurial
 
 # Make directories
 mkdir /goroot /gopath
@@ -20,5 +21,5 @@ curl -sSL https://golang.org/dl/go$GO_VERSION.src.tar.gz | tar -xz -C /goroot --
 cd /goroot/src
 ./make.bash
 
-# Install godep, often required
+# Install godep, often useful
 go get github.com/tools/godep 

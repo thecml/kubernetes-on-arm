@@ -56,6 +56,12 @@ EOF
 # Catch errors
 trap 'exit' ERR
 
+# cd to current dir ~/sdcard
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
+# Get access to current version
+source ../images/version.sh
+
 ########################## SECURITY CHECKS ##############################
 
 # Root is required

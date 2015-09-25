@@ -13,7 +13,7 @@ BIN="../_bin"
 OUT="$BIN/latest"
 
 # If there is a latest version, move to build date
-if [ -f "$OUT/version.sh" ]
+if [ -d "$OUT" ]
 then
 	# Now is the variable $BUILD_DATE available, which is the latest build date
 	source "$OUT/version.sh"
@@ -40,7 +40,5 @@ echo -e "\nBUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $OUT/version.sh
 
 rm -r $OUT/bin
 
-
-# Clean
-#docker rm $(CID)
-#docker rmi luxas/build-go
+# Remove the temporary container, saves space
+docker rm $CID
