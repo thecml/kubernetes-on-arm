@@ -4,26 +4,30 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+# Retrieve their dependencies
 build_dep(){
     IMAGE=$1
 
-    # Return if empty
-    if [[ $IMAGE == "" ]]; then
+    # Return if empty or scratch
+    if [[ $IMAGE == "" || $IMAGE == "scratch" ]]; then
     	exit
     fi
 
-    # If the $IMAGE is a base image, there aren't any dependencies
-    if [[ $(containsElement "$IMAGE" "${BASE[@]}") ]]; then
-        exit
+    # Check if there is an Dockerfile
+    if [[ -f ./$IMAGE/Dockerfile ]]; then
+
+      # Build the image that this image depends on from the dockerfile
+      build $(cat ./$IMAGE/Dockerfile | grep "FROM " | awk '{print $2}' | grep -o "[^:]*" | grep "/")
     fi
 
-    TOREPLACE="$IMAGE:"
-    DEP=$(getElement "$TOREPLACE" "${DEPS[@]}")
-    NEWBUILDS=$(echo ${DEP/$TOREPLACE/''})
+    # Read additional dependencies
+    if [[ -f ./$IMAGE/deps ]]; then
 
-    for BUILD in $NEWBUILDS; do
-        build "$BUILD"
-    done
+      # Read every line and build it
+      while read line; do
+        build "$line"
+      done <./$IMAGE/deps
+    fi
 }
 
 # Build an image
@@ -39,21 +43,10 @@ build(){
         echo "Installing: $1"
         time ./$1/build.sh
 
-        docker tag "$1":$LUX_VERSION "$1":latest
+        docker tag "$1" "$1":$LUX_VERSION
     else
         echo "Already installed: $1"
     fi
-}
-
-getElement () {
-  local e
-  for e in "${@:2}"; do [[ "$e" =~ "$1" ]] && echo "$e"; done
-  return 1
-}
-containsElement () {
-  local e
-  for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
-  return 1
 }
 
 usage(){
@@ -96,7 +89,6 @@ build_prefix()
 }
 
 
-
 clean()
 {
 	for IMAGE in $(docker images | grep build/ | awk '{print $1}')
@@ -112,10 +104,10 @@ case $1 in
 		build_all
 		exit;;
 	"export") 
-		export_images $@
+		export_images "$@"
 		exit;;
 	"import") 
-		import_images $@
+		import_images "$@"
 		exit;;
 	"clean") 
 		clean

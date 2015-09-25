@@ -1,15 +1,13 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-source ../../version.sh
-
 # Use the version file
 cp ../../version.sh .
 
 # Build the image
-docker build -t luxas/go:$LUX_VERSION .
+docker build -t luxas/go .
 
 # Make the filesystem
-CID=$(docker run -d luxas/go:$LUX_VERSION /bin/bash)
+CID=$(docker run -d luxas/go /bin/bash)
 
 # Get go and gofmt
 docker cp $CID:/goroot/bin .

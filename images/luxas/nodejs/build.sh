@@ -2,9 +2,7 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-source ../../version.sh
-
-docker build -t luxas/nodejs:$LUX_VERSION .
+docker build -t luxas/nodejs .
 
 # eventually remove some of these
 

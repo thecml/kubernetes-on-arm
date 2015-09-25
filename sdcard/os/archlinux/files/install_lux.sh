@@ -33,7 +33,7 @@ timedatectl set-timezone Europe/Helsinki
 echo "We'll set up a bare git repository with a live folder."
 
 # Make our folders for git versioning
-mkdir /lib/luxas /lib/luxas/luxcloud /lib/luxas/luxcloud.git
+mkdir -p /lib/luxas/luxcloud /lib/luxas/luxcloud.git
 
 # Move to our bare repo
 cd /lib/luxas/luxcloud.git
