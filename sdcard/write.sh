@@ -27,7 +27,7 @@ require()
 
 usage(){
 	cat <<EOF
-Welcome to buildSDCard!
+Welcome to the write to sd card process!
 This script will allow you to:
 	- Write an os to a sd card
 	- Customize for a specific type of board (e. g. rpi, banana pi)
@@ -35,11 +35,11 @@ This script will allow you to:
 
 Required arguments:
 
-sdcard/create.sh [disc or sd card] [boot] [os]
+sdcard/write.sh [disc or sd card] [boot] [os]
 
 Optional argument:
 
-sdcard/create.sh [disc or sd card] [boot] [os] [rootfs]
+sdcard/write.sh [disc or sd card] [boot] [os] [rootfs]
 
 Explanation:
 	disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see what letter you sd card have.
@@ -50,7 +50,7 @@ Explanation:
 All input should have corresponding files, folders or discs.
 
 Example:
-sdcard/create.sh /dev/sdb rpi-2 archlinux kube-archlinux
+sdcard/write.sh /dev/sdb rpi-2 archlinux kube-archlinux
 
 EOF
 }
