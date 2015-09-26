@@ -34,13 +34,4 @@ EOF
 
 	# Mount partition 2 to root, for editing
 	mount $PARTITION2 $ROOT
-}  
-
-
-
-
-unmountpartitions(){
-	# Clean up
-	# Unmount boot and root
-	umount $BOOT $ROOT
 }

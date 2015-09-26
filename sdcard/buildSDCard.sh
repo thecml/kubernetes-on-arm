@@ -1,8 +1,6 @@
 #!/bin/bash
-# buildSDCard.sh [disc] [machine] [distro] [middleware] [middleware-parameter]
-# buildSDCard.sh /dev/sdb rpi archlinux luxcloud-master pimaster 
 
-########################## HELPERS        ##############################
+########################## HELPER ##############################
 
 # Install a package 
 require()
@@ -10,16 +8,13 @@ require()
 	BINARY=$1
 	PACKAGE=$2
 
-	# If which didn't find the binary, install it
-	if [[ ! -e $(which $BINARY) ]]
-	then
-		# Is pacman present?
-		if [[ $(which pacman) != *"which: "* ]]
-		then
+	# If the $BINARY path -e(xists)
+	if [[ ! -e $(which $BINARY) ]]; then
+		
+		if [[ -e $(which pacman) ]]; then # Is pacman present?
 			pacman -S $PACKAGE --noconfirm
-			# Is apt-get present?
-		elif [[ $(which apt-get) != *"which: "* ]]
-		then
+			
+		elif [[ -e $(which apt-get) ]]; then # Is apt-get present?
 			apt-get install -y $PACKAGE
 		else
 			echo "The required package $PACKAGE with the binary $BINARY isn't present now. Install it."
@@ -36,18 +31,26 @@ Welcome to buildSDCard!
 This script will allow you to:
 	- Write an os to a sd card
 	- Customize for a specific type of board (e. g. rpi, banana pi)
-	- Insert files and configuration via a middleware, so your os works out-of-the-box!
+	- Insert files and configuration via a a prepopulated rootfs, so your os works out-of-the-box!
 
 Required arguments:
 
-./buildSDCard.sh [disc or sd card] [machine] [os]
+sdcard/create.sh [disc or sd card] [boot] [os]
 
-Optional arguments:
+Optional argument:
 
-./buildSDCard.sh [disc or sd card] [machine] [os] [middleware] [middleware-parameter]
+sdcard/create.sh [disc or sd card] [boot] [os] [rootfs]
+
+Explanation:
+	disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see what letter you sd card have.
+	boot - The type of board you have, e. g. a Raspberry Pi. That RPi requires special boot files.
+	os - The operating system which should be downloaded and installed.
+	rootfs - Prepopulated rootfs with scripts and such.
+
+All input should have corresponding files, folders or discs.
 
 Example:
-./buildSDCard.sh /dev/sdb rpi-2 archlinux luxcloud-master pimaster 
+sdcard/create.sh /dev/sdb rpi-2 archlinux kube-archlinux
 
 EOF
 }
@@ -87,8 +90,6 @@ then
 	exit 1
 fi
 
-
-
 ########################## OPTIONS ##############################
 
 # /dev/sdb, /dev/sdb1, /dev/sdb2
@@ -100,14 +101,9 @@ PARTITION2=${1}2
 TMPDIR=/tmp/writesdcard
 BOOT=$TMPDIR/boot
 ROOT=$TMPDIR/root
-#FILES=$TMPDIR/files
+PROJROOT=./..
 
-# Read optional parameters
-ROOTFS=$4
-QUIET=0
-
-
-if [[ $QUIET = 0 ]]; then
+if [[ -z $QUIET ]]; then
 
 	# Security check
 	read -p "You are going to lose all your data on $1. Continue? [Y/n]" answer
@@ -125,37 +121,48 @@ fi
 ########################## SOURCE FILES ##############################
 
 # Make some temp directories
-mkdir -p $TMPDIR $BOOT $ROOT $FILES
+mkdir -p $TMPDIR $BOOT $FILES
 
 MACHINENAME=$2
 OSNAME=$3
+ROOTFSNAME=$4
 
-# The files to source
-MACHINES=(./machine/*/$MACHINENAME.sh)
-OSES=(./os/*/$OSNAME.sh)
-MIDDLEWARES=(./middleware/*/$MIDDLEWARE.sh)
+# Populate rootfs
+if [[ -d rootfs/$ROOTFSNAME ]]; then
 
-if [[ ${#MACHINES[@]} > 1 || ${#OSES[@]} > 1 || ${#MIDDLEWARES[@]} > 1 || ! -f ${MACHINES[0]} || ! -f ${OSES[0]} ]]; then
-	echo "In ./machine/ and ./os/ (and eventually ./middleware/), all .sh files should have unique names and exist"
-	exit 1
+	# Prepopulate the rootfs
+	cp -r rootfs/$ROOTFSNAME $ROOT
+
+	# If we've a dynamic rootfs, invoke it
+	if [[ -f $ROOT/dynamic-rootfs.sh ]]; then
+		
+		# Source the dynamic rootfs script
+		source $ROOT/dynamic-rootfs.sh
+
+		# And invoke the function
+		rootfs
+
+		# Remove the intermediate file
+		rm $ROOT/dynamic-rootfs.sh
+	fi
+fi
+
+# Ensure they exists	
+if [[ ! -f boot/$MACHINENAME.sh || ! -f os/$OSNAME.sh ]]; then
+	echo "boot/$MACHINENAME.sh or os/$OSNAME.sh not found. These files are required. Exiting..."
+	exit
 fi
 
 # Source machine and os
-source ${MACHINES[0]}
-source ${OSES[0]}
+source boot/$MACHINENAME.sh
+source os/$OSNAME.sh
 
 
 # MACHINE must provide:
 # mountpartitions()
-# unmountpartitions()
-
 
 # OS must provide:
 # initos()
-
-
-# MIDDLEWARE must provide:
-# copyfiles()
 
 # Mount them
 mountpartitions
@@ -167,29 +174,9 @@ initos
 
 echo "OS written to SD Card"
 
-# Copy over all files to the temp files directory
-if [[ -d $(dirname ${MACHINES[0]})/files ]]; then
-	cp $(dirname ${MACHINES[0]})/files/* $FILES
-fi
-if [[ -d $(dirname ${OSES[0]})/files ]]; then
-	cp $(dirname ${OSES[0]})/files/* $FILES
-fi
-
-# If the middleware exists
-if [[ -f ${MIDDLEWARES[0]} ]]; then
-
-	echo "Middleware found"
-
-	if [[ -d $(dirname ${MIDDLEWARES[0]})/files ]]; then
-		cp $(dirname ${MIDDLEWARES[0]})/files/* $FILES
-	fi
-
-	source ${MIDDLEWARES[0]}
-	copyfiles
-fi
-
-# Unmount the temp filesystem
-unmountpartitions
+# Clean up
+# Unmount boot and root
+umount $BOOT $ROOT
 
 # Remove the temp filesystem
 rm -r $TMPDIR
