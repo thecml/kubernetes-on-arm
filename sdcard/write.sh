@@ -121,7 +121,7 @@ fi
 ########################## SOURCE FILES ##############################
 
 # Make some temp directories
-mkdir -p $TMPDIR $BOOT $FILES
+mkdir -p $TMPDIR $ROOT $BOOT $FILES
 
 MACHINENAME=$2
 OSNAME=$3
@@ -154,7 +154,7 @@ echo "Partitions mounted"
 if [[ -d rootfs/$ROOTFSNAME ]]; then
 
 	# Prepopulate the rootfs
-	cp -r rootfs/$ROOTFSNAME $ROOT
+	cp -r rootfs/$ROOTFSNAME/* $ROOT
 
 	# If we've a dynamic rootfs, invoke it
 	if [[ -f $ROOT/dynamic-rootfs.sh ]]; then
