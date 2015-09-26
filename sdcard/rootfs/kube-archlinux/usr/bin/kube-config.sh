@@ -45,6 +45,10 @@ install(){
 	# Notify systemd
 	systemctl daemon-reload
 
+	## REMOVE THIS THEN ##
+
+
+
 
 	# Enable the system-docker service and restart both
 	systemctl enable system-docker docker
