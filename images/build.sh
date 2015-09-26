@@ -39,11 +39,15 @@ build(){
         echo "To install: $1"
         build_dep "$1"
 
-        # Then build the image itself
-        echo "Installing: $1"
-        time ./$1/build.sh
+        # Only build if the image directory exists
+        if [[ -d $1 ]]; then
+        	
+	        # Then build the image itself
+	        echo "Installing: $1"
+	        time ./$1/build.sh
 
-        docker tag "$1" "$1":$LUX_VERSION
+	        docker tag "$1" "$1":$LUX_VERSION
+	   	fi
     else
         echo "Already installed: $1"
     fi
@@ -64,8 +68,6 @@ Usage:
 EOF
 }
 
-
-source dependencies.sh
 source version.sh
 
 build_all()

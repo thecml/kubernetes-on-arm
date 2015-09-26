@@ -3,7 +3,9 @@ rootfs(){
 	echo "PermitRootLogin yes" >> $ROOT/etc/ssh/sshd_config
 
 	# Copy current source
-	cp -r $PROJROOT/images $ROOT/etc/kubernetes/
+	mkdir $ROOT/etc/kubernetes/source
+
+	cp -r $PROJROOT $ROOT/etc/kubernetes/source
 
 	# If kubectl exists, include in rootfs
 	if [[ -f $PROJROOT/k8s/_bin/latest/kubectl ]]; then

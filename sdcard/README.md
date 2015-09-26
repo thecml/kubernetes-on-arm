@@ -1,6 +1,6 @@
 # README FOR THE SD CARD MAKER
 
-**The buildSDCard.sh script will write a os and optional config files to a sd card.**
+**sdcard/write.sh**
 
 Example use: 
 
