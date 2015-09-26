@@ -31,7 +31,7 @@ install(){
 
 	# Could these two pacman commands be combined?
 	echo "Updating the system..."
-	time pacman -Syu --noconfirm
+	#time pacman -Syu --noconfirm
 
 	echo "Now were going to install some packages"
 	pacman -S docker git make nmap --noconfirm
