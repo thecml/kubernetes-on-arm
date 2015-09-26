@@ -16,10 +16,10 @@ build_dep(){
     # Read additional dependencies, they always takes precedence
     if [[ -f ./$IMAGE/deps ]]; then
 
-      # Read every line and build it
-      while read line; do
-        build "$line"
-      done <./$IMAGE/deps
+	    # Read every line and build it
+	    for line in "$(cat ./$IMAGE/deps)"; do 
+	    	build $line; 
+	  	done
     fi
 
 
@@ -124,6 +124,6 @@ elif [[ $# = 0 ]]; then
 else
 	for IMG in "$@"
 	do
-		build $1
+		build $IMG
 	done
 fi
