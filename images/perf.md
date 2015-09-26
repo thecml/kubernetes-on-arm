@@ -37,3 +37,7 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
 
  To get k8s up and running from scratch: 2194 s, 36m 34s
  All images time: 2754 s, 45m 54s
+
+
+ ## 0.4.9
+ 

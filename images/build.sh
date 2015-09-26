@@ -13,20 +13,21 @@ build_dep(){
     	exit
     fi
 
-    # Check if there is an Dockerfile
-    if [[ -f ./$IMAGE/Dockerfile ]]; then
-
-      # Build the image that this image depends on from the dockerfile
-      build $(cat ./$IMAGE/Dockerfile | grep "FROM " | awk '{print $2}' | grep -o "[^:]*" | grep "/")
-    fi
-
-    # Read additional dependencies
+    # Read additional dependencies, they always takes precedence
     if [[ -f ./$IMAGE/deps ]]; then
 
       # Read every line and build it
       while read line; do
         build "$line"
       done <./$IMAGE/deps
+    fi
+
+
+    # Check if there is an Dockerfile
+    if [[ -f ./$IMAGE/Dockerfile ]]; then
+
+      # Build the image that this image depends on from the dockerfile
+      build $(cat ./$IMAGE/Dockerfile | grep "FROM " | awk '{print $2}' | grep -o "[^:]*" | grep "/")
     fi
 }
 
@@ -41,7 +42,7 @@ build(){
 
         # Only build if the image directory exists
         if [[ -d $1 ]]; then
-        	
+
 	        # Then build the image itself
 	        echo "Installing: $1"
 	        time ./$1/build.sh
