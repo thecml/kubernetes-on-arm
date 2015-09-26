@@ -138,12 +138,6 @@ if [[ -d rootfs/$ROOTFSNAME ]]; then
 		
 		# Source the dynamic rootfs script
 		source $ROOT/dynamic-rootfs.sh
-
-		# And invoke the function
-		rootfs
-
-		# Remove the intermediate file
-		rm $ROOT/dynamic-rootfs.sh
 	fi
 fi
 
@@ -173,6 +167,12 @@ echo "Partitions mounted"
 initos
 
 echo "OS written to SD Card"
+
+# And invoke the function
+rootfs
+
+# Remove the intermediate file
+rm $ROOT/dynamic-rootfs.sh
 
 # Clean up
 # Unmount boot and root
