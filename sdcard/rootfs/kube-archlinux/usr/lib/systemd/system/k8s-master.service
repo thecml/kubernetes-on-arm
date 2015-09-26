@@ -1,0 +1,12 @@
+[Unit]
+Description=The Master Components for Kubernetes
+After=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker kill k8s-master
+ExecStartPre=-/usr/bin/docker rm k8s-master
+ExecStart=/var/lib/luxcloud/scripts/spin-up-k8s.sh master
+ExecStop=/usr/bin/docker stop k8s-master
+
+[Install]
+WantedBy=multi-user.target

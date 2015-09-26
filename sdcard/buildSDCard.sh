@@ -100,11 +100,10 @@ PARTITION2=${1}2
 TMPDIR=/tmp/writesdcard
 BOOT=$TMPDIR/boot
 ROOT=$TMPDIR/root
-FILES=$TMPDIR/files
+#FILES=$TMPDIR/files
 
 # Read optional parameters
-MIDDLEWARE=$4
-MIDDLEWARE_PARAM=$5
+ROOTFS=$4
 QUIET=0
 
 

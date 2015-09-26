@@ -137,7 +137,7 @@ EOF
 
 ### ENABLE PROCESS ###
 
-# First of all, systemd would like to be noticed about our new files
+# First of all, systemd would like to be notified about our new files
 systemctl daemon-reload
 
 
