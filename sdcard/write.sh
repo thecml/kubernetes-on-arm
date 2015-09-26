@@ -127,19 +127,6 @@ MACHINENAME=$2
 OSNAME=$3
 ROOTFSNAME=$4
 
-# Populate rootfs
-if [[ -d rootfs/$ROOTFSNAME ]]; then
-
-	# Prepopulate the rootfs
-	cp -r rootfs/$ROOTFSNAME $ROOT
-
-	# If we've a dynamic rootfs, invoke it
-	if [[ -f $ROOT/dynamic-rootfs.sh ]]; then
-		
-		# Source the dynamic rootfs script
-		source $ROOT/dynamic-rootfs.sh
-	fi
-fi
 
 # Ensure they exists	
 if [[ ! -f boot/$MACHINENAME.sh || ! -f os/$OSNAME.sh ]]; then
@@ -162,6 +149,20 @@ source os/$OSNAME.sh
 mountpartitions
 
 echo "Partitions mounted"
+
+# Populate rootfs
+if [[ -d rootfs/$ROOTFSNAME ]]; then
+
+	# Prepopulate the rootfs
+	cp -r rootfs/$ROOTFSNAME $ROOT
+
+	# If we've a dynamic rootfs, invoke it
+	if [[ -f $ROOT/dynamic-rootfs.sh ]]; then
+		
+		# Source the dynamic rootfs script
+		source $ROOT/dynamic-rootfs.sh
+	fi
+fi
 
 # Download a tar file and extract it, requires $MACHINENAME
 initos

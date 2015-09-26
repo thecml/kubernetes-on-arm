@@ -24,13 +24,15 @@ EOF
 	require mkfs.vfat dosfstools
 
 	# Make boot filesystem
-	mkfs.vfat $PARTITION1
+	mkfs.vfat $PARTITION1 
 
 	# Mount partition 1 to boot, for editing
 	mount $PARTITION1 $BOOT
 
-	# Make root filesystem
-	mkfs.ext4 $PARTITION2
+	# Make root filesystem, answer y to if we want to overwrite the ext4 partition
+	mkfs.ext4 $PARTITION2 <<EOF
+y
+EOF
 
 	# Mount partition 2 to root, for editing
 	mount $PARTITION2 $ROOT
