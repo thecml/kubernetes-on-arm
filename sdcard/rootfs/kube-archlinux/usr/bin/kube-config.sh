@@ -148,6 +148,7 @@ build(){
 
 
 start-master(){
+	trap "exit" ERR
 	### REQUIRED IMAGES FOR THIS TO WORK ###
 
 	# List them here
@@ -168,10 +169,12 @@ EOF
 
 
 	# Load the images which is necessary to system-docker 
-	if [[ -z $(docker images | grep "k8s/etcd") ]]; then
+	if [[ -z $(docker -H unix:///var/run/system-docker.sock images | grep "k8s/etcd") ]]; then
+		echo "Copying k8s/etcd to system-docker"
 		docker save k8s/etcd | docker -H unix:///var/run/system-docker.sock load
 	fi
-	if [[ -z $(docker images | grep "k8s/flannel") ]]; then
+	if [[ -z $(docker -H unix:///var/run/system-docker.sock images | grep "k8s/flannel") ]]; then
+		echo "Copying k8s/etcd to system-docker"
 		docker save k8s/flannel | docker -H unix:///var/run/system-docker.sock load
 	fi
 
@@ -192,8 +195,8 @@ EOF
 	systemctl restart docker 
 
 	# Enable these master services
-	systemctl enable master-k8s
-	systemctl start master-k8s
+	systemctl enable k8s-master
+	systemctl start k8s-master
 }
 
 start-minion(){
@@ -259,9 +262,20 @@ EOF
 	# Bring docker up again
 	systemctl restart docker 
 
-	# Enable these master services
-	systemctl enable master-k8s
-	systemctl start master-k8s
+	# Enable these minion services
+	systemctl enable k8s-minion
+	systemctl start k8s-minion
+}
+
+disable(){
+	systemctl disable flannel etcd k8s-master k8s-minion
+	systemctl stop flannel etcd k8s-master k8s-minion
+
+	rm -f /usr/lib/systemd/system/docker.service.d/docker*.conf
+
+	systemctl daemon-reload
+
+	systemctl restart docker
 }
 
 checkformaster(){
@@ -317,4 +331,6 @@ case $1 in
                 start-minion;;
         'version')
                 version;;
+        'info')
+				version;;
 esac

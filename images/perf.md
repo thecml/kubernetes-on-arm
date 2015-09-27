@@ -44,10 +44,13 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
  - luxas/raspbian: 131 s (without resin pull)
  - luxas/alpine: 43 s
  - luxas/go: 1151 s (+godep, mercurial)
- - k8s/build: 
+ - k8s/build: 891 s
  - k8s/hyperkube: 183 s
  - k8s/etcd: 13 s
  - k8s/flannel: 107 s
  - k8s/pause: 1 s
  - k8s/exechealthz: 3 s
  - k8s/skydns: 3 s 
+ - k8s/kube2sky: 4 s 
+
+ To get all k8s up and running from scratch: 2530 s, 42m 10s
