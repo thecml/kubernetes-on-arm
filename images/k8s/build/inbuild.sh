@@ -116,8 +116,9 @@ cd /build/kubernetes/cluster/addons/dns/kube2sky
 
 # Required for building this
 # It makes the current kubernetes repo location accessible from the default gopath location
-mkdir -p /gopath/src/github.com/GoogleCloudPlatform
+mkdir -p /gopath/src/github.com/GoogleCloudPlatform /gopath/src/k8s.io/
 ln -s /build/kubernetes /gopath/src/github.com/GoogleCloudPlatform/kubernetes
+ln -s /build/kubernetes /gopath/src/k8s.io/kubernetes
 
 # Build for arm
 sed -e "s@GOARCH=amd64@GOARCH=arm@" -i Makefile
