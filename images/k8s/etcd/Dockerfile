@@ -1,3 +1,4 @@
+# Test scratch
 FROM luxas/alpine
 
 COPY etcd etcdctl /usr/bin/

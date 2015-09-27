@@ -1,3 +1,4 @@
+#scratch?
 FROM luxas/alpine
 
 COPY skydns /
