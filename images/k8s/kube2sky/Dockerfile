@@ -1,5 +1,5 @@
 # scratch?
-FROM luxas/alpine
+FROM scratch
 
 ADD kube2sky /
 

@@ -1,4 +1,4 @@
-# Test scratch
+# Possible with scratch, but harder to debug
 FROM luxas/alpine
 
 COPY etcd etcdctl /usr/bin/

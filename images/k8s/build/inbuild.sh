@@ -106,9 +106,9 @@ cd build/pause
 # Build the binary
 ./prepare.sh
 
-# Copy over the binary
+# Copy over the binaries
 cp pause /build/bin
-
+cp /gopath/bin/goupx /build/bin
 
 ## KUBE2SKY ##
 
@@ -131,8 +131,9 @@ cp kube2sky /build/bin
 
 ## SKYDNS ##
 
-# Compile the binary, requires mercurial
-go get github.com/skynetservices/skydns
+# Compile the binary statically, requires mercurial
+#go get github.com/skynetservices/skydns
+CGO_ENABLED=0 go get -a -installsuffix cgo --ldflags '-w' github.com/skynetservices/skydns
 
 # And copy over it
 cp /gopath/bin/skydns /build/bin
