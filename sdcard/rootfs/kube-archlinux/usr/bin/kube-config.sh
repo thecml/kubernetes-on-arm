@@ -293,7 +293,7 @@ version(){
 
     	# Do we have hyperkube? Then output version
       	if [[ ! -z $(docker images | grep k8s/hyperkube) ]]; then
-      		docker run --rm k8s/hyperkube hyperkube --version
+      		docker run --rm k8s/hyperkube /hyperkube --version
       	fi
     fi
 }
