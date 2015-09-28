@@ -7,7 +7,6 @@ ExecStartPre=-/usr/bin/docker -H unix:///var/run/system-docker.sock kill etcd-k8
 ExecStartPre=-/usr/bin/docker -H unix:///var/run/system-docker.sock rm etcd-k8s
 ExecStartPre=-/usr/bin/mkdir -p /var/lib/etcd
 ExecStart=/usr/bin/docker -H unix:///var/run/system-docker.sock run --net=host --name=etcd-k8s -v /var/lib/etcd:/var/etcd/data k8s/etcd
-#ExecStartPost=/usr/bin/docker -H unix:///var/run/system-docker.sock run --rm --net=host k8s/etcd etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
 ExecStop=/usr/bin/docker -H unix:///var/run/system-docker.sock stop etcd-k8s
 
 [Install]

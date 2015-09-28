@@ -53,4 +53,6 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
  - k8s/skydns: 3 s 
  - k8s/kube2sky: 4 s 
 
+ - luxas/nginx: 10 s
+
  To get all k8s up and running from scratch: 2530 s, 42m 10s

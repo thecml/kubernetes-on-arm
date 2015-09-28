@@ -36,6 +36,8 @@ cp ../../version.sh $OUT/version.sh
 # And append the build date
 echo -e "\nBUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $OUT/version.sh
 
+cp $OUT/kubectl /usr/bin/
+
 rm -r $OUT/bin
 
 # Remove the temporary container, saves space

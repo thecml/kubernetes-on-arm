@@ -6,8 +6,6 @@ RUN apt-install iptables ca-certificates
 # Copy files
 COPY hyperkube /
 COPY master-multi.json /etc/kubernetes/manifests-multi/master.json
-#COPY safe_format_and_mount /usr/share/google/safe_format_and_mount
 
-# Make them executable
-#RUN chmod a+rx /usr/share/google/safe_format_and_mount && \
+# Make it executable, necessary?
 RUN	chmod a+rx /hyperkube

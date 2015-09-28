@@ -3,6 +3,14 @@
 # Catch errors
 trap 'exit' ERR
 
+PKGS_TO_INSTALL="docker git"
+KUBERNETES_DIR=/etc/kubernetes
+KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
+PROJECT_SOURCE=$KUBERNETES_DIR/source
+K8S_PREFIX="k8s"
+REQUIRED_MASTER_IMAGES=("k8s/flannel k8s/etcd k8s/hyperkube k8s/pause")
+REQUIRED_WORKER_IMAGES=("k8s/flannel k8s/hyperkube k8s/pause")
+
 
 usage(){
 	cat <<EOF
@@ -13,13 +21,15 @@ With this utility, you can setup kubernetes on ARM!
 Usage: 
 	kube-config install - Installs docker and makes your board ready for kubernetes
 
-	kube-config build-master - Build the master images locally 
-	kube-config build-minion - Build the minion images locally 
+	kube-config build-k8s - Build the Kubernetes images locally 
+	kube-config build [image] - Build another image, included in the kubernetes-on-arm repository
 
 	kube-config enable-master - Enable the master services and then kubernetes is ready to use
-	kube-config enable-minion - Enable the minion services and then kubernetes has a new node
+	kube-config enable-worker - Enable the worker services and then kubernetes has a new node
 
-	kube-config version - Outputs some version information and info about your board
+	kube-config disable-k8s - Disable Kubernetes
+
+	kube-config info - Outputs some version information and info about your board and Kubernetes
 
 EOF
 }
@@ -29,24 +39,19 @@ EOF
 
 install(){
 
-	# Could these two pacman commands be combined?
-	echo "Updating the system..."
-	pacman -Syy # change to -Syu --noconfirm när systemd 226 kan användas
+
+	#echo "Updating the system..."
+	# Systemd 226 can't be used, do not update the system
+	pacman -Syy 
 
 	echo "Now were going to install some packages"
-	pacman -S docker git make nmap --noconfirm
+	pacman -S $PKGS_TO_INSTALL --noconfirm
 	
 	# Remove docker dropin files
-	rm -f /usr/lib/systemd/system/docker.service.d/docker*.conf
-
-	# Ensure the path exists
-	mkdir -p /usr/lib/systemd/system/docker.service.d
+	dropins-clean
 
 	# Create a symlink to the dropin location, so docker will use overlay
-	ln -s /etc/kubernetes/dynamic-dropins/docker-overlay.conf /usr/lib/systemd/system/docker.service.d/docker-overlay.conf
-
-	# Notify systemd
-	systemctl daemon-reload
+	dropins-enable-overlay
 
 	## REMOVE THIS THEN ##
 
@@ -59,11 +64,12 @@ install(){
 	#!/bin/bash
 	git --work-tree=/etc/kubernetes/source --git-dir=/lib/luxas/luxcloud.git checkout -f
 	find /etc/kubernetes/source -name "*.sh" -exec chmod +x {} \;
-	chmod +x /etc/kubernetes/source/utils/strip-image/*
 EOF
 
 	chmod a+x hooks/post-receive
 	cd -
+
+	## /REMOVE THIS THEN ##
 
 
 	# Enable the system-docker service and restart both
@@ -146,50 +152,66 @@ build(){
 	/etc/kubernetes/source/images/build.sh "$@"
 }
 
+# Remove all docker dropins. They are symlinks, so it doesn't matter
+dropins-clean(){
+	rm -f /usr/lib/systemd/system/docker.service.d/*.conf
+}
 
-start-master(){
-	trap "exit" ERR
-	### REQUIRED IMAGES FOR THIS TO WORK ###
+# Make a symlink from the config file to the dropin location
+dropins-enable-overlay(){
+	mkdir -p /usr/lib/systemd/system/docker.service.d/
+	ln -s $KUBERNETES_DIR/dynamic-dropins/docker-overlay.conf /usr/lib/systemd/system/docker.service.d/
+	systemctl daemon-reload
+}
 
-	# List them here
-	REQUIRED_IMAGES=("k8s/flannel k8s/etcd k8s/hyperkube k8s/pause")
+# Make a symlink from the config file to the dropin location
+dropins-enable-flannel(){
+	mkdir -p /usr/lib/systemd/system/docker.service.d/
+	ln -s $KUBERNETES_DIR/dynamic-dropins/docker-flannel.conf /usr/lib/systemd/system/docker.service.d/
+	systemctl daemon-reload
+}
+
+require-images(){
 
 	# Check that everyone exists or fail fast
-	for IMAGE in ${REQUIRED_IMAGES[@]}; do
+	for IMAGE in "$@"; do
 		if [[ -z $(docker images | grep "$IMAGE") ]]; then
-			echo "Error: Can't spin up the Kubernetes master service without these images: ${REQUIRED_IMAGES[@]}"
+			echo "Error: Can't spin up Kubernetes without these images: $@"
 			exit 1
 		fi
 	done
+}
+
+# Load the images which is necessary to system-docker 
+load-to-system-docker(){
+	# If they doesn't exist, load them from docker
+	if [[ -z $(docker -H unix:///var/run/system-docker.sock images | grep "$1") ]]; then
+		echo "Copying $1 to system-docker"
+		docker save $1 | docker -H unix:///var/run/system-docker.sock load
+	fi
+}
+
+start-master(){
+
+	# Require these images to be present
+	require-images ${REQUIRED_MASTER_IMAGES[@]}
 
 	# Say that our master is on this board
-	cat > /etc/kubernetes/k8s.conf <<EOF
-K8S_MASTER_IP=127.0.0.1
-EOF
+	echo "K8S_MASTER_IP=127.0.0.1" > $KUBERNETES_CONFIG
 
-
-	# Load the images which is necessary to system-docker 
-	if [[ -z $(docker -H unix:///var/run/system-docker.sock images | grep "k8s/etcd") ]]; then
-		echo "Copying k8s/etcd to system-docker"
-		docker save k8s/etcd | docker -H unix:///var/run/system-docker.sock load
-	fi
-	if [[ -z $(docker -H unix:///var/run/system-docker.sock images | grep "k8s/flannel") ]]; then
-		echo "Copying k8s/etcd to system-docker"
-		docker save k8s/flannel | docker -H unix:///var/run/system-docker.sock load
-	fi
+	# Load these master images to system-docker
+	load-to-system-docker $K8S_PREFIX/etcd
+	load-to-system-docker $K8S_PREFIX/flannel
 
 	# Enable and start our bootstrap services
-	systemctl enable flannel etcd
+	systemctl enable etcd flannel
 	systemctl start etcd flannel
 
 	# Remove docker dropin files
-	rm /usr/lib/systemd/system/docker.service.d/docker*.conf
+	dropins-clean
 
 	# Create a symlink to the dropin location, so docker will use flannel
-	ln -s /etc/kubernetes/dynamic-dropins/docker-flannel.conf /usr/lib/systemd/system/docker.service.d/docker-flannel.conf
-
-	# Systemd would like to be notified about our new files
-	systemctl daemon-reload
+	dropins-enable-flannel
 
 	# Bring docker up again
 	systemctl restart docker 
@@ -199,7 +221,7 @@ EOF
 	systemctl start k8s-master
 }
 
-start-minion(){
+start-worker(){
 
 	# Check if we have a connection
 	if [[ $(checkformaster) != "OK" ]]; then
@@ -209,12 +231,10 @@ start-minion(){
 
 		# Required
 		if [[ -z $masteripanswer ]]; then
-			echo "Kubernetes master ip is required. Exiting..."
+			echo "Kubernetes Master IP is required. Exiting..."
 			exit 1
 		else
-			cat > /etc/kubernetes/k8s.conf <<EOF
-K8S_MASTER_IP=$masteripanswer
-EOF
+			echo "K8S_MASTER_IP=$masteripanswer" > $KUBERNETES_CONFIG
 		fi
 
 		# Check again and fail if it's not working now either
@@ -223,57 +243,34 @@ EOF
 		fi
 	fi
 
-
-	### REQUIRED IMAGES FOR THIS TO WORK ###
-
-	# List them here
-	REQUIRED_IMAGES=("k8s/flannel k8s/hyperkube k8s/pause")
-
-	# Check that everyone exists or fail fast
-	for IMAGE in ${REQUIRED_IMAGES[@]}; do
-		if [[ -z $(docker images | grep "$IMAGE") ]]; then
-			echo "Error: Can't spin up the Kubernetes master service without these images: ${REQUIRED_IMAGES[@]}"
-			exit 1
-		fi
-	done
-
+	require-images ${REQUIRED_WORKER_IMAGES[@]}
 
 	# Load the images which is necessary to system-docker
-	if [[ -z $(docker images | grep "k8s/flannel") ]]; then
-		docker save k8s/flannel | docker -H unix:///var/run/system-docker.sock load
-	fi
+	load-to-system-docker $K8S_PREFIX/flannel
 
 	# Enable and start our bootstrap services
 	systemctl enable flannel
 	systemctl start flannel
 
 	# Remove docker dropin files
-	rm -f /usr/lib/systemd/system/docker.service.d/docker*.conf
-
-	# Ensure the path exists
-	mkdir -p /usr/lib/systemd/system/docker.service.d
+	dropins-clean
 
 	# Create a symlink to the dropin location, so docker will use flannel
-	ln -s /etc/kubernetes/dynamic-dropins/docker-flannel.conf /usr/lib/systemd/system/docker.service.d/docker-flannel.conf
-
-	# Systemd would like to be notified about our new files
-	systemctl daemon-reload
+	dropins-enable-flannel
 
 	# Bring docker up again
 	systemctl restart docker 
 
 	# Enable these minion services
-	systemctl enable k8s-minion
-	systemctl start k8s-minion
+	systemctl enable k8s-worker
+	systemctl start k8s-worker
 }
 
 disable(){
-	systemctl disable flannel etcd k8s-master k8s-minion
-	systemctl stop flannel etcd k8s-master k8s-minion
-
-	rm -f /usr/lib/systemd/system/docker.service.d/docker*.conf
-
-	systemctl daemon-reload
+	systemctl stop flannel etcd k8s-master k8s-worker
+	systemctl disable flannel etcd k8s-master k8s-worker
+	
+	dropins-clean
 
 	systemctl restart docker
 }
@@ -281,14 +278,18 @@ disable(){
 checkformaster(){
 
 	# Is the config file there? Then source it
-	if [[ -f /etc/kubernetes/k8s.conf ]]; then
-		source /etc/kubernetes/k8s.conf
+	if [[ -f $KUBERNETES_CONFIG ]]; then
+		source $KUBERNETES_CONFIG
 
 		# If ping doesn't return unknown, its OK
 		if [[ -z $(ping -c1 $K8S_MASTER_IP | grep unknown) ]]; then
 			echo "OK"
 		fi
 	fi
+}
+
+remove-etcd-datadir(){
+	rm -r /var/lib/etcd
 }
 
 version(){
@@ -321,14 +322,18 @@ fi
 case $1 in
         'install')
                 install;;
-        'build-master')
+        'build')
+				build "$@"
+        'build-k8s')
                 build "k8s/hyperkube k8s/pause k8s/etcd k8s/flannel";;
-        'build-minion')
-                build "k8s/hyperkube k8s/pause k8s/flannel";;
         'enable-master')
                 start-master;;
-        'enable-minion')
-                start-minion;;
+        'enable-worker')
+                start-worker;;
+       	'delete-k8s-data')
+				remove-etcd-datadir;;
+       	'disable-k8s')
+				disable;;
         'version')
                 version;;
         'info')

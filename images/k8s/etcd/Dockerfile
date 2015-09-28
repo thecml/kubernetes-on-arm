@@ -1,4 +1,4 @@
-# Possible with scratch, but harder to debug
+# Possible FROM scratch, but harder to debug
 FROM luxas/alpine
 
 COPY etcd etcdctl /usr/bin/

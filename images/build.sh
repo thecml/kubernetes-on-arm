@@ -1,8 +1,10 @@
 #!/bin/bash
 # How this build works
-# This is a replacement for the Makefile
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
+
+# get version information
+source ../version
 
 # Retrieve their dependencies
 build_dep(){
@@ -13,7 +15,7 @@ build_dep(){
     	exit
     fi
 
-    # Read additional dependencies, they always takes precedence
+    # Read dependencies from file, they always takes precedence
     if [[ -f ./$IMAGE/deps ]]; then
 
 	    # Read every line and build it
@@ -26,7 +28,7 @@ build_dep(){
     # Check if there is an Dockerfile
     if [[ -f ./$IMAGE/Dockerfile ]]; then
 
-      # Build the image that this image depends on from the dockerfile
+      # Build the image that this image depends on from the Dockerfile
       build $(cat ./$IMAGE/Dockerfile | grep "FROM " | awk '{print $2}' | grep -o "[^:]*" | grep "/")
     fi
 }
@@ -34,20 +36,20 @@ build_dep(){
 # Build an image
 build(){
 	# Does that image exist?
-    if [[ -z $(docker images | grep "$1" | grep "$LUX_VERSION") ]]; then
+    if [[ -z $(docker images | grep "$1" | grep "$VERSION") ]]; then
 
     	# First, build all this image's dependencies
         echo "To install: $1"
         build_dep "$1"
 
-        # Only build if the image directory exists
+        # Only build if the image directory exists, otherwise it´s from Docker Hub
         if [[ -d $1 ]]; then
 
 	        # Then build the image itself
 	        echo "Installing: $1"
 	        time ./$1/build.sh
 
-	        docker tag "$1" "$1":$LUX_VERSION
+	        docker tag "$1" "$1":$VERSION
 	   	fi
     else
         echo "Already installed: $1"
@@ -69,7 +71,7 @@ Usage:
 EOF
 }
 
-source version.sh
+
 
 build_all()
 {

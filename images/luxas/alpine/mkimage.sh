@@ -3,7 +3,7 @@
 # Original `mkimage-alpine.sh` by Eivind Uggedal (uggedal)
 # Tailored for running inside a Docker container
 
-# Code licensed under ISC license. Please see LICENSE file on this directory.
+# This script is based on mini-containers/base
 
 [ $(id -u) -eq 0 ] || {
   printf >&2 '%s requires root\n' "$0"

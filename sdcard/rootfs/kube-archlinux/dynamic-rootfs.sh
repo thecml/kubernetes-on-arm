@@ -1,10 +1,9 @@
 rootfs(){
 	# Allow ssh connections by root to this machine
-	echo "PermitRootLogin yes" >> $ROOT/etc/ssh/sshd_config
+	# echo "PermitRootLogin yes" >> $ROOT/etc/ssh/sshd_config
 
 	# Copy current source
 	mkdir $ROOT/etc/kubernetes/source
-
 	cp -r $PROJROOT $ROOT/etc/kubernetes/source
 
 	# If kubectl exists, include in rootfs
@@ -14,4 +13,7 @@ rootfs(){
 
 	# Remove the .sh
 	mv $ROOT/usr/bin/kube-config.sh $ROOT/usr/bin/kube-config
+
+	# Make the docker dropin directory
+	mkdir -p $ROOT/usr/lib/systemd/system/docker.service.d
 }
