@@ -3,6 +3,8 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+trap "exit" ERR
+
 # get version information
 source ../version
 
@@ -58,16 +60,14 @@ build(){
 
 usage(){
 cat <<EOF
-This will build all our ARM docker images in this directory.
+This will build all our ARM Docker images in this directory.
 
 Usage:
 
-./build.sh all (in no specific order)
-./build.sh export [image] [image]... (make a tar file of images, name will be luxcloud_version)
-./build.sh import [archive] (import all images in tar package)
-./build.sh clean (remove all build/* images, which is used as temp images for building)
-./build.sh [some prefix] (e.g. luxas, will build all images under ./luxas/)
-./build.sh [image] [image]... (e. g. luxas/archlinux k8s/build. Images will build from left to right)
+images/build.sh all (in no specific order)
+images/build.sh clean (remove all build/* images, which is used as temp images for building)
+images/build.sh [some prefix] (e.g. luxas, will build all images under ./luxas/)
+images/build.sh [image] [image]... (e. g. luxas/raspbian kubernetesonarm/build. Images will build from left to right)
 EOF
 }
 
@@ -107,12 +107,6 @@ clean()
 case $1 in 
   	"all") 
 		build_all
-		exit;;
-	"export") 
-		export_images "$@"
-		exit;;
-	"import") 
-		import_images "$@"
 		exit;;
 	"clean") 
 		clean

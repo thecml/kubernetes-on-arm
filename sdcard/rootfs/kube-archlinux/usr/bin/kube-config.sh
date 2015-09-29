@@ -22,7 +22,7 @@ Usage:
 	kube-config install - Installs docker and makes your board ready for kubernetes
 
 	kube-config build-k8s - Build the Kubernetes images locally 
-	kube-config build [image] - Build another image, included in the kubernetes-on-arm repository
+	kube-config build [image] - Build an image, which is included in the kubernetes-on-arm repository
 
 	kube-config enable-master - Enable the master services and then kubernetes is ready to use
 	kube-config enable-worker - Enable the worker services and then kubernetes has a new node
@@ -46,32 +46,11 @@ install(){
 
 	echo "Now were going to install some packages"
 	pacman -S $PKGS_TO_INSTALL --noconfirm
-	
-	# Remove docker dropin files
-	dropins-clean
 
 	# Create a symlink to the dropin location, so docker will use overlay
 	dropins-enable-overlay
 
-	## REMOVE THIS THEN ##
-
-	mkdir -p /lib/luxas/luxcloud.git && cd /lib/luxas/luxcloud.git
-
-	# Make version control
-	git init --bare
-
-	cat > hooks/post-receive <<EOF
-	#!/bin/bash
-	git --work-tree=/etc/kubernetes/source --git-dir=/lib/luxas/luxcloud.git checkout -f
-	find /etc/kubernetes/source -name "*.sh" -exec chmod +x {} \;
-EOF
-
-	chmod a+x hooks/post-receive
-	cd -
-
-	## /REMOVE THIS THEN ##
-
-
+	
 	# Enable the system-docker service and restart both
 	systemctl enable system-docker docker
 	systemctl restart system-docker docker
@@ -118,13 +97,16 @@ EOF
 	else
 		hostnamectl set-hostname $NEW_HOSTNAME
 	fi
+	if [[ -z $REBOOT ]]; then
+		read -p "Do you want to reboot now? A reboot is required for Docker to function. [Y/n] " rebootanswer
 
-	read -p "Do you want to reboot now? A reboot is required for Docker to function. [Y/n] " rebootanswer
-
-	case $rebootanswer in
-		[yY]*)
-			reboot;;
-	esac
+		case $rebootanswer in
+			[yY]*)
+				reboot;;
+		esac
+	else [[ $REBOOT = 1 ]]
+		reboot
+	fi
 }
 
 swap(){
@@ -154,21 +136,27 @@ build(){
 
 # Remove all docker dropins. They are symlinks, so it doesn't matter
 dropins-clean(){
+	mkdir -p /usr/lib/systemd/system/docker.service.d/
 	rm -f /usr/lib/systemd/system/docker.service.d/*.conf
+}
+
+dropins-enable(){
+	systemctl daemon-reload
+	systemctl restart docker
 }
 
 # Make a symlink from the config file to the dropin location
 dropins-enable-overlay(){
-	mkdir -p /usr/lib/systemd/system/docker.service.d/
+	dropins-clean
 	ln -s $KUBERNETES_DIR/dynamic-dropins/docker-overlay.conf /usr/lib/systemd/system/docker.service.d/
-	systemctl daemon-reload
+	dropins-enable
 }
 
 # Make a symlink from the config file to the dropin location
 dropins-enable-flannel(){
-	mkdir -p /usr/lib/systemd/system/docker.service.d/
+	dropins-clean
 	ln -s $KUBERNETES_DIR/dynamic-dropins/docker-flannel.conf /usr/lib/systemd/system/docker.service.d/
-	systemctl daemon-reload
+	dropins-enable
 }
 
 require-images(){
@@ -207,14 +195,8 @@ start-master(){
 	systemctl enable etcd flannel
 	systemctl start etcd flannel
 
-	# Remove docker dropin files
-	dropins-clean
-
 	# Create a symlink to the dropin location, so docker will use flannel
 	dropins-enable-flannel
-
-	# Bring docker up again
-	systemctl restart docker 
 
 	# Enable these master services
 	systemctl enable k8s-master
@@ -252,14 +234,8 @@ start-worker(){
 	systemctl enable flannel
 	systemctl start flannel
 
-	# Remove docker dropin files
-	dropins-clean
-
 	# Create a symlink to the dropin location, so docker will use flannel
 	dropins-enable-flannel
-
-	# Bring docker up again
-	systemctl restart docker 
 
 	# Enable these minion services
 	systemctl enable k8s-worker
@@ -323,9 +299,9 @@ case $1 in
         'install')
                 install;;
         'build')
-				build "$@"
+				build "$@";;
         'build-k8s')
-                build "k8s/hyperkube k8s/pause k8s/etcd k8s/flannel";;
+                build k8s/hyperkube k8s/pause k8s/etcd k8s/flannel;;
         'enable-master')
                 start-master;;
         'enable-worker')

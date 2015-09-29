@@ -22,6 +22,27 @@ EOF
 
 
 
+## REMOVE THIS THEN ##
+
+	mkdir -p /lib/luxas/luxcloud.git && cd /lib/luxas/luxcloud.git
+
+	# Make version control
+	git init --bare
+
+	cat > hooks/post-receive <<EOF
+	#!/bin/bash
+	git --work-tree=/etc/kubernetes/source --git-dir=/lib/luxas/luxcloud.git checkout -f
+	find /etc/kubernetes/source -name "*.sh" -exec chmod +x {} \;
+EOF
+
+	chmod a+x hooks/post-receive
+	cd -
+
+	## /REMOVE THIS THEN ##
+
+
+
+
 
 
 

@@ -8,7 +8,7 @@ ExecStartPre=-/usr/bin/docker -H unix:///var/run/system-docker.sock kill flannel
 ExecStartPre=-/usr/bin/docker -H unix:///var/run/system-docker.sock rm flannel-k8s
 ExecStartPre=-/usr/bin/rm -rf /var/lib/flannel
 ExecStartPre=-/usr/bin/mkdir -p /var/lib/flannel
-ExecStartPre=/usr/bin/docker -H unix:///var/run/system-docker.sock run --rm --net=host k8s/etcd etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+ExecStartPre=/bin/bash -c "sleep 2;/usr/bin/docker -H unix:///var/run/system-docker.sock run --rm --net=host k8s/etcd etcdctl set /coreos.com/network/config '{ \"Network\": \"10.1.0.0/16\" }'"
 ExecStart=/usr/bin/docker -H unix:///var/run/system-docker.sock run --name=flannel-k8s --net=host --privileged -v /dev/net:/dev/net -v /var/lib/flannel:/run/flannel k8s/flannel /flanneld --etcd-endpoints=http://${K8S_MASTER_IP}:4001
 ExecStop=/usr/bin/docker -H unix:///var/run/system-docker.sock stop flannel-k8s
 

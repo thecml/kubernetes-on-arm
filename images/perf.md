@@ -40,7 +40,7 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
 
 
  ## 0.4.9
- - resin/rpi-raspbian: 
+ - resin/rpi-raspbian: 110 s
  - luxas/raspbian: 131 s (without resin pull)
  - luxas/alpine: 43 s
  - luxas/go: 1151 s (+godep, mercurial)
@@ -55,4 +55,19 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
 
  - luxas/nginx: 10 s
 
- To get all k8s up and running from scratch: 2530 s, 42m 10s
+ To get all k8s up and running from scratch: 2640 s, 44 min
+
+
+
+
+ ## 0.5.0
+ - luxas/raspbian: 244 s
+ - luxas/alpine: 40 s
+ - luxas/go: 1109 s
+ - k8s/build: 854 s
+ - k8s/hyperkube: 191 s
+ - k8s/pause: 2 s
+ - k8s/etcd: 8 s
+ - k8s/flannel: 99 s
+
+ To get k8s up and running in v0.5: 2547 s, 42min 27sek
