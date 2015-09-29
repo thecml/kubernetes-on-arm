@@ -76,7 +76,6 @@ kube-config install
 # This script runs in 2-3 mins
 ```
 
-
 ## Build the Docker images for ARM
 
 We will be setting up Kubernetes in a Docker container, so we have to build some images.	
