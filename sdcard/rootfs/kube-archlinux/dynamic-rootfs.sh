@@ -7,8 +7,8 @@ rootfs(){
 	cp -r $PROJROOT $ROOT/etc/kubernetes/source
 
 	# If kubectl exists, include in rootfs
-	if [[ -f $PROJROOT/k8s/_bin/latest/kubectl ]]; then
-		cp $PROJROOT/k8s/_bin/latest/kubectl $ROOT/usr/bin
+	if [[ -f $PROJROOT/kubernetesonarm/_bin/latest/kubectl ]]; then
+		cp $PROJROOT/kubernetesonarm/_bin/latest/kubectl $ROOT/usr/bin
 	fi
 
 	# Remove the .sh

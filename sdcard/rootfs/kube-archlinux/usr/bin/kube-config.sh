@@ -7,9 +7,9 @@ PKGS_TO_INSTALL="docker git"
 KUBERNETES_DIR=/etc/kubernetes
 KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
 PROJECT_SOURCE=$KUBERNETES_DIR/source
-K8S_PREFIX="k8s"
-REQUIRED_MASTER_IMAGES=("k8s/flannel k8s/etcd k8s/hyperkube k8s/pause")
-REQUIRED_WORKER_IMAGES=("k8s/flannel k8s/hyperkube k8s/pause")
+K8S_PREFIX="kubernetesonarm"
+REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
+REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 
 
 usage(){
@@ -283,8 +283,8 @@ version(){
     if [ "$?" == "0" ]; then
 
     	# Do we have hyperkube? Then output version
-      	if [[ ! -z $(docker images | grep k8s/hyperkube) ]]; then
-      		docker run --rm k8s/hyperkube /hyperkube --version
+      	if [[ ! -z $(docker images | grep $K8S_PREFIX/hyperkube) ]]; then
+      		docker run --rm $K8S_PREFIX/hyperkube /hyperkube --version
       	fi
     fi
 }
@@ -301,7 +301,7 @@ case $1 in
         'build')
 				build "$@";;
         'build-k8s')
-                build k8s/hyperkube k8s/pause k8s/etcd k8s/flannel;;
+                build ${REQUIRED_MASTER_IMAGES[@]};;
         'enable-master')
                 start-master;;
         'enable-worker')

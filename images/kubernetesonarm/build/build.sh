@@ -3,10 +3,10 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 cp ../../version.sh .
 
 # First, build
-docker build -t k8s/build .
+docker build -t kubernetesonarm/build .
 
 # Then copy out the binaries
-CID=$(docker run -d k8s/build /bin/bash)
+CID=$(docker run -d kubernetesonarm/build /bin/bash)
 BIN="../_bin"
 OUT="$BIN/latest"
 

@@ -3,11 +3,11 @@ Description=Etcd Master Data Store for Kubernetes Apiserver
 After=system-docker.service
 
 [Service]
-ExecStartPre=-/usr/bin/docker -H unix:///var/run/system-docker.sock kill etcd-k8s
-ExecStartPre=-/usr/bin/docker -H unix:///var/run/system-docker.sock rm etcd-k8s
+ExecStartPre=-/usr/bin/docker -H unix:///var/run/system-docker.sock kill k8s-etcd
+ExecStartPre=-/usr/bin/docker -H unix:///var/run/system-docker.sock rm k8s-etcd
 ExecStartPre=-/usr/bin/mkdir -p /var/lib/etcd
-ExecStart=/usr/bin/docker -H unix:///var/run/system-docker.sock run --net=host --name=etcd-k8s -v /var/lib/etcd:/var/etcd/data k8s/etcd
-ExecStop=/usr/bin/docker -H unix:///var/run/system-docker.sock stop etcd-k8s
+ExecStart=/usr/bin/docker -H unix:///var/run/system-docker.sock run --net=host --name=k8s-etcd -v /var/lib/etcd:/var/etcd/data kubernetesonarm/etcd
+ExecStop=/usr/bin/docker -H unix:///var/run/system-docker.sock stop k8s-etcd
 
 [Install]
 WantedBy=multi-user.target
