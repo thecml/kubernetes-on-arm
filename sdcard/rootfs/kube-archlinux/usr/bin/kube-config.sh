@@ -201,6 +201,8 @@ start-master(){
 	# Enable these master services
 	systemctl enable k8s-master
 	systemctl start k8s-master
+
+	echo "Master Kubernetes services enabled successfully"
 }
 
 start-worker(){
@@ -240,6 +242,8 @@ start-worker(){
 	# Enable these minion services
 	systemctl enable k8s-worker
 	systemctl start k8s-worker
+
+	echo "Worker Kubernetes services enabled successfully"
 }
 
 disable(){
@@ -299,7 +303,7 @@ case $1 in
         'install')
                 install;;
         'build')
-				build "$@";;
+				build $@;;
         'build-k8s')
                 build ${REQUIRED_MASTER_IMAGES[@]};;
         'enable-master')

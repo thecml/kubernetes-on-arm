@@ -8,7 +8,6 @@ Imagine... Your own testbed for Kubernetes with cheap Raspberry Pis.
 
 <img src="docs/raspberrypi-joins-kubernetes.png" height="500"/>
 
-
 #### **Are you convinced too, like me, that cheap ARM boards and Kubernetes is a match made in heaven?**		
 **Then, lets go!**
 
@@ -44,8 +43,9 @@ sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-archlinux
 
 # The installer will ask you if you want to erase all data on your card
 # Answer y/n on that question
-# Append the command with QUIET=1 if no security check should be made
+# Prepend the command with QUIET=1 if no security check should be made
 # Requires an internet connection
+# This script runs in 3-4 mins
 ```
 
 ## Setup your board
@@ -54,6 +54,8 @@ Start your Raspberry Pi
 Log into it. The user/password is: **alarm/alarm**
 
 ```bash
+# Switch to user root
+su root
 
 # This script will install and setup docker etc.
 kube-config install
@@ -68,6 +70,10 @@ kube-config install
 
 # Last question is whether you want to reboot
 # You must do this, otherwise docker will behave very strange and fail
+
+# If you want to run this script non-interactively, do this:
+# TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
+# This script runs in 2-3 mins
 ```
 
 
@@ -92,13 +98,13 @@ The script will produce these Docker images:
  - luxas/raspbian: Is a stripped `resin/rpi-raspbian` image. [Docs]()
  - luxas/alpine: Is a Alpine Linux image. Only 8 MB. Based on `mini-containers/base`. [Docs]()
  - luxas/go: Is a Golang image, which is used for building repositories on ARM. [Docs]()
- - kubernetesarm/build: This image downloads all source code and builds it for ARM. [Docs]()
+ - kubernetesonarm/build: This image downloads all source code and builds it for ARM. [Docs]()
 
 These images are used in the cluster:
- - kubernetesarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs]()
- - kubernetesarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs]()
- - kubernetesarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs]()
- - kubernetesarm/pause: `pause` is a image Kubernetes uses internally. [Docs]()
+ - kubernetesonarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs]()
+ - kubernetesonarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs]()
+ - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs]()
+ - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs]()
 
 
 
@@ -175,3 +181,9 @@ It should also be as easy as possible for people, who don´t know anything about
 It should be easy in the future to add support for new boards and operating systems.
 
 #### Feel free to create an issue if you find a bug or think that something should be added or removed!
+
+
+
+
+
+
