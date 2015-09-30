@@ -51,12 +51,12 @@ sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-archlinux
 ## Setup your board
 
 Start your Raspberry Pi		
-Log into it. The user/password is: **alarm/alarm**
+Log into it. The user/password is: **root/root** or **alarm/alarm**		
+Yes, I know. Root enabled via ssh isn´t that good.
+But for the moment this task is left as an exercise to the user.
+These scripts requires root. So if you login via **alarm**, then `su root` when you´re going to do some serious hacking :)
 
 ```bash
-# Switch to user root
-su root
-
 # This script will install and setup docker etc.
 kube-config install
 
@@ -76,6 +76,7 @@ kube-config install
 # This script runs in 2-3 mins
 ```
 
+
 ## Build the Docker images for ARM
 
 We will be setting up Kubernetes in a Docker container, so we have to build some images.	
@@ -94,16 +95,16 @@ kube-config build-k8s
 ```
 
 The script will produce these Docker images: 	
- - luxas/raspbian: Is a stripped `resin/rpi-raspbian` image. [Docs]()
- - luxas/alpine: Is a Alpine Linux image. Only 8 MB. Based on `mini-containers/base`. [Docs]()
- - luxas/go: Is a Golang image, which is used for building repositories on ARM. [Docs]()
- - kubernetesonarm/build: This image downloads all source code and builds it for ARM. [Docs]()
+ - luxas/raspbian: Is a stripped `resin/rpi-raspbian` image. [Docs coming soon...]()
+ - luxas/alpine: Is a Alpine Linux image. Only 8 MB. Based on `mini-containers/base`. [Docs coming soon...]()
+ - luxas/go: Is a Golang image, which is used for building repositories on ARM. [Docs coming soon...]()
+ - kubernetesonarm/build: This image downloads all source code and builds it for ARM. [Docs coming soon...]()
 
 These images are used in the cluster:
- - kubernetesonarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs]()
- - kubernetesonarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs]()
- - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs]()
- - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs]()
+ - kubernetesonarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs coming soon...]()
+ - kubernetesonarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs coming soon...]()
+ - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs coming soon...]()
+ - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs coming soon...]()
 
 
 
@@ -167,7 +168,18 @@ curl $SERVICE_IP
 
 ```
 
+## Known issues
 
+After a reboot, the `etcd` service doesn´t work properly. But I´m working on it.
+
+
+## Future work
+
+I will try to compile [RancherOS](https://github.com/rancher/os) to this project also.
+
+Add support for Banana Pro and Parallella.
+
+And lots of other interesting things...
 
 ## Goals for this project
 
@@ -180,9 +192,3 @@ It should also be as easy as possible for people, who don´t know anything about
 It should be easy in the future to add support for new boards and operating systems.
 
 #### Feel free to create an issue if you find a bug or think that something should be added or removed!
-
-
-
-
-
-

@@ -71,3 +71,15 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
  - k8s/flannel: 99 s
 
  To get k8s up and running in v0.5: 2547 s, 42min 27sek
+
+ ## 0.5.0
+ - luxas/raspbian: 254 s
+ - luxas/alpine: 36 s
+ - luxas/go: 1140 s
+ - kubernetesonarm/build: 857 s
+ - kubernetesonarm/flannel: 115 s
+ - kubernetesonarm/etcd: 8 s 
+ - kubernetesonarm/hyperkube: 163 s
+ - kubernetesonarm/pause: 1 s 
+
+ Total time for kube-config: 2574 s, 42min 54sek

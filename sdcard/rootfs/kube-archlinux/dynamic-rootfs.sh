@@ -1,6 +1,6 @@
 rootfs(){
 	# Allow ssh connections by root to this machine
-	# echo "PermitRootLogin yes" >> $ROOT/etc/ssh/sshd_config
+	echo "PermitRootLogin yes" >> $ROOT/etc/ssh/sshd_config
 
 	# Copy current source
 	mkdir $ROOT/etc/kubernetes/source
