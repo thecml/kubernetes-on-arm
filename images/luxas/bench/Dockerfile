@@ -9,7 +9,7 @@ RUN apt-install build-essential \
 	unzip test.zip && \
 	mv Raspberry* bench
 
-COPY inbuild.sh /
+COPY onstart.sh /
 COPY main.cpp /perf
 
-CMD ["/inbuild.sh"]
+CMD ["/onstart.sh"]

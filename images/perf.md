@@ -81,5 +81,8 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
  - kubernetesonarm/etcd: 8 s 
  - kubernetesonarm/hyperkube: 163 s
  - kubernetesonarm/pause: 1 s 
+ - kubernetesonarm/exechealthz: 4 s
+ - kubernetesonarm/skydns: 4 s
+ - kubernetesonarm/kube2sky: 5 s
 
  Total time for kube-config: 2574 s, 42min 54sek
