@@ -1,27 +1,27 @@
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: kube-dns
+  name: kube-dns-v8
   namespace: kube-system
   labels:
     k8s-app: kube-dns
-    version: v9
+    version: v8
     kubernetes.io/cluster-service: "true"
 spec:
-  replicas: 2
+  replicas: REPLICAS
   selector:
     k8s-app: kube-dns
-    version: v9
+    version: v8
   template:
     metadata:
       labels:
         k8s-app: kube-dns
-        version: v9
+        version: v8
         kubernetes.io/cluster-service: "true"
     spec:
       containers:
       - name: etcd
-        image: k8s/etcd
+        image: kubernetesonarm/etcd
         resources:
           limits:
             cpu: 100m
@@ -40,16 +40,17 @@ spec:
         - name: etcd-storage
           mountPath: /var/etcd/data
       - name: kube2sky
-        image: k8s/kube2sky
+        image: kubernetesonarm/kube2sky
         resources:
           limits:
             cpu: 100m
             memory: 50Mi
         args:
         # command = "/kube2sky"
-        - -domain={{ pillar['dns_domain'] }}
+        - -domain=DNSDOMAIN
+        - -kube_master_url=http://KUBEMASTER:8080
       - name: skydns
-        image: k8s/skydns
+        image: kubernetesonarm/skydns
         resources:
           limits:
             cpu: 100m
@@ -58,7 +59,7 @@ spec:
         # command = "/skydns"
         - -machines=http://localhost:4001
         - -addr=0.0.0.0:53
-        - -domain={{ pillar['dns_domain'] }}.
+        - -domain=DNSDOMAIN.
         ports:
         - containerPort: 53
           name: dns
@@ -73,21 +74,14 @@ spec:
             scheme: HTTP
           initialDelaySeconds: 30
           timeoutSeconds: 5
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 1
-          timeoutSeconds: 5
       - name: healthz
-        image: luxas/alpine
+        image: kubernetesonarm/exechealthz
         resources:
           limits:
             cpu: 10m
             memory: 20Mi
         args:
-        - -cmd=nslookup kubernetes.default.svc.{{ pillar['dns_domain'] }} localhost >/dev/null
+        - -cmd=nslookup kubernetes.default.svc.DNSDOMAIN localhost >/dev/null
         - -port=8080
         ports:
         - containerPort: 8080
