@@ -79,6 +79,7 @@ kube-config install
 
 ## Build the Docker images for ARM
 
+Everything have to be compiled to ARM. Fortunately this is possible, sometimes easily, with Go.		
 We will be setting up Kubernetes in a Docker container, so we have to build some images.	
 I´m working on getting pre-built images up on Docker Hub so in the future, one may skip this step.
 
@@ -109,9 +110,6 @@ These images are used in the cluster:
 
 
 ## Setup Kubernetes
-
-Everything have to be compiled to ARM. Fortunately this is possible, sometimes easily, with Go.		
-There is a script, called `kube-config`
 
 ```bash
 
@@ -168,7 +166,36 @@ curl $SERVICE_IP
 
 ```
 
+## Service management
+
+The `kube-archlinux` rootfs (the only one atm) uses systemd services for starting/stopping containers.
+
+Systemd services: 
+ - system-docker: Or `bootstrap-docker`. Used for running `etcd` and `flannel`.
+ - etcd: Starts the `kubernetesonarm/etcd` container. Depends on `system-docker`.
+ - flannel: Starts the `kubernetesonarm/flannel` container. Depends on `etcd`.
+ - docker: Plain docker service. Dropins are symlinked. Depends on `flannel`.
+ - k8s-master: Service that starts up the main master components
+ - k8s-minion: Service that starts up `kubelet` and the `proxy`.
+
+
+Useful commands for troubleshooting: 
+ - `systemctl status (service)`: Get the status
+ - `systemctl start (service)`: Start
+ - `systemctl stop (service)`: Stop
+ - `systemctl cat (service)`: See the `.service` files for an unit.
+ - `journalctl -xe`: Get the system log
+
+## Beta version
+
+This project is work under progress.
+
 ## Known issues
+
+Some times `docker` will refuse to start with error: `libcontainer-14678-systemd-test-default-dependencies.scope: Scope has no PIDs. Refusing.` when running `kube-config enable-master`.	
+Solution: `systemctl restart k8s-master` or run `kube-config enable-master` twice
+
+When the service `k8s-master` is stopped by `systemctl`, the other master components (`apiserver`, `controller-manager`, `scheduler`) in their containers, isn´t stopped.
 
 After a reboot, the `etcd` service doesn´t work properly. But I´m working on it.
 
@@ -192,3 +219,9 @@ It should also be as easy as possible for people, who don´t know anything about
 It should be easy in the future to add support for new boards and operating systems.
 
 #### Feel free to create an issue if you find a bug or think that something should be added or removed!
+
+
+
+
+
+
