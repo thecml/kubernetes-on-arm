@@ -5,9 +5,11 @@ After=docker.service
 [Service]
 ExecStartPre=-/usr/bin/docker kill k8s-master k8s-worker-proxy
 ExecStartPre=-/usr/bin/docker rm k8s-master k8s-worker-proxy
-ExecStart=/bin/bash -c "exec docker run --name=k8s-master --net=host -v /var/run/docker.sock:/var/run/docker.sock kubernetesonarm/hyperkube /hyperkube kubelet --pod_infra_container_image="kubernetesonarm/pause" --api-servers=http://localhost:8080 --v=2 --address=0.0.0.0 --enable-server --hostname-override=$(/usr/bin/hostname -i | /usr/bin/awk '{print $1}') --config=/etc/kubernetes/manifests-multi"
+ExecStart=/bin/bash -c "exec docker run --name=k8s-master --net=host -v /var/run/docker.sock:/var/run/docker.sock kubernetesonarm/hyperkube /hyperkube kubelet --pod_infra_container_image="kubernetesonarm/pause" --api-servers=http://localhost:8080 --cluster-dns=10.0.0.10 --cluster-domain=cluster.local --v=2 --address=0.0.0.0 --enable-server --hostname-override=$(/usr/bin/hostname -i | /usr/bin/awk '{print $1}') --config=/etc/kubernetes/manifests-multi"
 ExecStartPost=/usr/bin/docker run -d --name=k8s-worker-proxy --net=host --privileged kubernetesonarm/hyperkube /hyperkube proxy --master=http://localhost:8080 --v=2
 ExecStop=/usr/bin/docker stop k8s-master k8s-worker-proxy
+Restart=on-failure
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

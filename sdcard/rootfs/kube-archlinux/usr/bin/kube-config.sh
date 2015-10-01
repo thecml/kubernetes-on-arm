@@ -27,9 +27,11 @@ Usage:
 	kube-config enable-master - Enable the master services and then kubernetes is ready to use
 	kube-config enable-worker - Enable the worker services and then kubernetes has a new node
 
-	kube-config disable-k8s - Disable Kubernetes
+	kube-config disable-k8s - Disable Kubernetes, reverting the enable actions, useful if something went wrong
+	kube-config delete-k8s-data - Clean the /var/lib/etcd directory, where all master data is stored
 
 	kube-config info - Outputs some version information and info about your board and Kubernetes
+	kube-config help - Display this help
 
 EOF
 }
@@ -138,6 +140,8 @@ build(){
 dropins-clean(){
 	mkdir -p /usr/lib/systemd/system/docker.service.d/
 	rm -f /usr/lib/systemd/system/docker.service.d/*.conf
+
+	systemctl daemon-reload
 }
 
 dropins-enable(){
@@ -198,11 +202,16 @@ start-master(){
 	# Create a symlink to the dropin location, so docker will use flannel
 	dropins-enable-flannel
 
+	# Wait for docker to come up
+	sleep 5
+
+	echo "Starting the master containers"
+
 	# Enable these master services
 	systemctl enable k8s-master
 	systemctl start k8s-master
 
-	echo "Master Kubernetes services enabled successfully"
+	echo "Master Kubernetes services enabled"
 }
 
 start-worker(){
@@ -239,14 +248,21 @@ start-worker(){
 	# Create a symlink to the dropin location, so docker will use flannel
 	dropins-enable-flannel
 
+	# Wait for docker to come up
+	sleep 5
+
+	echo "Starting the worker containers"
+
 	# Enable these minion services
 	systemctl enable k8s-worker
 	systemctl start k8s-worker
 
-	echo "Worker Kubernetes services enabled successfully"
+	echo "Worker Kubernetes services enabled"
 }
 
 disable(){
+	systemctl daemon-reload
+
 	systemctl stop flannel etcd k8s-master k8s-worker
 	systemctl disable flannel etcd k8s-master k8s-worker
 	
@@ -318,4 +334,6 @@ case $1 in
                 version;;
         'info')
 				version;;
+		'help')
+				usage;;
 esac
