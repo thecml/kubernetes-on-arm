@@ -75,7 +75,7 @@ kube-config install
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
 # This script runs in 2-3 mins
 ```
-
+Kubernetes works on Raspberry Pi 1 (A, A+, B, B+), which is armv6 and Raspberry Pi 2
 
 ## Build the Docker images for ARM
 
