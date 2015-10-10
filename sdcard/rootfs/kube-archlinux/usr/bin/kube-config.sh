@@ -5,6 +5,7 @@ trap 'exit' ERR
 
 PKGS_TO_INSTALL="docker git"
 KUBERNETES_DIR=/etc/kubernetes
+ADDONS_DIR=$KUBERNETES_DIR/addons
 KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
 PROJECT_SOURCE=$KUBERNETES_DIR/source
 K8S_PREFIX="kubernetesonarm"
@@ -133,6 +134,7 @@ EOF
 }
 
 build(){
+	shift
 	/etc/kubernetes/source/images/build.sh "$@"
 }
 
@@ -180,6 +182,18 @@ load-to-system-docker(){
 	if [[ -z $(docker -H unix:///var/run/system-docker.sock images | grep "$1") ]]; then
 		echo "Copying $1 to system-docker"
 		docker save $1 | docker -H unix:///var/run/system-docker.sock load
+	fi
+}
+
+get-node-type(){
+	local minionstate=$(systemctl is-active k8s-worker)
+	local masterstate=$(systemctl is-active k8s-master)
+	if [[ minionstate == "active" ]]; then
+		echo "minion";
+	else if [[ masterstate == "active" ]]; then
+		echo "master";
+	else
+		echo ""
 	fi
 }
 
@@ -260,6 +274,25 @@ start-worker(){
 	echo "Worker Kubernetes services enabled"
 }
 
+start-dns(){
+	if [[ get-node-type != "" ]]; then
+		kubectl create -f $ADDONS_DIR/dns/dns-rc.yaml
+		kubectl create -f $ADDONS_DIR/dns/dns-svc.yaml
+
+		echo "Started the DNS service";
+	else
+
+	fi
+}
+stop-dns(){
+	if [[ get-node-type != "" ]]; then
+		kubectl stop -f $ADDONS_DIR/dns/dns-rc.yaml
+		kubectl stop -f $ADDONS_DIR/dns/dns-svc.yaml
+
+		echo "Stopped the DNS service";
+	fi
+}
+
 disable(){
 	systemctl daemon-reload
 
@@ -285,7 +318,12 @@ checkformaster(){
 }
 
 remove-etcd-datadir(){
-	rm -r /var/lib/etcd
+	read -p "Do you want to delete all Kubernetes data about this cluster? [Y/n]" removeanswer
+	case $removeanswer in
+		[yY]*)
+			rm -r /var/lib/etcd
+			echo "Deleted all Kubernetes data";;
+	esac
 }
 
 version(){
@@ -326,6 +364,10 @@ case $1 in
                 start-master;;
         'enable-worker')
                 start-worker;;
+        'enable-dns')
+				start-dns;;
+		'diable-dns')
+				stop-dns;;
        	'delete-k8s-data')
 				remove-etcd-datadir;;
        	'disable-k8s')

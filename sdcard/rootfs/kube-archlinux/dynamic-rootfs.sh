@@ -16,4 +16,9 @@ rootfs(){
 
 	# Make the docker dropin directory
 	mkdir -p $ROOT/usr/lib/systemd/system/docker.service.d
+
+	# Copy the addons
+	mkdir -p $ROOT/etc/kubernetes/addons
+	cp -r $PROJROOT/services/k8s/dns $ROOT/etc/kubernetes/addons/
+	
 }

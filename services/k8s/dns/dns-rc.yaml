@@ -5,18 +5,15 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: kube-dns
-    version: v8
     kubernetes.io/cluster-service: "true"
 spec:
-  replicas: REPLICAS
+  replicas: 1
   selector:
     k8s-app: kube-dns
-    version: v8
   template:
     metadata:
       labels:
         k8s-app: kube-dns
-        version: v8
         kubernetes.io/cluster-service: "true"
     spec:
       containers:
@@ -47,8 +44,8 @@ spec:
             memory: 50Mi
         args:
         # command = "/kube2sky"
-        - -domain=DNSDOMAIN
-        - -kube_master_url=http://KUBEMASTER:8080
+        - -domain=cluster.local
+        - -kube_master_url=https://10.0.0.1
       - name: skydns
         image: kubernetesonarm/skydns
         resources:
@@ -59,7 +56,7 @@ spec:
         # command = "/skydns"
         - -machines=http://localhost:4001
         - -addr=0.0.0.0:53
-        - -domain=DNSDOMAIN.
+        - -domain=cluster.local
         ports:
         - containerPort: 53
           name: dns
@@ -67,13 +64,13 @@ spec:
         - containerPort: 53
           name: dns-tcp
           protocol: TCP
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
+#        livenessProbe:
+#          httpGet:
+#            path: /healthz
+#            port: 8080
+#            scheme: HTTP
+#          initialDelaySeconds: 30
+#          timeoutSeconds: 5
       - name: healthz
         image: kubernetesonarm/exechealthz
         resources:
@@ -81,7 +78,7 @@ spec:
             cpu: 10m
             memory: 20Mi
         args:
-        - -cmd=nslookup kubernetes.default.svc.DNSDOMAIN localhost >/dev/null
+        - -cmd=/bin/sh -c "nslookup kubernetes.default.svc.cluster.local localhost >/dev/null"
         - -port=8080
         ports:
         - containerPort: 8080
