@@ -286,8 +286,8 @@ start-dns(){
 }
 stop-dns(){
 	if [[ get-node-type != "" ]]; then
-		kubectl stop -f $ADDONS_DIR/dns/dns-rc.yaml
-		kubectl stop -f $ADDONS_DIR/dns/dns-svc.yaml
+		kubectl delete -f $ADDONS_DIR/dns/dns-rc.yaml
+		kubectl delete -f $ADDONS_DIR/dns/dns-svc.yaml
 
 		echo "Stopped the DNS service";
 	fi
