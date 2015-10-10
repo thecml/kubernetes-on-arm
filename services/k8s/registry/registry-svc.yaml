@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: kube-registry
+  name: registry
   namespace: kube-system
   labels:
-    k8s-app: kube-registry
+    k8s-app: registry
     kubernetes.io/cluster-service: "true"
     kubernetes.io/name: "KubeRegistry"
 spec:
   selector:
-    k8s-app: kube-registry
+    k8s-app: registry
   ports:
   - name: registry
     port: 5000

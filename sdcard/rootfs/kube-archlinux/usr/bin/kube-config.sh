@@ -28,6 +28,12 @@ Usage:
 	kube-config enable-master - Enable the master services and then kubernetes is ready to use
 	kube-config enable-worker - Enable the worker services and then kubernetes has a new node
 
+	kube-config start [addon] - Start an addon
+	kube-config stop [addon] - Stop an addon
+		- Currently defined addons
+			- dns: Makes all services accessible via DNS
+			- registry: Makes a central docker registry
+
 	kube-config disable-k8s - Disable Kubernetes, reverting the enable actions, useful if something went wrong
 	kube-config delete-k8s-data - Clean the /var/lib/etcd directory, where all master data is stored
 
@@ -190,10 +196,10 @@ get-node-type(){
 	local masterstate=$(systemctl is-active k8s-master)
 	if [[ minionstate == "active" ]]; then
 		echo "minion";
-	else if [[ masterstate == "active" ]]; then
+	elif [[ masterstate == "active" ]]; then
 		echo "master";
 	else
-		echo ""
+		echo "";
 	fi
 }
 
@@ -274,23 +280,48 @@ start-worker(){
 	echo "Worker Kubernetes services enabled"
 }
 
-start-dns(){
+start(){
 	if [[ get-node-type != "" ]]; then
-		kubectl create -f $ADDONS_DIR/dns/dns-rc.yaml
-		kubectl create -f $ADDONS_DIR/dns/dns-svc.yaml
+		local SVC=start-$1
 
-		echo "Started the DNS service";
+		# Invoke the function
+		$($SVC)
+
+		echo "Done"
 	else
-
+		echo "Kubernetes is not running!"
 	fi
 }
-stop-dns(){
-	if [[ get-node-type != "" ]]; then
-		kubectl delete -f $ADDONS_DIR/dns/dns-rc.yaml
-		kubectl delete -f $ADDONS_DIR/dns/dns-svc.yaml
 
-		echo "Stopped the DNS service";
+stop(){
+	if [[ get-node-type != "" ]]; then
+		local SVC=stop-$1
+
+		# Invoke the function
+		$($SVC)
+
+		echo "Done"
+	else
+		echo "Kubernetes is not running!"
 	fi
+}
+
+start-dns(){
+	kubectl create -f $ADDONS_DIR/dns/dns-rc.yaml >/dev/null
+	kubectl create -f $ADDONS_DIR/dns/dns-svc.yaml >/dev/null
+}
+stop-dns(){
+	kubectl delete -f $ADDONS_DIR/dns/dns-rc.yaml >/dev/null
+	kubectl delete -f $ADDONS_DIR/dns/dns-svc.yaml >/dev/null
+}
+
+start-registry(){
+	kubectl create -f $ADDONS_DIR/registry/registry-rc.yaml >/dev/null
+	kubectl create -f $ADDONS_DIR/registry/registry-svc.yaml >/dev/null
+}
+stop-registry(){
+	kubectl delete -f $ADDONS_DIR/registry/registry-rc.yaml >/dev/null
+	kubectl delete -f $ADDONS_DIR/registry/registry-svc.yaml >/dev/null
 }
 
 disable(){
@@ -364,10 +395,10 @@ case $1 in
                 start-master;;
         'enable-worker')
                 start-worker;;
-        'enable-dns')
-				start-dns;;
-		'diable-dns')
-				stop-dns;;
+        'start')
+				start $2;;
+		'stop')
+				stop $2;;
        	'delete-k8s-data')
 				remove-etcd-datadir;;
        	'disable-k8s')
