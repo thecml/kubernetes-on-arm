@@ -43,11 +43,16 @@ sdcard/write.sh [disc or sd card] [boot] [os] [rootfs]
 
 Explanation:
 	disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see what letter you sd card have.
-	boot - The type of board you have, e. g. a Raspberry Pi. That RPi requires special boot files.
+	boot - The type of board you have, e. g. a Raspberry Pi. RPi requires special boot files.
+		- Currently supported:
+			- rpi - For Raspberry Pi A, A+, B, B+
+			- rpi-2 - For Raspberry Pi 2 Model B
 	os - The operating system which should be downloaded and installed.
+		- Currently supported:
+			- archlinux - Arch Linux ARM
 	rootfs - Prepopulated rootfs with scripts and such.
-
-All input should have corresponding files, folders or discs.
+		- Currently supported: 
+			- kube-archlinux - Kubernetes scripts prepopulated (optional)
 
 Example:
 sdcard/write.sh /dev/sdb rpi-2 archlinux kube-archlinux
@@ -62,9 +67,6 @@ trap 'exit' ERR
 # cd to current dir ~/sdcard
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-# Get access to current version
-source ../images/version.sh
-
 ########################## SECURITY CHECKS ##############################
 
 # Root is required
@@ -75,7 +77,7 @@ fi
 
 # At least three arguments should be present
 if [[ "$#" < 3 ]]; then
-	echo "You must specify at least three arguments."
+	echo "You must specify at least three arguments: the disc (e.g. /dev/sdb), the machine (e.g. rpi-2) and the operating system (e.g. archlinux)"
 	usage
 	exit 1
 fi
@@ -86,7 +88,7 @@ require fdisk fdisk
 # Check that it really is a disk
 if [[ -z $(fdisk -l | grep "$1") ]] 
 then
-	echo "The disc $1 doesn't exist. Compare with 'fdisk -l'"
+	echo "The disc $1 doesn't exist. Check with 'fdisk -l'"
 	exit 1
 fi
 
@@ -102,6 +104,10 @@ TMPDIR=/tmp/writesdcard
 BOOT=$TMPDIR/boot
 ROOT=$TMPDIR/root
 PROJROOT=./..
+
+MACHINENAME=$2
+OSNAME=$3
+ROOTFSNAME=$4
 
 if [[ -z $QUIET ]]; then
 
@@ -121,29 +127,20 @@ fi
 ########################## SOURCE FILES ##############################
 
 # Make some temp directories
-mkdir -p $TMPDIR $ROOT $BOOT $FILES
-
-MACHINENAME=$2
-OSNAME=$3
-ROOTFSNAME=$4
-
+mkdir -p $TMPDIR $ROOT $BOOT
 
 # Ensure they exists	
-if [[ ! -f boot/$MACHINENAME.sh || ! -f os/$OSNAME.sh ]]; then
-	echo "boot/$MACHINENAME.sh or os/$OSNAME.sh not found. These files are required. Exiting..."
-	exit
+if [[ ! -f os/$OSNAME.sh ]]; then
+	echo "os/$OSNAME.sh not found. That file is required. Exiting..."
+	exit 1
 fi
 
 # Source machine and os
-source boot/$MACHINENAME.sh
 source os/$OSNAME.sh
-
-
-# MACHINE must provide:
-# mountpartitions()
 
 # OS must provide:
 # initos()
+# mountpartitions()
 
 # Mount them
 mountpartitions
@@ -156,7 +153,7 @@ if [[ -d rootfs/$ROOTFSNAME ]]; then
 	# Prepopulate the rootfs
 	cp -r rootfs/$ROOTFSNAME/* $ROOT
 
-	# If we've a dynamic rootfs, invoke it
+	# If we've a dynamic rootfs, don't invoke it, but load it
 	if [[ -f $ROOT/dynamic-rootfs.sh ]]; then
 		
 		# Source the dynamic rootfs script
