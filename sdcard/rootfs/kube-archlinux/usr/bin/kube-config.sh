@@ -285,9 +285,9 @@ start(){
 		local SVC=start-$1
 
 		# Invoke the function
-		$($SVC)
+		$($SVC >/dev/null)
 
-		echo "Done"
+		echo "Started $1"
 	else
 		echo "Kubernetes is not running!"
 	fi
@@ -298,30 +298,30 @@ stop(){
 		local SVC=stop-$1
 
 		# Invoke the function
-		$($SVC)
+		$($SVC >/dev/null)
 
-		echo "Done"
+		echo "Stopped $1"
 	else
 		echo "Kubernetes is not running!"
 	fi
 }
 
 start-dns(){
-	kubectl create -f $ADDONS_DIR/dns/dns-rc.yaml >/dev/null
-	kubectl create -f $ADDONS_DIR/dns/dns-svc.yaml >/dev/null
+	kubectl create -f $ADDONS_DIR/dns/dns-rc.yaml
+	kubectl create -f $ADDONS_DIR/dns/dns-svc.yaml
 }
 stop-dns(){
-	kubectl delete -f $ADDONS_DIR/dns/dns-rc.yaml >/dev/null
-	kubectl delete -f $ADDONS_DIR/dns/dns-svc.yaml >/dev/null
+	kubectl delete -f $ADDONS_DIR/dns/dns-rc.yaml
+	kubectl delete -f $ADDONS_DIR/dns/dns-svc.yaml
 }
 
 start-registry(){
-	kubectl create -f $ADDONS_DIR/registry/registry-rc.yaml >/dev/null
-	kubectl create -f $ADDONS_DIR/registry/registry-svc.yaml >/dev/null
+	kubectl create -f $ADDONS_DIR/registry/registry-rc.yaml
+	kubectl create -f $ADDONS_DIR/registry/registry-svc.yaml
 }
 stop-registry(){
-	kubectl delete -f $ADDONS_DIR/registry/registry-rc.yaml >/dev/null
-	kubectl delete -f $ADDONS_DIR/registry/registry-svc.yaml >/dev/null
+	kubectl delete -f $ADDONS_DIR/registry/registry-rc.yaml
+	kubectl delete -f $ADDONS_DIR/registry/registry-svc.yaml
 }
 
 disable(){

@@ -20,5 +20,5 @@ rootfs(){
 	# Copy the addons
 	mkdir -p $ROOT/etc/kubernetes/addons
 	cp -r $PROJROOT/services/k8s/dns $ROOT/etc/kubernetes/addons/
-	
+	cp -r $PROJROOT/services/k8s/registry $ROOT/etc/kubernetes/addons/
 }
