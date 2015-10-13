@@ -30,7 +30,7 @@ usage(){
 Welcome to the write to sd card process!
 This script will allow you to:
 	- Write an os to a sd card
-	- Customize for a specific type of board (e. g. rpi, banana pi)
+	- Customize for a specific type of board
 	- Insert files and configuration via a a prepopulated rootfs, so your os works out-of-the-box!
 
 Required arguments:
@@ -47,7 +47,7 @@ Explanation:
 		- Currently supported:
 			- rpi - For Raspberry Pi A, A+, B, B+
 			- rpi-2 - For Raspberry Pi 2 Model B
-			- parallella - The Adepteva Parallella board
+			- parallella - The Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it.
 	os - The operating system which should be downloaded and installed.
 		- Currently supported:
 			- archlinux - Arch Linux ARM
