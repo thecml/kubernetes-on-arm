@@ -21,4 +21,12 @@ rootfs(){
 	mkdir -p $ROOT/etc/kubernetes/addons
 	cp -r $PROJROOT/services/k8s/dns $ROOT/etc/kubernetes/addons/
 	cp -r $PROJROOT/services/k8s/registry $ROOT/etc/kubernetes/addons/
+
+
+	# Parallella patch. Disable overlay, because linux 3.14 doesn't have overlay support
+	if [[ $MACHINENAME == "parallella" ]]; then
+		
+		sed -e "s@-s overlay@@" -i $ROOT/etc/kubernetes/dynamic-dropins/docker-flannel.conf
+		sed -e "s@-s overlay@@" -i $ROOT/etc/kubernetes/dynamic-dropins/docker-overlay.conf
+	fi
 }

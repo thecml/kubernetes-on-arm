@@ -47,6 +47,7 @@ Explanation:
 		- Currently supported:
 			- rpi - For Raspberry Pi A, A+, B, B+
 			- rpi-2 - For Raspberry Pi 2 Model B
+			- parallella - The Adepteva Parallella board
 	os - The operating system which should be downloaded and installed.
 		- Currently supported:
 			- archlinux - Arch Linux ARM

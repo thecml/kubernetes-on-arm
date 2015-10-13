@@ -1,15 +1,14 @@
-DEFAULT_ROOTFS="kube-archlinux"
-
+# Invoked by sdcard/write
 initos(){
 	case $MACHINENAME in
 		rpi|rpi-2|parallella)
-			writeos;;
+			writeplainos;;
 		*)
 			exit;;
 	esac
 }
 
-writeos(){
+writeplainos(){
 	# Download
 	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-${MACHINENAME}-latest.tar.gz | tar -xz -C $ROOT
 
@@ -19,14 +18,14 @@ writeos(){
 	mv $ROOT/boot/* $BOOT
 }
 
-
+# Invoked by sdcard/write
 mountpartitions(){
 	# Partition the sd card
 	case $MACHINENAME in
 		rpi|rpi-2|parallella)
 			mounthelper 100;; # Make 100 MB fat partition for the RPi
 		*)
-			echo "Other boards than rpi and rpi-2 is not supported. Exiting..."
+			echo "Other boards than rpi, rpi-2 and parallella is not supported. Exiting..."
 			exit 1
 	esac
 }
