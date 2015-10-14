@@ -1,10 +1,9 @@
-# Images performance
+# Images build speed
 
 ## 0.4.0
 
 - luxas/raspbian: 237 s
 - luxas/alpine: 38 s
-
 - luxas/go: 1210 s
 - luxas/nodejs: 16 s
 - luxas/registry: 350 s
@@ -15,7 +14,6 @@
 - k8s/etcd: 13 s
 - k8s/flannel: 126 s
 - k8s/pause: 1 s
-- k8s/web: ?
 
 To get k8s up and running from scratch: 4060 s, 1h 7m 40s
 
@@ -40,10 +38,10 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
 
 
  ## 0.4.9
- - resin/rpi-raspbian: 110 s
- - luxas/raspbian: 131 s (without resin pull)
+ - luxas/raspbian: 241 s
  - luxas/alpine: 43 s
- - luxas/go: 1151 s (+godep, mercurial)
+ - luxas/go: 1151 s
+
  - k8s/build: 891 s
  - k8s/hyperkube: 183 s
  - k8s/etcd: 13 s
@@ -58,20 +56,6 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
  To get all k8s up and running from scratch: 2640 s, 44 min
 
 
-
-
- ## 0.5.0
- - luxas/raspbian: 244 s
- - luxas/alpine: 40 s
- - luxas/go: 1109 s
- - k8s/build: 854 s
- - k8s/hyperkube: 191 s
- - k8s/pause: 2 s
- - k8s/etcd: 8 s
- - k8s/flannel: 99 s
-
- To get k8s up and running in v0.5: 2547 s, 42min 27sek
-
  ## 0.5.0
  - luxas/raspbian: 254 s
  - luxas/alpine: 36 s
@@ -85,4 +69,4 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
  - kubernetesonarm/skydns: 4 s
  - kubernetesonarm/kube2sky: 5 s
 
- Total time for kube-config: 2574 s, 42min 54sek
+ Total time for kube-config: 2574 s, 42min 54sec
