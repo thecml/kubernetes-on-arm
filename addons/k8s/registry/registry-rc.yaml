@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: registry
-        image: luxas/registry
+        image: kubernetesonarm/registry
         resources:
           limits:
             cpu: 100m
