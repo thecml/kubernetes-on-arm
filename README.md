@@ -6,7 +6,7 @@
 #### Yes, now it is.    
 Imagine... Your own testbed for Kubernetes with cheap Raspberry Pis. 
 
-<img src="docs/raspberrypi-joins-kubernetes.png" width="530" height="548"/>
+<img src="docs/raspberrypi-joins-kubernetes.png"/>
 
 #### **Are you convinced too, like me, that cheap ARM boards and Kubernetes is a match made in heaven?**    
 **Then, lets go!**
@@ -86,7 +86,7 @@ Read about the Parallella board [here](docs/parallella-status.md)
 
 ## Build the Docker images for ARM
 
-Everything have to be compiled to ARM. Fortunately this is possible, sometimes easily, with Go.    
+Everything have to be compiled to ARM. Fortunately this is possible with Go.     
 We will be setting up Kubernetes in a Docker container, so we have to build some images.  
 
 This step is now optional.    
@@ -95,7 +95,10 @@ Proceed to [Setup Kubernetes](#setup-kubernetes) if you want to download the ima
 ```bash
 
 # Build all master images
-kube-config build-k8s-images
+kube-config build-images
+
+# Build all addons
+kube-config build-addons
 
 # This script will take approximately 45 min on a Raspberry Pi 2
 # Grab yourself a coffee during the time!
@@ -127,15 +130,12 @@ kube-config enable-worker
 
 # The "enable-worker" script will ask you for the ip of the master
 # Write in the ip address and you´re done!
-
-
 ```
 
 
 ## Use Kubernetes
 
 After you have built the images, `kubectl` will be available.
-
 
 ```bash
 
@@ -144,12 +144,10 @@ After you have built the images, `kubectl` will be available.
 # Get info about your machine and Kubernetes version
 kube-config info
 
-# Build an nginx image
-kube-config build luxas/nginx
-
-# Make an replication controller with our image
+# Make an replication controller with an image
 # Hopefully you will have some minions, so you is able to see how they spread across hosts
-kubectl run my-nginx --image=luxas/nginx --replicas=3
+# The nginx-test image is a nginx server serving only one message: "<p>WELCOME TO NGINX</p>"
+kubectl run my-nginx --image=luxas/nginx-test --replicas=3
 
 # See that the nginx container is running
 docker ps
@@ -169,6 +167,7 @@ kubectl get svc
 # See if the nginx container is working
 # Replace $SERVICE_IP with one ip "kubectl get svc" returned 
 curl $SERVICE_IP
+# --> <p>WELCOME TO NGINX</p>
 
 # Start dns
 kube-config enable dns
@@ -181,6 +180,23 @@ kubectl --namespace=kube-system get pods,rc,svc
 
 # Test dns
 curl my-nginx.default.svc.cluster.local
+# --> <p>WELCOME TO NGINX</p>
+
+# Start the registry
+kube-config enable-addon registry
+
+# Wait a minute for it to start
+kubectl --namespace=kube-system get pods
+
+# Tag an image
+docker tag my-name/my-image registry.kube-system.svc.cluster.local:5000/my-name/my-image
+
+# And push it to the registry
+docker push registry.kube-system.svc.cluster.local:5000/my-name/my-image
+
+# On another node, pull it
+docker pull registry.kube-system.svc.cluster.local:5000/my-name/my-image
+
 ```
 
 ## Addons
@@ -189,9 +205,10 @@ Two addons is available right now
  - Kubernetes DNS:
    - Every service gets the hostname: `{{my-svc}}.{{my-namespace}}.svc.cluster.local`
    - Example: `my-awesome-webserver.default.svc.cluster.local` may resolve to ip `10.0.0.154`
-   - Those DNS names is available both in containers and on the node itself
+   - Those DNS names is available both in containers and on the node itself (by adding it to `/etc/resolv.conf`)
    - If you want to access the Kubernetes API easily, `curl -k https://kubernetes.kube-system.svc.cluster.local` or `curl -k https://10.0.0.1` if you remember numbers better.
    - The DNS server itself has allocated ip `10.0.0.10`
+   - The DNS domain is for the moment `cluster.local`
  - Central image registry
    - A registry for storing cluster images if one loses the internet connection for example.
    - Or for cluster images that one not want to publish on Docker Hub
@@ -239,6 +256,7 @@ This project is under development.
    - Added support for Parallella (although it´s slow)
    - Extended the README
    - Published the Kubernetes images on Docker Hub
+   - Rewrite of the SD Card writing process
 
 ## Known issues
 
@@ -249,10 +267,10 @@ After a reboot, the `etcd` service doesn´t work properly. But I´m working on i
 ## Future work
 
  - Compile [RancherOS](https://github.com/rancher/os) to ARM
- - Add support for Banana Pro and Cubieboard
- - Add support for Kubernetes Web UI with some extra modules
- - Add support for [HypriotOS](http://blog.hypriot.com)
- - More security with (self-signed or real) certificates
+ - Add support for Banana Pro (and Cubieboard ?)
+ - Add support for Kubernetes Web UI
+ - Add support for [HypriotOS](http://blog.hypriot.com)?
+ - More security with (self-signed or real) certificates and service accounts
 
 And lots of other interesting things...
 

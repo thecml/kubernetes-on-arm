@@ -1,5 +1,7 @@
 # Images build speed
 
+These images are built on a Raspberry Pi 2.
+
 ## 0.4.0
 
 - luxas/raspbian: 237 s
@@ -70,3 +72,21 @@ To get k8s up and running from scratch: 4060 s, 1h 7m 40s
  - kubernetesonarm/kube2sky: 5 s
 
  Total time for kube-config: 2574 s, 42min 54sec
+
+
+ ## 0.5.5
+  - luxas/raspbian: 254 s
+  - luxas/alpine: 41 s
+  - luxas/go: 1135 s
+
+  - kubernetesonarm/build: 880 s
+  - kubernetesonarm/flannel: 109 s
+  - kubernetesonarm/etcd: 10 s 
+  - kubernetesonarm/hyperkube: 161 s
+  - kubernetesonarm/pause: 1 s 
+  - kubernetesonarm/exechealthz: 5 s
+  - kubernetesonarm/skydns: 2 s
+  - kubernetesonarm/kube2sky: 3 s
+  - kubernetesonarm/registry: 168 s
+
+  Total time for kube-config: 2769 s, 46min 9s
