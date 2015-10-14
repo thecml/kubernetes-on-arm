@@ -55,7 +55,7 @@ cd /build/kubernetes
 
 ## PATCHES FOR K8S BUILDING
 
-# Do not build these
+# Do not build these packages
 # Now it should be much faster
 TOREMOVE=(
 	"cmd/kube-proxy"
@@ -70,17 +70,17 @@ TOREMOVE=(
 	" kube-controller-manager"
 	" kube-scheduler"
 
-	"cmd/integration"
-	"cmd/gendocs"
-    "cmd/genman"
-    "cmd/mungedocs"
-    "cmd/genbashcomp"
-    "cmd/genconversion"
-    "cmd/gendeepcopy"
+	#"cmd/integration"
+	#"cmd/gendocs"
+    #"cmd/genman"
+    #"cmd/mungedocs"
+    #"cmd/genbashcomp"
+    #"cmd/genconversion"
+    #"cmd/gendeepcopy"
     #"examples/k8petstore/web-server"
     #"cmd/genswaggertypedocs"
-    "github.com/onsi/ginkgo/ginkgo"
-    "test/e2e/e2e.test"
+    #"github.com/onsi/ginkgo/ginkgo"
+    #"test/e2e/e2e.test"
 )
   
 # Loop each and remove them
@@ -88,6 +88,9 @@ for STR in "${TOREMOVE[@]}"; do
 	sed -e "s@ $STR@@" -i hack/lib/golang.sh
 done
 
+
+# Do not build test targets
+sed -e 's/ "\${KUBE_TEST_TARGETS\[@\]}" / /' -i hack/lib/golang.sh
 
 # Build kubectl statically, instead of hyperkube
 sed -e "s@ hyperkube@ kubectl@" -i hack/lib/golang.sh
@@ -149,3 +152,20 @@ make server
 
 # Copy over the binary
 cp exechealthz /build/bin
+
+
+## IMAGE REGISTRY ## 
+
+REGISTRY_DIR=$GOPATH/src/github.com/docker/distribution
+
+# Make the dir
+mkdir -p $REGISTRY_DIR
+
+# Download source
+curl -sSL https://github.com/docker/distribution/archive/$REGISTRY_VERSION.tar.gz | tar -xz -C $REGISTRY_DIR --strip-components=1
+
+# And compile. This gopath hack may also be resolved by using godep
+GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH make -C $REGISTRY_DIR $REGISTRY_DIR/bin/registry 
+
+# Copy the binary
+cp $REGISTRY_DIR/bin/registry /build/bin
