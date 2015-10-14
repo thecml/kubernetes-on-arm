@@ -90,7 +90,7 @@ done
 
 
 # Do not build test targets
-sed -e 's/ "\${KUBE_TEST_TARGETS\[@\]}" / /' -i hack/lib/golang.sh
+sed -e 's/ "\${KUBE_TEST_TARGETS\[@\]}"/ /' -i hack/lib/golang.sh
 
 # Build kubectl statically, instead of hyperkube
 sed -e "s@ hyperkube@ kubectl@" -i hack/lib/golang.sh
