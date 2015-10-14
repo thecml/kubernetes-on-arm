@@ -11,6 +11,7 @@ PROJECT_SOURCE=$KUBERNETES_DIR/source
 K8S_PREFIX="kubernetesonarm"
 REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
+REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry")
 
 
 usage(){
@@ -22,24 +23,31 @@ With this utility, you can setup kubernetes on ARM!
 Usage: 
 	kube-config install - Installs docker and makes your board ready for kubernetes
 
-	kube-config build-k8s - Build the Kubernetes images locally 
+	kube-config build-images - Build the Kubernetes images locally
+	kube-config build-addons - Build the Kubernetes addon images locally
 	kube-config build [image] - Build an image, which is included in the kubernetes-on-arm repository
+		- Options with the luxas prefix:
+			- luxas/alpine: My alpine base image
+			- luxas/bench: Benchmark your ARM board compared to a Raspberry Pi 1. Based on Roy Longbottoms Benchmarks
+			- luxas/go: My Golang image
+			- luxas/nginx: Simple nginx image based on alpine. Used mostly for testing.
+			- luxas/nodejs: node.js image based on alpine.
+			- luxas/raspbian: A Raspbian base image. Based on resin/rpi-raspbian.
 
 	kube-config enable-master - Enable the master services and then kubernetes is ready to use
 	kube-config enable-worker - Enable the worker services and then kubernetes has a new node
-
-	kube-config start [addon] - Start an addon
-	kube-config stop [addon] - Stop an addon
+	kube-config enable-addon [addon] - Enable an addon
 		- Currently defined addons
-			- dns: Makes all services accessible via DNS
-			- registry: Makes a central docker registry
+				- dns: Makes all services accessible via DNS
+				- registry: Makes a central docker registry
 
-	kube-config disable-k8s - Disable Kubernetes, reverting the enable actions, useful if something went wrong
-	kube-config delete-k8s-data - Clean the /var/lib/etcd directory, where all master data is stored
+	kube-config disable-machine - Disable Kubernetes on this machine, reverting the enable actions, useful if something went wrong
+	kube-config disable-addon [addon] - Disable an addon, not the whole cluster
+	
+	kube-config delete-data - Clean the /var/lib/etcd directory, where all master data is stored
 
 	kube-config info - Outputs some version information and info about your board and Kubernetes
 	kube-config help - Display this help
-
 EOF
 }
 
@@ -49,9 +57,8 @@ EOF
 install(){
 
 
-	#echo "Updating the system..."
-	# Systemd 226 can't be used, do not update the system
-	pacman -Syy 
+	echo "Updating the system..."
+	pacman -Syu 
 
 	echo "Now were going to install some packages"
 	pacman -S $PKGS_TO_INSTALL --noconfirm
@@ -178,6 +185,13 @@ require-images(){
 		if [[ -z $(docker images | grep "$IMAGE") ]]; then
 			echo "Error: Can't spin up Kubernetes without these images: $@"
 			exit 1
+		else
+			# Try to pull the images
+			docker pull $@
+			
+			# Invoke a second time and exit
+			require-images
+			return
 		fi
 	done
 }
@@ -282,6 +296,9 @@ start-worker(){
 
 start(){
 	if [[ get-node-type != "" ]]; then
+
+		require ${REQUIRED_ADDON_IMAGES[@]}
+
 		local SVC=start-$1
 
 		# Invoke the function
@@ -389,22 +406,22 @@ case $1 in
                 install;;
         'build')
 				build $@;;
-        'build-k8s')
+        'build-images')
                 build ${REQUIRED_MASTER_IMAGES[@]};;
+        'build-addons')
+				build ${REQUIRED_ADDON_IMAGES[@]};;
         'enable-master')
                 start-master;;
         'enable-worker')
                 start-worker;;
-        'start')
+        'enable-addon')
 				start $2;;
-		'stop')
-				stop $2;;
-       	'delete-k8s-data')
-				remove-etcd-datadir;;
-       	'disable-k8s')
+		'disable-machine')
 				disable;;
-        'version')
-                version;;
+		'disable-addon')
+				stop $2;;
+       	'delete-data')
+				remove-etcd-datadir;;
         'info')
 				version;;
 		'help')
