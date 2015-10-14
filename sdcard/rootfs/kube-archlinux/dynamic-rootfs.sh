@@ -6,11 +6,6 @@ rootfs(){
 	mkdir $ROOT/etc/kubernetes/source
 	cp -r $PROJROOT $ROOT/etc/kubernetes/source
 
-	# If kubectl exists, include in rootfs
-	if [[ -f $PROJROOT/kubernetesonarm/_bin/latest/kubectl ]]; then
-		cp $PROJROOT/kubernetesonarm/_bin/latest/kubectl $ROOT/usr/bin
-	fi
-
 	# Remove the .sh
 	mv $ROOT/usr/bin/kube-config.sh $ROOT/usr/bin/kube-config
 
@@ -19,8 +14,7 @@ rootfs(){
 
 	# Copy the addons
 	mkdir -p $ROOT/etc/kubernetes/addons
-	cp -r $PROJROOT/addons/k8s/dns $ROOT/etc/kubernetes/addons/
-	cp -r $PROJROOT/addons/k8s/registry $ROOT/etc/kubernetes/addons/
+	cp -r $PROJROOT/addons/k8s/* $ROOT/etc/kubernetes/addons/
 
 
 	# Parallella patch. Disable overlay, because linux 3.14 doesn't have overlay support

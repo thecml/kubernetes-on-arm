@@ -58,7 +58,7 @@ install(){
 
 
 	echo "Updating the system..."
-	pacman -Syu 
+	pacman -Syu --noconfirm
 
 	echo "Now were going to install some packages"
 	pacman -S $PKGS_TO_INSTALL --noconfirm
@@ -147,7 +147,6 @@ EOF
 }
 
 build(){
-	shift
 	/etc/kubernetes/source/images/build.sh "$@"
 }
 
@@ -183,17 +182,29 @@ require-images(){
 	# Check that everyone exists or fail fast
 	for IMAGE in "$@"; do
 		if [[ -z $(docker images | grep "$IMAGE") ]]; then
-			echo "Error: Can't spin up Kubernetes without these images: $@"
-			exit 1
-		else
-			# Try to pull the images
-			docker pull $@
-			
-			# Invoke a second time and exit
-			require-images
-			return
+
+			echo "Can't spin up Kubernetes without these images: $@"
+			pull-images
 		fi
 	done
+}
+
+pull-images(){
+
+	echo "Tries to pull them instead."
+	# Try to pull the images
+	docker pull $@
+
+	if [[ -z $(docker images | grep "$IMAGE") ]]; then
+		echo "Pull failed"
+		exit 1
+	fi
+
+	
+	if [[ ! -f /usr/bin/kubectl ]]; then
+		echo "Downloading kubectl..."
+		curl https://github.com/luxas/kubernetes-on-arm/releases/download/v0.5.5/kubectl > /usr/bin/kubectl
+	fi
 }
 
 # Load the images which is necessary to system-docker 
@@ -225,6 +236,7 @@ start-master(){
 	# Say that our master is on this board
 	echo "K8S_MASTER_IP=127.0.0.1" > $KUBERNETES_CONFIG
 
+	echo "Transferring images to system-docker"
 	# Load these master images to system-docker
 	load-to-system-docker $K8S_PREFIX/etcd
 	load-to-system-docker $K8S_PREFIX/flannel
@@ -232,6 +244,9 @@ start-master(){
 	# Enable and start our bootstrap services
 	systemctl enable etcd flannel
 	systemctl start etcd flannel
+
+	# Wait for etcd and flannel
+	sleep 5
 
 	# Create a symlink to the dropin location, so docker will use flannel
 	dropins-enable-flannel
@@ -272,12 +287,16 @@ start-worker(){
 
 	require-images ${REQUIRED_WORKER_IMAGES[@]}
 
+	echo "Transferring images to system-docker"
 	# Load the images which is necessary to system-docker
 	load-to-system-docker $K8S_PREFIX/flannel
 
 	# Enable and start our bootstrap services
 	systemctl enable flannel
 	systemctl start flannel
+
+	# Wait for flannel
+	sleep 5
 
 	# Create a symlink to the dropin location, so docker will use flannel
 	dropins-enable-flannel
@@ -297,7 +316,7 @@ start-worker(){
 start(){
 	if [[ get-node-type != "" ]]; then
 
-		require ${REQUIRED_ADDON_IMAGES[@]}
+		require-images ${REQUIRED_ADDON_IMAGES[@]}
 
 		local SVC=start-$1
 
@@ -324,7 +343,14 @@ stop(){
 }
 
 start-dns(){
-	kubectl create -f $ADDONS_DIR/dns/dns-rc.yaml
+	source $KUBERNETES_CONFIG
+
+	# Replace the KUBEMASTER placeholder with the master ip temporary, until service accounts is in place
+	if [[ $K8S_MASTER_IP == "127.0.0.1" ]]; then
+		K8S_MASTER_IP=$(hostname -i | awk '{print $1}')
+	fi
+
+	sed -e "s@KUBEMASTER@http://$K8S_MASTER_IP:8080@" $ADDONS_DIR/dns/dns-rc.yaml | kubectl create -f -
 	kubectl create -f $ADDONS_DIR/dns/dns-svc.yaml
 }
 stop-dns(){
@@ -405,6 +431,7 @@ case $1 in
         'install')
                 install;;
         'build')
+				shift
 				build $@;;
         'build-images')
                 build ${REQUIRED_MASTER_IMAGES[@]};;
