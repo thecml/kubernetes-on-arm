@@ -3,6 +3,8 @@ initos(){
 	case $MACHINENAME in
 		rpi|rpi-2|parallella)
 			writeplainos;;
+		cubietruck)
+			writecubiearch;;
 		*)
 			exit;;
 	esac
@@ -24,6 +26,8 @@ mountpartitions(){
 	case $MACHINENAME in
 		rpi|rpi-2|parallella)
 			mounthelper 100;; # Make 100 MB fat partition for the RPi
+		cubietruck)
+			mountcubietruck;; # Mount the cubie
 		*)
 			echo "Other boards than rpi, rpi-2 and parallella is not supported. Exiting..."
 			exit 1
@@ -68,4 +72,35 @@ EOF
 
 	# Mount partition 2 to root, for editing
 	mount $PARTITION2 $ROOT
+}
+
+mountcubietruck(){
+	/sbin/fdisk $SDCARD <<EOF
+o
+p
+n
+p
+1
+2048
+
+w
+EOF
+
+	mkfs.ext4 $PARTITION2 <<EOF
+y
+EOF
+	# Mount partition 2 to root, for editing
+	mount $PARTITION2 $ROOT
+}
+
+writecubiearch(){
+	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-armv7-latest.tar.gz | tar -xz -C $ROOT
+
+	sync
+
+	wget http://archlinuxarm.org/os/sunxi/boot/cubietruck/u-boot-sunxi-with-spl.bin
+
+	dd if=u-boot-sunxi-with-spl.bin of=$SDCARD bs=1024 seek=8
+
+	wget http://archlinuxarm.org/os/sunxi/boot/cubietruck/boot.scr -O $ROOT/boot/boot.scr
 }
