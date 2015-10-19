@@ -169,3 +169,21 @@ GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH make -C $REGISTRY_DIR $REGISTRY_D
 
 # Copy the binary
 cp $REGISTRY_DIR/bin/registry /build/bin
+
+
+## KUBE UI ##
+
+cd /build
+
+curl -sSL https://github.com/kubernetes/kube-ui/archive/master.tar.gz | tar -xz
+mv kube-ui* kube-ui
+
+cd /build/kube-ui
+
+go get github.com/jteeuwen/go-bindata/...
+
+ln -s /build/kube-ui /gopath/src/k8s.io/kube-ui
+
+make kube-ui
+
+cp kube-ui /build/bin
