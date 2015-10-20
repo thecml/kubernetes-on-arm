@@ -22,5 +22,9 @@ rootfs(){
 		
 		sed -e "s@-s overlay@@" -i $ROOT/etc/kubernetes/dynamic-dropins/docker-flannel.conf
 		sed -e "s@-s overlay@@" -i $ROOT/etc/kubernetes/dynamic-dropins/docker-overlay.conf
+	elif [[ $MACHINENAME == "rpi" || $MACHINENAME == "rpi-2" ]]; then
+
+		# Enable memory and swap accounting
+		sed -e "s@console=tty1@console=tty1 cgroup_enable=memory swapaccount=1@" -i $BOOT/cmdline.txt
 	fi
 }
