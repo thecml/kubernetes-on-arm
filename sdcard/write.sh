@@ -73,6 +73,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 # Root is required
 if [ "$EUID" -ne 0 ]; then
   echo "Please run as root"
+  usage
   exit 1
 fi
 
@@ -97,8 +98,15 @@ fi
 
 # /dev/sdb, /dev/sdb1, /dev/sdb2
 SDCARD=$1
-PARTITION1=${1}1
-PARTITION2=${1}2
+
+# Special case. the mmcblk0 disc's partitions are named p1 and p2 instead of 1 and 2 
+if [[ $SDCARD == "/dev/mmcblk"* ]]; then
+	PARTITION1=${1}p1
+	PARTITION2=${1}p2	
+else
+	PARTITION1=${1}1
+	PARTITION2=${1}2
+fi
 
 # A tmp dir to store things in, a boot partition and the root filesystem
 TMPDIR=/tmp/writesdcard
@@ -116,13 +124,13 @@ if [[ -z $QUIET ]]; then
 	read -p "You are going to lose all your data on $1. Continue? [Y/n]" answer
 
 	case $answer in 
-	  	[yY]* ) 
-			echo "OK. Continuing...";;
-
-		* ) 
+	  	[nN]* ) 
 			echo "Quitting..."
-	      	exit 1;;
+	      	exit 1;;		
 	esac
+
+	# OK to continue
+	echo "OK. Continuing..."
 fi
 
 ########################## SOURCE FILES ##############################
