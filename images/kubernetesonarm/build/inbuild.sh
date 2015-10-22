@@ -6,6 +6,9 @@ mkdir -p /build/bin
 # Get version variables
 source /version.sh
 
+# Make it run on a RPi 1 too
+export GOARM=6
+
 ## ETCD ##
 
 # Download a gzipped archive and extract, much faster
