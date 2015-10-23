@@ -47,9 +47,15 @@ build(){
         # Only build if the image directory exists, otherwise it´s from Docker Hub
         if [[ -d $1 ]]; then
 
-	        # Then build the image itself
-	        echo "Installing: $1"
-	        time ./$1/build.sh
+        	echo "Installing: $1"
+
+        	# If the directory hasn't a build.sh file, then a normal docker build is invoked
+        	if [[ ! -f ./$1/build.sh ]]; then
+    			docker build -t $1 $1
+        	else
+		        # Then build the image via the build file
+		        time ./$1/build.sh
+		    fi
 
 	        docker tag "$1" "$1":$VERSION
 	   	fi
