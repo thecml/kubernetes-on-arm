@@ -1,44 +1,37 @@
-# Invoked by sdcard/write
-initos(){
+# First invoked by sdcard/write
+mountpartitions(){
+	# Partition the sd card
 	case $MACHINENAME in
 		rpi|rpi-2|parallella)
-			writeplainos;;
+			generalformat 100;; # Make 100 MB fat partition for the RPi
 		cubietruck)
-			writecubiearch;;
+			cubieformat;; # Mount the cubie
 		*)
 			exit;;
 	esac
 }
 
-writeplainos(){
-	# Download
-	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-${MACHINENAME}-latest.tar.gz | tar -xz -C $ROOT
-
-	sync
-
-	# Move /boot to separate partition
-	mv $ROOT/boot/* $BOOT
-}
-
 # Invoked by sdcard/write
-mountpartitions(){
-	# Partition the sd card
+initos(){
 	case $MACHINENAME in
 		rpi|rpi-2|parallella)
-			mounthelper 100;; # Make 100 MB fat partition for the RPi
+			generaldownload;;
 		cubietruck)
-			mountcubietruck;; # Mount the cubie
+			cubiedownload;;
 		*)
-			echo "Other boards than rpi, rpi-2 and parallella is not supported. Exiting..."
-			exit 1
+			exit;;
 	esac
 }
 
-# This helper
-mounthelper(){
+
+## ------------------------- PARTITION AND DOWNLOAD THE OS --------------------------------
+
+# Format the SD Card with two partitions, boot and root. Boot is $1 MB big.
+# This makes the root partition as big as the sd card minus boot
+generalformat(){
 	# Here we "press" the keys in order, commanding fdisk to make a partition
 	echo "Now $SDCARD is going to be partitioned"
-/sbin/fdisk $SDCARD <<EOF
+	fdisk $SDCARD <<EOF
 o
 p
 n
@@ -74,8 +67,24 @@ EOF
 	mount $PARTITION2 $ROOT
 }
 
-mountcubietruck(){
-	/sbin/fdisk $SDCARD <<EOF
+
+# Download the OS, and redirect the tar warnings to the log
+generaldownload(){
+	# Download
+	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-${MACHINENAME}-latest.tar.gz | tar -xz -C $ROOT >> $LOGFILE
+
+	sync
+
+	# Move /boot to separate partition
+	mv $ROOT/boot/* $BOOT
+}
+
+
+
+# Cubietruck guide: http://archlinuxarm.org/platforms/armv7/allwinner/cubietruck
+# All the commands copied from there
+cubieformat(){
+	fdisk $SDCARD <<EOF
 o
 p
 n
@@ -93,8 +102,8 @@ EOF
 	mount $PARTITION2 $ROOT
 }
 
-writecubiearch(){
-	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-armv7-latest.tar.gz | tar -xz -C $ROOT
+cubiedownload(){
+	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-armv7-latest.tar.gz | tar -xz -C $ROOT >> $LOGFILE
 
 	sync
 

@@ -43,11 +43,12 @@ sdcard/write.sh [disc or sd card] [boot] [os] [rootfs]
 
 Explanation:
 	disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see what letter you sd card have.
-	boot - The type of board you have, e. g. a Raspberry Pi. RPi requires special boot files.
+	boot - The type of board you have
 		- Currently supported:
 			- rpi - For Raspberry Pi A, A+, B, B+
 			- rpi-2 - For Raspberry Pi 2 Model B
-			- parallella - The Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it.
+			- parallella - The Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel
+			- cubieboard - Feel free to test and return bugs. @luxas doesn't have a cubie, so he can't test it.
 	os - The operating system which should be downloaded and installed.
 		- Currently supported:
 			- archlinux - Arch Linux ARM
@@ -57,7 +58,6 @@ Explanation:
 
 Example:
 sdcard/write.sh /dev/sdb rpi-2 archlinux kube-archlinux
-
 EOF
 }
 
@@ -109,22 +109,24 @@ else
 fi
 
 # A tmp dir to store things in, a boot partition and the root filesystem
+# TODO: use mktemp... instead of hard-coded dir
 TMPDIR=/tmp/writesdcard
 BOOT=$TMPDIR/boot
 ROOT=$TMPDIR/root
 PROJROOT=./..
+LOGFILE=/tmp/kubernetes-on-arm.log
 
 MACHINENAME=$2
 OSNAME=$3
 ROOTFSNAME=$4
 
-if [[ -z $QUIET ]]; then
+if [[ -z $QUIET || $QUIET = 0 ]]; then
 
 	# Security check
-	read -p "You are going to lose all your data on $1. Continue? [Y/n]" answer
+	read -p "You are going to lose all your data on $1. Continue? (Y is default) [Y/n]" answer
 
 	case $answer in 
-	  	[nN]* ) 
+	  	[nN]*) 
 			echo "Quitting..."
 	      	exit 1;;		
 	esac
