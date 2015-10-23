@@ -16,6 +16,9 @@ rootfs(){
 	mkdir -p $ROOT/etc/kubernetes/addons
 	cp -r $PROJROOT/addons/k8s/* $ROOT/etc/kubernetes/addons/
 
+	# Remember the time we built this SD Card
+	echo -e "\nBUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $ROOT/etc/kubernetes/sdcard_build_date.conf
+
 
 	# Parallella patch. Disable overlay, because linux 3.14 doesn't have overlay support
 	if [[ $MACHINENAME == "parallella" ]]; then
