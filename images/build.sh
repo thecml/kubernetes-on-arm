@@ -1,23 +1,47 @@
 #!/bin/bash
-# How this build works
 
+# Change to current directory and fail on errors
 cd "$( dirname "${BASH_SOURCE[0]}" )"
-
 trap "exit" ERR
 
-# get version information
+# Get version information
 source ../version
 
-# Retrieve their dependencies
+# Output usage if no args is present
+usage(){
+cat <<EOF
+This will build an ARM Docker image in this directory.
+
+Usage:
+images/build.sh kubernetesonarm/etcd
+--> etcd is based on luxas/alpine
+----> builds luxas/alpine
+--> etcd depends on binaries from kubernetesonarm/build. Specified in the images/kubernetesonarm/etcd/deps file.
+----> will build kubernetesonarm/build
+----> kubernetesonarm/build depends on luxas/go
+------> will build luxas/go
+------> luxas/go depends on luxas/raspbian
+--------> builds luxas/raspbian
+--------> luxas/raspbian depends on resin/rpi-raspbian. Pull from Docker Hub.
+
+How does this script know which image another image depends on?
+The script checks the Dockerfile!
+
+If you have custom dependencies, specify that in a deps file next to the Dockerfile.
+EOF
+}
+
+
+# Retrieve an image's dependencies
 build_dep(){
     IMAGE=$1
 
-    # Return if empty or scratch
+    # Return if empty or scratch, those images have no deps
     if [[ $IMAGE == "" || $IMAGE == "scratch" ]]; then
     	exit
     fi
 
-    # Read dependencies from file, they always takes precedence
+    # Read dependencies from the custom file, they always takes precedence
     if [[ -f ./$IMAGE/deps ]]; then
 
 	    # Read every line and build it
@@ -35,8 +59,9 @@ build_dep(){
     fi
 }
 
-# Build an image
-build(){
+# Builds an image
+build() {
+
 	# Does that image exist?
     if [[ -z $(docker images | grep "$1" | grep "$VERSION") ]]; then
 
@@ -44,19 +69,21 @@ build(){
         echo "To build: $1"
         build_dep "$1"
 
-        # Only build if the image directory exists, otherwise it´s from Docker Hub
+        # Then, build this image. Only build if the image directory exists, otherwise we assume it´s from Docker Hub
         if [[ -d $1 ]]; then
 
-        	echo "Buildning: $1"
+        	echo "Building: $1"
 
         	# If the directory hasn't a build.sh file, then a normal docker build is invoked
         	if [[ ! -f ./$1/build.sh ]]; then
+
     			docker build -t $1 $1
         	else
 		        # Then build the image via the build file
 		        time ./$1/build.sh
 		    fi
 
+		    # Tag the image with current version
 	        docker tag "$1" "$1":$VERSION
 	   	fi
     else
@@ -64,68 +91,12 @@ build(){
     fi
 }
 
-usage(){
-cat <<EOF
-This will build all our ARM Docker images in this directory.
-
-Usage:
-
-images/build.sh all (in no specific order)
-images/build.sh clean (remove all build/* images, which is used as temp images for building)
-images/build.sh [some prefix] (e.g. luxas, will build all images under ./luxas/)
-images/build.sh [image] [image]... (e. g. luxas/raspbian kubernetesonarm/build. Images will build from left to right)
-EOF
-}
-
-
-
-build_all()
-{
-	for DIR in *
-	do
-		if [[ -d $DIR ]]; then
-			build_prefix $DIR
-		fi
-	done
-}
-
-build_prefix()
-{
-	for IMG in $1/*
-	do
-		if [[ -d $IMG && $1/_bin != $IMG ]]; then
-			build $IMG
-		fi
-	done
-}
-
-
-clean()
-{
-	for IMAGE in $(docker images | grep build/ | awk '{print $1}')
-	do
-		docker rmi -f $IMAGE
-	done
-}
-
-
-
-case $1 in 
-  	"all") 
-		build_all
-		exit;;
-	"clean") 
-		clean
-		exit;;
-esac
-
-if [[ $# = 1 && -z $(echo $1 | grep "/") ]]; then
-	build_prefix $1
-elif [[ $# = 0 ]]; then
+# If no args is specifyed, output usage
+if [[ $# = 0 ]]; then
     usage
 else
-	for IMG in "$@"
-	do
+	# Otherwise, build every arg
+	for IMG in "$@"; do
 		build $IMG
 	done
 fi
