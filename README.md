@@ -6,7 +6,7 @@
 #### Yes, now it is.    
 Imagine... Your own testbed for Kubernetes with cheap Raspberry Pis. 
 
-<img src="docs/raspberrypi-joins-kubernetes.png"/>
+![Image of Kubernetes and Raspberry Pi](docs/raspberrypi-joins-kubernetes.png)
 
 #### **Are you convinced too, like me, that cheap ARM boards and Kubernetes is a match made in heaven?**    
 **Then, lets go!**
@@ -81,8 +81,10 @@ kube-config install
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
 # This script runs in 2-3 mins
 ```
-Kubernetes works on Raspberry Pi 1 (A, A+, B, B+), which is armv6, Raspberry Pi 2 (armv7).   
-Read about the Parallella board [here](docs/parallella-status.md)
+Kubernetes should work on Raspberry Pi 1 (A, A+, B, B+), which is armv6, Raspberry Pi 2 (armv7).   
+Right now there's an issue for `armv6`, so it isn't usable on a Pi 1 at the moment.    
+Read about the Parallella board [here](docs/parallella-status.md) 
+Experimental cubietruck support is also present.
 
 ## Build the Docker images for ARM
 
@@ -111,10 +113,10 @@ The script will produce these Docker images:
  - kubernetesonarm/build: This image downloads all source code and builds it for ARM. [Docs coming soon...]()
 
 These images are used in the cluster:
- - kubernetesonarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs coming soon...]()
- - kubernetesonarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs coming soon...]()
- - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs coming soon...]()
- - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs coming soon...]()
+ - kubernetesonarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/etcd/README.md)
+ - kubernetesonarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/flannel/README.md)
+ - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/hyperkube/README.md)
+ - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/pause/README.md)
 
 
 
@@ -146,7 +148,7 @@ kube-config info
 
 # Make an replication controller with an image
 # Hopefully you will have some minions, so you is able to see how they spread across hosts
-# The nginx-test image is a nginx server serving only one message: "<p>WELCOME TO NGINX</p>"
+# The nginx-test image will be downloaded from Docker Hub and is a nginx server which only is serving the message: "<p>WELCOME TO NGINX</p>"
 kubectl run my-nginx --image=luxas/nginx-test --replicas=3
 
 # See that the nginx container is running
@@ -165,7 +167,7 @@ kubectl expose rc/my-nginx --port=80
 kubectl get svc
 
 # See if the nginx container is working
-# Replace $SERVICE_IP with one ip "kubectl get svc" returned 
+# Replace $SERVICE_IP with the ip "kubectl get svc" returned 
 curl $SERVICE_IP
 # --> <p>WELCOME TO NGINX</p>
 
@@ -201,7 +203,7 @@ docker pull registry.kube-system.svc.cluster.local:5000/my-name/my-image
 
 ## Addons
 
-Two addons is available right now
+Two addons is available right now (and one experimental)
  - Kubernetes DNS:
    - Every service gets the hostname: `{{my-svc}}.{{my-namespace}}.svc.cluster.local`
    - Example: `my-awesome-webserver.default.svc.cluster.local` may resolve to ip `10.0.0.154`
@@ -215,6 +217,12 @@ Two addons is available right now
    - This service is available at this address: `registry.kube-system.svc.cluster.local` or at the `10.0.0.20` ip
    - Just tag your image: `docker tag my-name/my-image registry.kube-system.svc.cluster.local:5000/my-name/my-image`
    - And push it to the registry: `docker push registry.kube-system.svc.cluster.local:5000/my-name/my-image`
+ - Kubernetes UI
+   - An web frontend for mostly viewing the cluster status
+   - [Official project](https://github.com/kubernetes/kube-ui)
+   - `kube-ui` hasn't been released yet, so this is very experimental and going to change
+   - It will not display some useful information right now, so use it only if you want to hack on it
+
 
 ## Service management
 
@@ -267,7 +275,7 @@ After a reboot, the `etcd` service doesn´t work properly. But I´m working on i
 ## Future work
 
  - Compile [RancherOS](https://github.com/rancher/os) to ARM
- - Add support for Banana Pro (and Cubieboard ?)
+ - Add support for Banana Pro
  - Add support for Kubernetes Web UI
  - Add support for [HypriotOS](http://blog.hypriot.com)?
  - More security with (self-signed or real) certificates and service accounts
