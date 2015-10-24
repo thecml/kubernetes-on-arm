@@ -265,6 +265,13 @@ This project is under development.
    - Extended the README
    - Published the Kubernetes images on Docker Hub
    - Rewrite of the SD Card writing process
+ - v0.5.6
+   - Added experimental support for Kube UI and Cubietruck
+   - Now memory accounting is enabled on RPi. No docker warnings are shown anymore.
+   - Updated README.md and added READMEs to the core Kubernetes images. More to come.
+   - Fixed the most of @nsteinmetz's bug reports. Thanks.
+   - Some bugfixes here and there
+   - Note: this is a prerelease, just for one to have newer code to hack on.
 
 ## Known issues
 
