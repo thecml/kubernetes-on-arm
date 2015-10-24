@@ -41,13 +41,13 @@ build(){
     if [[ -z $(docker images | grep "$1" | grep "$VERSION") ]]; then
 
     	# First, build all this image's dependencies
-        echo "To install: $1"
+        echo "To build: $1"
         build_dep "$1"
 
         # Only build if the image directory exists, otherwise it´s from Docker Hub
         if [[ -d $1 ]]; then
 
-        	echo "Installing: $1"
+        	echo "Buildning: $1"
 
         	# If the directory hasn't a build.sh file, then a normal docker build is invoked
         	if [[ ! -f ./$1/build.sh ]]; then
@@ -60,7 +60,7 @@ build(){
 	        docker tag "$1" "$1":$VERSION
 	   	fi
     else
-        echo "Already installed: $1"
+        echo "Already built: $1"
     fi
 }
 
