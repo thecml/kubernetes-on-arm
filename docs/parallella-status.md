@@ -22,6 +22,6 @@ This build takes 1 second on a Raspberry Pi 2.
 It takes 200 seconds to build on a Parallella!
 
 
-Please give any suggestions what I could do to make it faster!
+Please give suggestions what I could do to make it faster!
 
 Follow the thread [here](https://github.com/parallella/parallella-linux/issues/8)
