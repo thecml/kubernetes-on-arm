@@ -116,7 +116,7 @@ install(){
 			[yY]*)
 				swap;;
 		esac
-	elif [[ $SWAP = 1 ]]; then
+	elif [[ $SWAP == 1 ]]; then
 		swap
 	fi
 
@@ -147,7 +147,7 @@ install(){
 				download_imgs;;
 		esac
 
-	else [[ $DOWNLOAD_IMAGES = 1 ]]
+	elif [[ $DOWNLOAD_IMAGES == 1 ]]; then
 		download_imgs
 	fi
 
@@ -161,7 +161,7 @@ install(){
 			*)
 				reboot;;
 		esac
-	else [[ $REBOOT = 1 ]]
+	elif [[ $REBOOT == 1 ]]; then
 		reboot
 	fi
 }
