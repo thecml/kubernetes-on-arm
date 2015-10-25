@@ -270,11 +270,11 @@ pull-images(){
 	done
 
 	# If kubectl doesn't exist, download from github
-	if [[ ! -f /usr/bin/kubectl ]]; then
+	#if [[ ! -f /usr/bin/kubectl ]]; then
 		#echo "Downloading kubectl..."
 		#curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.5.5/kubectl > /usr/bin/kubectl
 		#chmod +x /usr/bin/kubectl
-	fi
+	#fi
 }
 
 # Load an image to system-docker
