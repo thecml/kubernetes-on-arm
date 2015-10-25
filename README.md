@@ -1,7 +1,6 @@
-# Welcome to the Kubernetes on ARM project!
+## Welcome to the Kubernetes on ARM project!
 
-#### Kubernetes on a Raspberry Pi?
-#### Is that possible?
+#### Kubernetes on a Raspberry Pi? Is that possible?
 
 #### Yes, now it is.    
 Imagine... Your own testbed for Kubernetes with cheap Raspberry Pis. 
@@ -35,8 +34,8 @@ git clone https://github.com/luxas/kubernetes-on-arm
 # Change to that directory
 cd kubernetes-on-arm
 
-# Use latest stable version if you want
-git checkout v0.5.6
+# Switch to specific version if you want. Optional. Latest is always default.
+# git checkout v0.5.6
 
 # Get some help text about supported options
 sdcard/write.sh
@@ -66,6 +65,10 @@ These scripts requires root. So if you login via **alarm**, then `su root` when 
 # This script will install and setup docker etc.
 kube-config install
 
+# First, it will update the system and install docker
+# Then it will download prebuilt Kubernetes binaries
+# If you build kubernetesonarm/build, then all binaries will be replaced with that version
+
 # The script will ask you for timezone. Defaults to Europe/Helsinki
 # Run "timedatectl list-timezones" before to check for values
 
@@ -74,11 +77,14 @@ kube-config install
 
 # It will ask for which hostname you want. Defaults to kubepi.
 
+# It will also ask if it should download prebuilt docker images
+# If you aren't planning to build and hack the images yourself, answer y
+
 # Last question is whether you want to reboot
 # You must do this, otherwise docker will behave very strange and fail
 
 # If you want to run this script non-interactively, do this:
-# TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
+# TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi DOWNLOAD_IMAGES=1 REBOOT=0 kube-config install
 # This script runs in 2-3 mins
 ```
 Kubernetes should work on Raspberry Pi 1 (A, A+, B, B+), which is armv6, Raspberry Pi 2 (armv7).   
@@ -92,7 +98,7 @@ Everything have to be compiled to ARM. Fortunately this is possible with Go.
 We will be setting up Kubernetes in a Docker container, so we have to build some images.  
 
 This step is now optional.    
-Proceed to [Setup Kubernetes](#setup-kubernetes) if you want to download the images from Docker Hub.
+Proceed to [Setup Kubernetes](#setup-kubernetes) if you plan to download or downloaded the images from Github or Docker Hub.
 
 ```bash
 
@@ -107,16 +113,16 @@ kube-config build-addons
 ```
 
 The script will produce these Docker images:    
- - luxas/raspbian: Is a stripped `resin/rpi-raspbian` image. [Docs coming soon...]()
- - luxas/alpine: Is a Alpine Linux image. Only 8 MB. Based on `mini-containers/base`. [Docs coming soon...]()
- - luxas/go: Is a Golang image, which is used for building repositories on ARM. [Docs coming soon...]()
- - kubernetesonarm/build: This image downloads all source code and builds it for ARM. [Docs coming soon...]()
+ - luxas/raspbian: Is a stripped `resin/rpi-raspbian` image. Docs coming soon...
+ - luxas/alpine: Is a Alpine Linux image. Only 8 MB. Based on `mini-containers/base`. Docs coming soon...
+ - luxas/go: Is a Golang image, which is used for building repositories on ARM. Docs coming soon...
+ - kubernetesonarm/build: This image downloads all source code and builds it for ARM. Docs coming soon...
 
 These images are used in the cluster:
- - kubernetesonarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/etcd/README.md)
- - kubernetesonarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/flannel/README.md)
- - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/hyperkube/README.md)
- - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/pause/README.md)
+ - kubernetesonarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs](images/kubernetesonarm/etcd/README.md)
+ - kubernetesonarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs](images/kubernetesonarm/flannel/README.md)
+ - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs](images/kubernetesonarm/hyperkube/README.md)
+ - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs](images/kubernetesonarm/pause/README.md)
 
 
 
@@ -137,11 +143,12 @@ kube-config enable-worker
 
 ## Use Kubernetes
 
-After you have built the images, `kubectl` will be available.
-
 ```bash
 
 # Some examples
+
+# See which commands kube-config has
+kube-config
 
 # Get info about your machine and Kubernetes version
 kube-config info
@@ -151,6 +158,7 @@ kube-config info
 # The nginx-test image will be downloaded from Docker Hub and is a nginx server which only is serving the message: "<p>WELCOME TO NGINX</p>"
 kubectl run my-nginx --image=luxas/nginx-test --replicas=3
 
+# The pull will take some minute
 # See that the nginx container is running
 docker ps
 
@@ -172,9 +180,9 @@ curl $SERVICE_IP
 # --> <p>WELCOME TO NGINX</p>
 
 # Start dns
-kube-config enable dns
+kube-config enable-addon dns
 
-# Maybe they landed on our node?
+# Maybe the containers landed on our node?
 docker ps
 
 # See which internal cluster services that are running
@@ -199,6 +207,14 @@ docker push registry.kube-system.svc.cluster.local:5000/my-name/my-image
 # On another node, pull it
 docker pull registry.kube-system.svc.cluster.local:5000/my-name/my-image
 
+# On master, run this to see open ports
+netstat -nlp
+
+# See cluster info
+kubectl cluster-info
+
+# Disable the node if you want
+kube-config disable-node
 ```
 
 ## Addons
@@ -247,7 +263,7 @@ Useful commands for troubleshooting:
 
 ## Beta version
 
-This project is under development.  
+This project is under development.
 [Changelog](CHANGELOG.md)
 
 ## Known issues
