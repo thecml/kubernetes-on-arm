@@ -112,11 +112,11 @@ p
 w
 EOF
 
-	mkfs.ext4 $PARTITION2 <<EOF
+	mkfs.ext4 $PARTITION1 <<EOF
 y
 EOF
-	# Mount partition 2 to root, for editing
-	mount $PARTITION2 $ROOT
+	# Mount partition 1 to root, for editing
+	mount $PARTITION1 $ROOT
 }
 
 cubiedownload(){
@@ -125,11 +125,11 @@ cubiedownload(){
 
 	sync
 
-	wget http://archlinuxarm.org/os/sunxi/boot/cubietruck/u-boot-sunxi-with-spl.bin
+	curl http://archlinuxarm.org/os/sunxi/boot/cubietruck/u-boot-sunxi-with-spl.bin > u-boot-sunxi-with-spl.bin
 
 	dd if=u-boot-sunxi-with-spl.bin of=$SDCARD bs=1024 seek=8
 
-	wget http://archlinuxarm.org/os/sunxi/boot/cubietruck/boot.scr -O $ROOT/boot/boot.scr
+	curl http://archlinuxarm.org/os/sunxi/boot/cubietruck/boot.scr > $ROOT/boot/boot.scr
 }
 
 umount_root(){
