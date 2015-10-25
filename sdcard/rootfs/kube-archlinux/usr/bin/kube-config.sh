@@ -13,10 +13,12 @@ K8S_PREFIX="kubernetesonarm"
 # The images that are required
 REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
-REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry $K8S_PREFIX/kube-ui")
+REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry")
 
 DEFAULT_TIMEZONE="Europe/Helsinki"
 DEFAULT_HOSTNAME="kubepi"
+
+LATEST_DOWNLOAD_RELEASE="v0.5.5"
 
 # If the config doesn't exist, create
 if [[ ! -f $KUBERNETES_CONFIG ]]; then
@@ -83,6 +85,14 @@ install(){
 	systemctl enable system-docker docker
 	systemctl restart system-docker docker
 
+	echo "Downloading prebuilt binaries. It is possible to build them manually later."
+	# First, symlink the latest binaries directory to a better place
+	ln -s $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest $KUBERNETES_DIR/binaries
+
+	# Download latest binaries, now we have them in $PATH
+	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $KUBERNETES_DIR/binaries
+
+
 	echo "Set the timezone"
 	if [[ -z $TIMEZONE ]]; then
 		read -p "Which timezone should be set? Defaults to $DEFAULT_TIMEZONE. " timezoneanswer
@@ -100,7 +110,7 @@ install(){
 
 	# Has the user explicitely specified it? If not, ask.
 	if [[ -z $SWAP ]]; then
-		read -p "Do you want to create an 1GB swapfile (useful for compiling)? [Y/n] " swapanswer
+		read -p "Do you want to create an 1GB swapfile (useful for compiling)? n is default [Y/n] " swapanswer
 		
 		case $swapanswer in
 			[yY]*)
@@ -124,6 +134,21 @@ install(){
 		
 	else
 		hostnamectl set-hostname $NEW_HOSTNAME
+	fi
+
+	# Download prebuilt docker images
+	if [[ -z $DOWNLOAD_IMAGES ]]; then
+		read -p "Do you want to download Kubernetes for ARM docker images? So you won't have to build them yourself. Y is default. [Y/n] " downloadanswer
+
+		case $downloadanswer in
+			[nN]*)
+				echo "OK. Continuing...";;
+			*)
+				download_imgs;;
+		esac
+
+	else [[ $DOWNLOAD_IMAGES = 1 ]]
+		download_imgs
 	fi
 
 	# Reboot?
@@ -160,6 +185,20 @@ swap(){
 /swapfile  none  swap  defaults  0  0
 EOF
 	fi
+}
+
+# This is faster than Docker Hub
+download_imgs(){
+	rm -r /tmp/dlk8s
+	mkdir -p /tmp/dlk8s
+
+	# Get the uploaded archive
+	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | tar -xz -C /tmp/dlk8s
+
+	# And load it to docker
+	docker load -i /tmp/dlk8s/images.tar
+
+	rm -r /tmp/dlk8s
 }
 
 ### --------------------------------- HELPERS -----------------------------------
@@ -232,8 +271,9 @@ pull-images(){
 
 	# If kubectl doesn't exist, download from github
 	if [[ ! -f /usr/bin/kubectl ]]; then
-		echo "Downloading kubectl..."
-		curl https://github.com/luxas/kubernetes-on-arm/releases/download/v0.5.5/kubectl > /usr/bin/kubectl
+		#echo "Downloading kubectl..."
+		#curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.5.5/kubectl > /usr/bin/kubectl
+		#chmod +x /usr/bin/kubectl
 	fi
 }
 
@@ -279,19 +319,25 @@ checkformaster(){
 start-master(){
 
 	# Disable some (already running?) services
+	echo "Disabling k8s if it is running"
 	disable >/dev/null
 	sleep 1
 
 	# Require these images to be present
+	echo "Checks so all images are present"
 	require-images ${REQUIRED_MASTER_IMAGES[@]}
 
 	# Say that our master is on this board
 	echo "K8S_MASTER_IP=127.0.0.1" > $KUBERNETES_CONFIG
 
-	echo "Transferring images to system-docker"
+	echo "Transferring images to system-docker, if necessary"
 	# Load these master images to system-docker
 	load-to-system-docker $K8S_PREFIX/etcd
 	load-to-system-docker $K8S_PREFIX/flannel
+
+	# Enable system-docker
+	systemctl restart system-docker
+	sleep 5
 
 	# Enable and start our bootstrap services
 	systemctl enable etcd flannel
@@ -318,6 +364,7 @@ start-master(){
 start-worker(){
 
 	# Disable some (already running?) services
+	echo "Disabling k8s if it is running"
 	disable >/dev/null
 	sleep 1
 
@@ -343,11 +390,16 @@ start-worker(){
 		fi
 	fi
 
+	echo "Checks so all images are present"
 	require-images ${REQUIRED_WORKER_IMAGES[@]}
 
-	echo "Transferring images to system-docker"
+	echo "Transferring images to system-docker, if necessary"
 	# Load the images which is necessary to system-docker
 	load-to-system-docker $K8S_PREFIX/flannel
+
+	# Enable system-docker
+	systemctl restart system-docker
+	sleep 5
 
 	# Enable and start our bootstrap services
 	systemctl enable flannel
@@ -427,8 +479,6 @@ disable(){
 	systemctl disable flannel etcd k8s-master k8s-worker
 	
 	dropins-enable-overlay
-
-	systemctl restart docker
 }
 
 
