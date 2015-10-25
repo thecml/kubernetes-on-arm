@@ -82,8 +82,8 @@ EOF
 
 # Download the OS, and redirect the tar warnings to the log
 generaldownload(){
-	# Download
-	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-${MACHINENAME}-latest.tar.gz | tar -xz -C $ROOT >> $LOGFILE
+	# Download, redirect stderr (all errors) to stdout, which in turn is appended to a log file
+	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-${MACHINENAME}-latest.tar.gz | tar -xz -C $ROOT >> $LOGFILE 2>&1
 
 	sync
 
@@ -120,7 +120,8 @@ EOF
 }
 
 cubiedownload(){
-	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-armv7-latest.tar.gz | tar -xz -C $ROOT >> $LOGFILE
+	# Download, redirect stderr (all errors) to stdout, which in turn is appended to a log file
+	curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-armv7-latest.tar.gz | tar -xz -C $ROOT >> $LOGFILE 2>&1
 
 	sync
 
