@@ -79,21 +79,25 @@ install(){
 	pacman -S $PKGS_TO_INSTALL --noconfirm
 
 	# Create a symlink to the dropin location, so docker will use overlay
-	dropins-enable-overlay
+	mkdir -p /usr/lib/systemd/system/docker.service.d/
+	ln -s $KUBERNETES_DIR/dynamic-dropins/docker-overlay.conf /usr/lib/systemd/system/docker.service.d/
+	systemctl daemon-reload
+
+	# But do not start docker now, it won't work.
 
 	# Enable the system-docker service and restart both
 	systemctl enable system-docker docker
-	systemctl restart system-docker docker
+	systemctl stop docker
 
 	echo "Downloading prebuilt binaries. It is possible to build them manually later."
+	
 	# First, symlink the latest binaries directory to a better place
+	mkdir -p $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
 	ln -s $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest $KUBERNETES_DIR/binaries
 
 	# Download latest binaries, now we have them in $PATH
-	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $KUBERNETES_DIR/binaries
+	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
 
-
-	echo "Set the timezone"
 	if [[ -z $TIMEZONE ]]; then
 		read -p "Which timezone should be set? Defaults to $DEFAULT_TIMEZONE. " timezoneanswer
 
@@ -136,21 +140,6 @@ install(){
 		hostnamectl set-hostname $NEW_HOSTNAME
 	fi
 
-	# Download prebuilt docker images
-	if [[ -z $DOWNLOAD_IMAGES ]]; then
-		read -p "Do you want to download Kubernetes for ARM docker images? So you won't have to build them yourself. Y is default. [Y/n] " downloadanswer
-
-		case $downloadanswer in
-			[nN]*)
-				echo "OK. Continuing...";;
-			*)
-				download_imgs;;
-		esac
-
-	elif [[ $DOWNLOAD_IMAGES == 1 ]]; then
-		download_imgs
-	fi
-
 	# Reboot?
 	if [[ -z $REBOOT ]]; then
 		read -p "Do you want to reboot now? A reboot is required for Docker to function. Y is default. [Y/n] " rebootanswer
@@ -189,16 +178,27 @@ EOF
 
 # This is faster than Docker Hub
 download_imgs(){
-	rm -r /tmp/dlk8s
-	mkdir -p /tmp/dlk8s
+	
+	# If the temp dir exists, remove and recreate
+	if [[ -d /tmp/downloadk8s ]]; then
+		rm -rf /tmp/downloadk8s
+	fi
 
+	# Make the directory
+	mkdir -p /tmp/downloadk8s
+
+	echo "Downloading images from Github"
 	# Get the uploaded archive
-	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | tar -xz -C /tmp/dlk8s
+	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | tar -xz -C /tmp/downloadk8s
 
+	echo "Loading them to docker"
 	# And load it to docker
-	docker load -i /tmp/dlk8s/images.tar
+	docker load -i /tmp/downloadk8s/images.tar
 
-	rm -r /tmp/dlk8s
+	echo "Finished loading them to docker"
+
+	# And remove the temp
+	rm -r /tmp/downloadk8s
 }
 
 ### --------------------------------- HELPERS -----------------------------------
@@ -325,6 +325,14 @@ start-master(){
 
 	# Require these images to be present
 	echo "Checks so all images are present"
+
+	# If hyperkube isn't present, we have probably never pulled the images
+	# Then, pull them the first time from Github and fall back on Docker Hub
+	#if [[ -z $(docker images | grep "$K8S_PREFIX/hyperkube") ]]; then
+	#	download_imgs
+	#fi
+
+	# Use our normal check-and-pull process
 	require-images ${REQUIRED_MASTER_IMAGES[@]}
 
 	# Say that our master is on this board
@@ -391,6 +399,14 @@ start-worker(){
 	fi
 
 	echo "Checks so all images are present"
+
+	# If hyperkube isn't present, we have probably never pulled the images
+	# Then, pull them the first time from Github and fall back on Docker Hub
+	# TODO: check which one is faster
+	#if [[ -z $(docker images | grep "$K8S_PREFIX/hyperkube") ]]; then
+	#	download_imgs
+	#fi
+
 	require-images ${REQUIRED_WORKER_IMAGES[@]}
 
 	echo "Transferring images to system-docker, if necessary"
