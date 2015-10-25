@@ -36,7 +36,7 @@ git clone https://github.com/luxas/kubernetes-on-arm
 cd kubernetes-on-arm
 
 # Use latest stable version if you want
-git checkout v0.5.5
+git checkout v0.5.6
 
 # Get some help text about supported options
 sdcard/write.sh
