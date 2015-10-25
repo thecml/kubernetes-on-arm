@@ -125,11 +125,11 @@ cubiedownload(){
 
 	sync
 
-	curl http://archlinuxarm.org/os/sunxi/boot/cubietruck/u-boot-sunxi-with-spl.bin > u-boot-sunxi-with-spl.bin
+	curl -sSL http://archlinuxarm.org/os/sunxi/boot/cubietruck/u-boot-sunxi-with-spl.bin > u-boot-sunxi-with-spl.bin
 
 	dd if=u-boot-sunxi-with-spl.bin of=$SDCARD bs=1024 seek=8
 
-	curl http://archlinuxarm.org/os/sunxi/boot/cubietruck/boot.scr > $ROOT/boot/boot.scr
+	curl -sSL http://archlinuxarm.org/os/sunxi/boot/cubietruck/boot.scr > $ROOT/boot/boot.scr
 }
 
 umount_root(){
