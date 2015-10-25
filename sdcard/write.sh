@@ -172,6 +172,8 @@ if [[ -d rootfs/$ROOTFSNAME ]]; then
 	fi
 fi
 
+echo "Downloading OS and writing to SD Card"
+
 # Download a tar file and extract it, requires $MACHINENAME
 initos
 
@@ -189,3 +191,5 @@ cleanup
 
 # Remove the temp filesystem
 rm -r $TMPDIR
+
+echo "Finished writing your SD Card."
