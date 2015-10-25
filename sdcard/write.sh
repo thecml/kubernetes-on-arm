@@ -184,8 +184,8 @@ rootfs
 rm $ROOT/dynamic-rootfs.sh
 
 # Clean up
-# Unmount boot and root
-umount $BOOT $ROOT
+# Unmount boot and root, call the os file
+cleanup
 
 # Remove the temp filesystem
 rm -r $TMPDIR

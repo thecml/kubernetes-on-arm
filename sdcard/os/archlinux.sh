@@ -23,6 +23,18 @@ initos(){
 	esac
 }
 
+# Invoked by sdcard/write
+cleanup(){
+	case $MACHINENAME in
+		rpi|rpi-2|parallella)
+			umount_boot_and_root;;
+		cubietruck)
+			umount_root;;
+		*)
+			exit;;
+	esac
+}
+
 
 ## ------------------------- PARTITION AND DOWNLOAD THE OS --------------------------------
 
@@ -79,6 +91,11 @@ generaldownload(){
 	mv $ROOT/boot/* $BOOT
 }
 
+# Umount both root and boot on a RPi for example
+umount_boot_and_root(){
+	umount $BOOT $ROOT
+}
+
 
 
 # Cubietruck guide: http://archlinuxarm.org/platforms/armv7/allwinner/cubietruck
@@ -112,4 +129,8 @@ cubiedownload(){
 	dd if=u-boot-sunxi-with-spl.bin of=$SDCARD bs=1024 seek=8
 
 	wget http://archlinuxarm.org/os/sunxi/boot/cubietruck/boot.scr -O $ROOT/boot/boot.scr
+}
+
+umount_root(){
+	umount $ROOT
 }
