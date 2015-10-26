@@ -193,7 +193,7 @@ download_imgs(){
 	# Make the directory
 	mkdir -p /tmp/downloadk8s
 
-	echo "Downloading images from Github"
+	echo "Downloading Kubernetes docker images from Github"
 	# Get the uploaded archive
 	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | tar -xz -C /tmp/downloadk8s
 
@@ -274,13 +274,6 @@ pull-images(){
 			fi
 		fi
 	done
-
-	# If kubectl doesn't exist, download from github
-	#if [[ ! -f /usr/bin/kubectl ]]; then
-		#echo "Downloading kubectl..."
-		#curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.5.5/kubectl > /usr/bin/kubectl
-		#chmod +x /usr/bin/kubectl
-	#fi
 }
 
 # Load an image to system-docker
@@ -334,9 +327,9 @@ start-master(){
 
 	# If hyperkube isn't present, we have probably never pulled the images
 	# Then, pull them the first time from Github and fall back on Docker Hub
-	#if [[ -z $(docker images | grep "$K8S_PREFIX/hyperkube") ]]; then
-	#	download_imgs
-	#fi
+	if [[ -z $(docker images | grep "$K8S_PREFIX/hyperkube") ]]; then
+		download_imgs
+	fi
 
 	# Use our normal check-and-pull process
 	require-images ${REQUIRED_MASTER_IMAGES[@]}
@@ -409,9 +402,9 @@ start-worker(){
 	# If hyperkube isn't present, we have probably never pulled the images
 	# Then, pull them the first time from Github and fall back on Docker Hub
 	# Docker Pull takes 2.2x longer. A normal Github download and install may take 3 mins
-	#if [[ -z $(docker images | grep "$K8S_PREFIX/hyperkube") ]]; then
-	#	download_imgs
-	#fi
+	if [[ -z $(docker images | grep "$K8S_PREFIX/hyperkube") ]]; then
+		download_imgs
+	fi
 
 	require-images ${REQUIRED_WORKER_IMAGES[@]}
 
