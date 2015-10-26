@@ -16,7 +16,15 @@ rootfs(){
 	cp -r $PROJROOT/addons $ROOT/etc/kubernetes
 
 	# Remember the time we built this SD Card
-	echo -e "\nBUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $ROOT/etc/kubernetes/sdcard_build_date.conf
+	echo -e "SDCARD_BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $ROOT/etc/kubernetes/sdcard_build_date.conf
+
+	COMMIT=$(git log --oneline 2>&1 | head -1 | awk '{print $1}')
+	if [[ $COMMIT != "bash:" && $COMMIT != "fatal:" ]]; then
+		echo -e "\nK8S_ON_ARM_COMMIT=$COMMIT" >> $ROOT/etc/kubernetes/sdcard_build_date.conf
+	fi
+
+	source ../version
+	echo -e "\nK8S_ON_ARM_VERSION=$VERSION" >> $ROOT/etc/kubernetes/sdcard_build_date.conf
 
 	# Parallella patch. Disable overlay, because linux 3.14 doesn't have overlay support
 	if [[ $MACHINENAME == "parallella" ]]; then

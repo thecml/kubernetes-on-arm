@@ -509,23 +509,38 @@ remove-etcd-datadir(){
 
 version(){
 	echo "Architecture: $(uname -m)" 
-
-	echo "Processors:"
-	cat /proc/cpuinfo | grep "model name"
-
-	echo "RAM Memory: $(free -m | grep Mem | awk '{print $2}') MiB"
-	echo "Used RAM Memory: $(free -m | grep Mem | awk '{print $3}') MiB"
 	echo "Kernel: $(uname) $(uname -r | grep -o "[0-9.]*" | grep "[.]")"
-	
+	echo "CPU: $(lscpu | grep 'Core(s)' | grep -o "[0-9]*") cores x $(lscpu | grep "CPU max" | grep -o "[0-9]*" | head -1) MHz"
+
+	echo
+	echo "Used RAM Memory: $(free -m | grep Mem | awk '{print $3}') MiB"
+	echo "RAM Memory: $(free -m | grep Mem | awk '{print $2}') MiB"
+	echo
+	echo "Used disk space: $(df -h | grep /dev/root | awk '{print $3}')B ($(df | grep /dev/root | awk '{print $3}') KB)"
+	echo "Free disk space: $(df -h | grep /dev/root | awk '{print $4}')B ($(df | grep /dev/root | awk '{print $4}') KB)"
+	echo
+
+	source /etc/kubernetes/sdcard_build_date.conf
+	D=$SDCARD_BUILD_DATE
+	echo "SD Card was built: $(echo $D | cut -c1-2)-$(echo $D | cut -c3-4)-20$(echo $D | cut -c5-6) $(echo $D | cut -c8-9):$(echo $D | cut -c10-11)"
+	echo
+	echo "kubernetes-on-arm: "
+	echo "Latest commit: $K8S_ON_ARM_COMMIT"
+	echo "Version: $K8S_ON_ARM_VERSION"
+	echo
+
 	# Is docker running?
     docker ps 2> /dev/null 1> /dev/null
     if [ "$?" == "0" ]; then
 
     	# Do we have hyperkube? Then output version
       	if [[ ! -z $(docker images | grep $K8S_PREFIX/hyperkube) ]]; then
-      		docker run --rm $K8S_PREFIX/hyperkube /hyperkube --version
+      		echo "kubernetes version: $(docker run --rm $K8S_PREFIX/hyperkube /hyperkube --version | grep -o "v[0-9\.]*" | cut -c2-)"
       	fi
     fi
+
+    echo "systemd version: $(systemctl --version | head -1 | cut -c9-)"
+    echo "docker version: $(docker version | grep "Server version" | awk '{print $3}')"
 }
 
 # If nothing is specified, return usage
