@@ -36,6 +36,7 @@ With this utility, you can setup Kubernetes on ARM!
 
 Usage: 
 	kube-config install - Installs docker and makes your board ready for kubernetes
+	kube-config upgrade - Upgrade current Operating System. Example for Arch Linux, update the packages to latest version.
 
 	kube-config build-images - Build the Kubernetes images locally
 	kube-config build-addons - Build the Kubernetes addon images locally
@@ -153,6 +154,11 @@ install(){
 	elif [[ $REBOOT == 1 ]]; then
 		reboot
 	fi
+}
+
+upgrade(){
+	echo "Upgrading the system"
+	pacman -Syu
 }
 
 swap(){
@@ -402,7 +408,7 @@ start-worker(){
 
 	# If hyperkube isn't present, we have probably never pulled the images
 	# Then, pull them the first time from Github and fall back on Docker Hub
-	# TODO: check which one is faster
+	# Docker Pull takes 2.2x longer. A normal Github download and install may take 3 mins
 	#if [[ -z $(docker images | grep "$K8S_PREFIX/hyperkube") ]]; then
 	#	download_imgs
 	#fi
@@ -539,6 +545,8 @@ fi
 case $1 in
         'install')
                 install;;
+        'upgrade')
+				upgrade;;
 
 
         'build')
