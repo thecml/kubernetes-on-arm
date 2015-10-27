@@ -21,3 +21,12 @@
    - Fixed the most of @nsteinmetz's bug reports. Thanks.
    - Some bugfixes here and there
    - Note: this is a prerelease, just for one to have newer code to hack on.
+ - v0.5.8
+   - Enhanced the SD Card write process
+   - Now cubietruck is supported
+   - Kubernetes binaries are now downloaded from Github, this makes it also possible to use k8s out-of-docker
+   - Bugfixes, especially when running `kube-config enable-*`
+   - Now the installer also may download images from Github
+   - Added lots of new info to `kube-config info`
+   - Added `kube-config upgrade` for upgrading the system
+   - Added the `sleep` addon. [README](addons/sleep/README.md)
