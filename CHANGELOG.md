@@ -1,26 +1,5 @@
 ## Changelog
 
- - v0.5.0
-   - First release, Kubernetes is working and one may build the SD Card on Linux.
-   - Kubernetes v1.0.6
-   - flannel v0.5.3
-   - etcd v2.0.12
-   - registry v2.1.1
-   - golang v1.4.2
- - v0.5.5
-   - Added two addons: DNS and central image registry
-   - Fixed some bugs
-   - Added support for Parallella (although it´s slow)
-   - Extended the README
-   - Published the Kubernetes images on Docker Hub
-   - Rewrite of the SD Card writing process
- - v0.5.6
-   - Added experimental support for Kube UI and Cubietruck
-   - Now memory accounting is enabled on RPi. No docker warnings are shown anymore.
-   - Updated README.md and added READMEs to the core Kubernetes images. More to come.
-   - Fixed the most of @nsteinmetz's bug reports. Thanks.
-   - Some bugfixes here and there
-   - Note: this is a prerelease, just for one to have newer code to hack on.
  - v0.5.8
    - Enhanced the SD Card write process
    - Now cubietruck is supported
@@ -30,3 +9,24 @@
    - Added lots of new info to `kube-config info`
    - Added `kube-config upgrade` for upgrading the system
    - Added the `sleep` addon. [README](addons/sleep/README.md)
+ - v0.5.6
+   - Added experimental support for Kube UI and Cubietruck
+   - Now memory accounting is enabled on RPi. No docker warnings are shown anymore.
+   - Updated README.md and added READMEs to the core Kubernetes images. More to come.
+   - Fixed the most of @nsteinmetz's bug reports. Thanks.
+   - Some bugfixes here and there
+   - Note: this is a prerelease, just for one to have newer code to hack on.
+ - v0.5.5
+   - Added two addons: DNS and central image registry
+   - Fixed some bugs
+   - Added support for Parallella (although it´s slow)
+   - Extended the README
+   - Published the Kubernetes images on Docker Hub
+   - Rewrite of the SD Card writing process
+ - v0.5.0
+   - First release, Kubernetes is working and one may build the SD Card on Linux.
+   - Kubernetes v1.0.6
+   - flannel v0.5.3
+   - etcd v2.0.12
+   - registry v2.1.1
+   - golang v1.4.2
