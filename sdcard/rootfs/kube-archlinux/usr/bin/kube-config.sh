@@ -10,6 +10,8 @@ KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
 PROJECT_SOURCE=$KUBERNETES_DIR/source
 K8S_PREFIX="kubernetesonarm"
 
+DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d/"
+
 # The images that are required
 REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
@@ -80,8 +82,8 @@ install(){
 	pacman -S $PKGS_TO_INSTALL --noconfirm
 
 	# Create a symlink to the dropin location, so docker will use overlay
-	mkdir -p /usr/lib/systemd/system/docker.service.d/
-	ln -s $KUBERNETES_DIR/dynamic-dropins/docker-overlay.conf /usr/lib/systemd/system/docker.service.d/
+	mkdir -p $DOCKER_DROPIN_DIR
+	ln -s $KUBERNETES_DIR/dropins/docker-overlay.conf $DOCKER_DROPIN_DIR
 	systemctl daemon-reload
 
 	# But do not start docker now, it won't work.
@@ -158,7 +160,7 @@ install(){
 
 upgrade(){
 	echo "Upgrading the system"
-	pacman -Syu
+	pacman -Syu --noconfirm
 }
 
 swap(){
@@ -216,10 +218,8 @@ build(){
 
 # Remove all docker dropins. They are symlinks, so it doesn't matter
 dropins-clean(){
-	mkdir -p /usr/lib/systemd/system/docker.service.d/
-	rm -f /usr/lib/systemd/system/docker.service.d/*.conf
-
-	systemctl daemon-reload
+	mkdir -p $DOCKER_DROPIN_DIR
+	rm -f $DOCKER_DROPIN_DIR/*.conf
 }
 
 dropins-enable(){
@@ -230,50 +230,40 @@ dropins-enable(){
 # Make a symlink from the config file to the dropin location
 dropins-enable-overlay(){
 	dropins-clean
-	ln -s $KUBERNETES_DIR/dynamic-dropins/docker-overlay.conf /usr/lib/systemd/system/docker.service.d/
+	ln -s $KUBERNETES_DIR/dropins/docker-overlay.conf $DOCKER_DROPIN_DIR
 	dropins-enable
 }
 
 # Make a symlink from the config file to the dropin location
 dropins-enable-flannel(){
 	dropins-clean
-	ln -s $KUBERNETES_DIR/dynamic-dropins/docker-flannel.conf /usr/lib/systemd/system/docker.service.d/
+	ln -s $KUBERNETES_DIR/dropins/docker-flannel.conf $DOCKER_DROPIN_DIR
 	dropins-enable
 }
 
 require-images(){
+	local FAIL=0
 
-	# Check that everyone exists or fail fast
+	# Loop every image, check if it exists
 	for IMAGE in "$@"; do
 		if [[ -z $(docker images | grep "$IMAGE") ]]; then
 
-			echo "Can't spin up Kubernetes without these images: $@"
-			pull-images "$@"
-			break
-		fi
-	done
-}
-
-pull-images(){
-
-	echo "Tries to pull them instead."
-
-	# For each 
-	for IMAGE in "$@"; do
-
-		if [[ -z $(docker images | grep "$IMAGE") ]]; then
-
-			# Try to pull the image
+			# If it doesn't exist, try to pull
+			echo "Pulling $IMAGE from Docker Hub"
 			docker pull $IMAGE
-
-			# Double-check if it's here
+			
 			if [[ -z $(docker images | grep "$IMAGE") ]]; then
 
-				echo "Pull failed. Try to pull these images yourself: $@"
-				exit
+				echo "Pull failed. Try to pull this image yourself: $IMAGE"
+				FAIL=1
 			fi
 		fi
 	done
+
+	if [[ $FAIL == 1 ]];
+		echo "One or more images failed to pull. Exiting...";
+		exit 1
+	fi
 }
 
 # Load an image to system-docker
@@ -520,8 +510,8 @@ version(){
 	echo "Free disk space: $(df -h | grep /dev/root | awk '{print $4}')B ($(df | grep /dev/root | awk '{print $4}') KB)"
 	echo
 
-	if [[ -f /etc/kubernetes/sdcard_build_date.conf ]]; then
-		source /etc/kubernetes/sdcard_build_date.conf
+	if [[ -f $KUBERNETES_DIR/SDCard_metadata.conf ]]; then
+		source $KUBERNETES_DIR/SDCard_metadata.conf
 		D=$SDCARD_BUILD_DATE
 		echo "SD Card was built: $(echo $D | cut -c1-2)-$(echo $D | cut -c3-4)-20$(echo $D | cut -c5-6) $(echo $D | cut -c8-9):$(echo $D | cut -c10-11)"
 		echo
