@@ -7,5 +7,9 @@ RUN apt-install iptables ca-certificates
 COPY hyperkube /
 COPY master-multi.json /etc/kubernetes/manifests-multi/master.json
 
+# Do as upstream
+RUN cp /usr/bin/nsenter /nsenter
+
+
 # Make it executable, necessary?
 #RUN	chmod a+rx /hyperkube
