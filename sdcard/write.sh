@@ -48,7 +48,7 @@ Explanation:
 			- rpi - For Raspberry Pi A, A+, B, B+
 			- rpi-2 - For Raspberry Pi 2 Model B
 			- parallella - The Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel
-			- cubieboard - Feel free to test and return bugs. @luxas doesn't have a cubie, so he can't test it.
+			- cubietruck - Feel free to test and return bugs. @luxas doesn't have a cubie, so he can't test it.
 	os - The operating system which should be downloaded and installed.
 		- Currently supported:
 			- archlinux - Arch Linux ARM
@@ -79,7 +79,7 @@ fi
 
 # At least three arguments should be present
 if [[ "$#" < 3 ]]; then
-	echo "You must specify at least three arguments: the disc (e.g. /dev/sdb), the machine (e.g. rpi-2) and the operating system (e.g. archlinux)"
+	echo "You must specify at least three arguments."
 	usage
 	exit 1
 fi
@@ -88,8 +88,7 @@ fi
 require fdisk fdisk
 
 # Check that it really is a disk
-if [[ -z $(fdisk -l | grep "$1") ]] 
-then
+if [[ -z $(fdisk -l | grep "$1") ]]; then
 	echo "The disc $1 doesn't exist. Check with 'fdisk -l'"
 	exit 1
 fi
@@ -110,7 +109,7 @@ fi
 
 # A tmp dir to store things in, a boot partition and the root filesystem
 # TODO: use mktemp... instead of hard-coded dir
-TMPDIR=/tmp/writesdcard
+TEMPDIR=$(mktemp /tmp/writesdcard.XXXXXXXX)
 BOOT=$TMPDIR/boot
 ROOT=$TMPDIR/root
 PROJROOT=./..
@@ -128,6 +127,7 @@ if [[ -z $QUIET || $QUIET = 0 ]]; then
 	case $answer in 
 	  	[nN]*) 
 			echo "Quitting..."
+			rm -r $TMPDIR
 	      	exit 1;;		
 	esac
 
@@ -138,11 +138,12 @@ fi
 ########################## SOURCE FILES ##############################
 
 # Make some temp directories
-mkdir -p $TMPDIR $ROOT $BOOT
+mkdir -p $ROOT $BOOT
 
 # Ensure they exists	
 if [[ ! -f os/$OSNAME.sh ]]; then
 	echo "os/$OSNAME.sh not found. That file is required. Exiting..."
+	rm -r $TMPDIR
 	exit 1
 fi
 
