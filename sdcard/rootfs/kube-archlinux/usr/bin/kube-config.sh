@@ -10,6 +10,8 @@ KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
 PROJECT_SOURCE=$KUBERNETES_DIR/source
 K8S_PREFIX="kubernetesonarm"
 
+COMMANDS_FILE=/etc/commands.sh
+
 DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d/"
 
 # The images that are required
@@ -27,6 +29,10 @@ if [[ ! -f $KUBERNETES_CONFIG ]]; then
 	echo "K8S_MASTER_IP=127.0.0.1" > $KUBERNETES_CONFIG
 fi
 
+# Source the commands, e.g. os_install, os_upgrade, post_install
+if [[ -f $COMMANDS_FILE ]]; then
+	source $COMMANDS_FILE
+fi
 # Source the config
 source $KUBERNETES_CONFIG
 
@@ -38,7 +44,7 @@ With this utility, you can setup Kubernetes on ARM!
 
 Usage: 
 	kube-config install - Installs docker and makes your board ready for kubernetes
-	kube-config upgrade - Upgrade current Operating System. Example for Arch Linux, update the packages to latest version.
+	kube-config upgrade - Upgrade current operating system packages to latest version.
 
 	kube-config build-images - Build the Kubernetes images locally
 	kube-config build-addons - Build the Kubernetes addon images locally
@@ -74,12 +80,16 @@ EOF
 
 install(){
 
+	# If we have a external command file, use it
+	if [[ $(type -t os_install) == "function" ]]; then
+		os_install $PKGS_TO_INSTALL
+	else
+		echo "Updating the system..."
+		pacman -Syu --noconfirm
 
-	echo "Updating the system..."
-	pacman -Syu --noconfirm
-
-	echo "Now were going to install some packages"
-	pacman -S $PKGS_TO_INSTALL --noconfirm
+		echo "Now were going to install some packages"
+		pacman -S $PKGS_TO_INSTALL --noconfirm
+	fi
 
 	# Create a symlink to the dropin location, so docker will use overlay
 	mkdir -p $DOCKER_DROPIN_DIR
@@ -100,6 +110,12 @@ install(){
 
 	# Download latest binaries, now we have them in $PATH
 	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
+
+	if [[  $(type -f post_install) == "function" ]]; then
+		echo "Doing some custom work specific to this board"
+		post_install
+	fi
+
 
 	if [[ -z $TIMEZONE ]]; then
 		read -p "Which timezone should be set? Defaults to $DEFAULT_TIMEZONE. " timezoneanswer
@@ -143,6 +159,8 @@ install(){
 		hostnamectl set-hostname $NEW_HOSTNAME
 	fi
 
+
+
 	# Reboot?
 	if [[ -z $REBOOT ]]; then
 		read -p "Do you want to reboot now? A reboot is required for Docker to function. Y is default. [Y/n] " rebootanswer
@@ -160,7 +178,11 @@ install(){
 
 upgrade(){
 	echo "Upgrading the system"
-	pacman -Syu --noconfirm
+	if [[ $(type -f os_upgrade) == "function" ]]; then
+		os_upgrade
+	else
+		pacman -Syu --noconfirm
+	fi
 }
 
 swap(){

@@ -29,7 +29,7 @@ usage(){
 	cat <<EOF
 Welcome to the write to sd card process!
 This script will allow you to:
-	- Write an os to a sd card
+	- Write an os to a SD Card
 	- Customize for a specific type of board
 	- Insert files and configuration via a a prepopulated rootfs, so your os works out-of-the-box!
 
@@ -114,12 +114,15 @@ BOOT=$TMPDIR/boot
 ROOT=$TMPDIR/root
 PROJROOT=./..
 LOGFILE=/tmp/kubernetes-on-arm.log
+CUSTOMCMDFILETMP=$TMPDIR/customcmd
+CUSTOMCMDFILETARGET=etc/customcmd.sh
 
 MACHINENAME=$2
 OSNAME=$3
 ROOTFSNAME=$4
 
-if [[ -z $QUIET || $QUIET = 0 ]]; then
+
+if [[ -z $QUIET || $QUIET == 0 ]]; then
 
 	# Security check
 	read -p "You are going to lose all your data on $1. Continue? (Y is default) [Y/n]" answer
@@ -145,6 +148,16 @@ if [[ ! -f os/$OSNAME.sh ]]; then
 	echo "os/$OSNAME.sh not found. That file is required. Exiting..."
 	rm -r $TMPDIR
 	exit 1
+fi
+
+# Copy the contents of the command file to the temp command file
+if [[ -f os/$OSNAME/commands.sh ]]; then
+	cat os/$OSNAME/commands.sh >> $CUSTOMCMDFILETMP
+fi
+
+# Copy the contents of the custom board file to the temp command file
+if [[ -f os/$OSNAME/$MACHINENAME.sh ]]; then
+	cat os/$OSNAME/$MACHINENAME.sh >> $CUSTOMCMDFILETMP
 fi
 
 # Source machine and os
@@ -182,6 +195,9 @@ echo "OS written to SD Card"
 
 # And invoke the function
 rootfs
+
+# Write the custom cmd file
+mv $CUSTOMCMDFILETMP $ROOT/$CUSTOMCMDFILETARGET
 
 # Remove the intermediate file
 rm $ROOT/dynamic-rootfs.sh

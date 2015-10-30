@@ -24,21 +24,16 @@ rootfs(){
 
 	COMMIT=$(git log --oneline 2>&1 | head -1 | awk '{print $1}')
 	if [[ $COMMIT != "bash:" && $COMMIT != "fatal:" ]]; then
-		echo -e "\nK8S_ON_ARM_COMMIT=$COMMIT" >> $SDCARD_METADATA_FILE
+		echo "K8S_ON_ARM_COMMIT=$COMMIT" >> $SDCARD_METADATA_FILE
 	fi
 
 	source ../version
-	echo -e "\nK8S_ON_ARM_VERSION=$VERSION" >> $SDCARD_METADATA_FILE
+	echo "K8S_ON_ARM_VERSION=$VERSION" >> $SDCARD_METADATA_FILE
 
-	# These patches should be moved to board specific scripts
-	# Parallella patch. Disable overlay, because linux 3.14 doesn't have overlay support
+	# Parallella patch, specific to this rootfs. Disable overlay, because linux 3.14 doesn't have overlay support
 	if [[ $MACHINENAME == "parallella" ]]; then
 		
 		sed -e "s@-s overlay@@" -i $K8S_DIR/dropins/docker-flannel.conf
 		sed -e "s@-s overlay@@" -i $K8S_DIR/dropins/docker-overlay.conf
-	elif [[ $MACHINENAME == "rpi" || $MACHINENAME == "rpi-2" ]]; then
-
-		# Enable memory and swap accounting
-		sed -e "s@console=tty1@console=tty1 cgroup_enable=memory swapaccount=1@" -i $BOOT/cmdline.txt
 	fi
 }
