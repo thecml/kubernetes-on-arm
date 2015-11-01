@@ -18,12 +18,12 @@ mv /build/etcd* /build/etcd
 cd /build/etcd
 
 # Apply some 32-bit patches
-curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/raft.go.patch > raft.go.patch
-curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/server.go.patch > server.go.patch
-curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/watcher_hub.go.patch > watcher_hub.go.patch
-patch etcdserver/raft.go < raft.go.patch
-patch etcdserver/server.go < server.go.patch
-patch store/watcher_hub.go < watcher_hub.go.patch
+#curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/raft.go.patch > raft.go.patch
+#curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/server.go.patch > server.go.patch
+#curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/watcher_hub.go.patch > watcher_hub.go.patch
+#patch etcdserver/raft.go < raft.go.patch
+#patch etcdserver/server.go < server.go.patch
+#patch store/watcher_hub.go < watcher_hub.go.patch
 
 # Build etcd
 ./build
