@@ -109,7 +109,7 @@ fi
 
 # A tmp dir to store things in, a boot partition and the root filesystem
 # TODO: use mktemp... instead of hard-coded dir
-TEMPDIR=$(mktemp /tmp/writesdcard.XXXXXXXX)
+TMPDIR=$(mktemp -d /tmp/writesdcard.XXXXXXXX)
 BOOT=$TMPDIR/boot
 ROOT=$TMPDIR/root
 PROJROOT=./..
