@@ -20,7 +20,7 @@ The installer will write Arch Linux ARM to your SD Card, and include some Kubern
  - Step 2: Open a Linux command line, e. g. Ubuntu Terminal
    - Windows downloads coming soon...
  - Step 3: Install git in order to download this project, e. g. `sudo apt-get install git`
- - Step 4: Check which letter you SD Card has, similar to `/dev/sdb`
+ - Step 4: Check which letter your SD Card has, similar to `/dev/sdb`
    - Run `sudo fdisk -l` to list all hard drives connected to the computer
 
 
@@ -33,9 +33,6 @@ git clone https://github.com/luxas/kubernetes-on-arm
 
 # Change to that directory
 cd kubernetes-on-arm
-
-# Switch to specific version if you want. Optional. Latest is always default.
-# git checkout v0.5.6
 
 # Get some help text about supported options
 sdcard/write.sh
@@ -55,10 +52,10 @@ sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-archlinux
 
 ## Setup your board
 
-Start your Raspberry Pi    
-Log into it. The user/password is: **root/root** or **alarm/alarm**     
+Boot your board and log into it.    
+The user/password is: **root/root** or **alarm/alarm**      
 Yes, I know. Root enabled via ssh isn´t that good.
-But for the moment the task to enhance ssh security is left as an exercise to the user.
+But for the moment the task to enhance ssh security is left as an exercise to the user.      
 These scripts requires root. So if you login via **alarm**, then `su root` when you´re going to do some serious hacking :)
 
 ```bash
@@ -158,7 +155,7 @@ kube-config info
 # The nginx-test image will be downloaded from Docker Hub and is a nginx server which only is serving the message: "<p>WELCOME TO NGINX</p>"
 kubectl run my-nginx --image=luxas/nginx-test --replicas=3
 
-# The pull will take some minute
+# The pull might take some minutes
 # See that the nginx container is running
 docker ps
 
@@ -237,7 +234,7 @@ Two addons is available right now (and one experimental)
    - An web frontend for mostly viewing the cluster status
    - [Official project](https://github.com/kubernetes/kube-ui)
    - `kube-ui` hasn't been released yet, so this is very experimental and going to change
-   - It will not display some useful information right now, so use it only if you want to hack on it
+   - It won't display useful information right now, so use it only if you want to hack on it
 
 
 ## Service management
@@ -266,21 +263,9 @@ Useful commands for troubleshooting:
 This project is under development.
 [Changelog](CHANGELOG.md)
 
-## Known issues
-
-When the service `k8s-master` is stopped by `systemctl`, the other master components (`apiserver`, `controller-manager`, `scheduler`) in their containers, isn´t stopped.
-
-After a reboot, the `etcd` service doesn´t work properly. But I´m working on it.
-
 ## Future work
 
- - Compile [RancherOS](https://github.com/rancher/os) to ARM
- - Add support for Banana Pro
- - Add support for Kubernetes Web UI
- - Add support for [HypriotOS](http://blog.hypriot.com)?
- - More security with (self-signed or real) certificates and service accounts
-
-And lots of other interesting things...
+See the [ROADMAP](ROADMAP.md)
 
 ## Goals for this project
 

@@ -4,7 +4,7 @@ Just some notes about what I probably will include in this project
 
 ##### New features for v0.6.0
  - A new, more customizable way to write the SD Card, allows for more OSes in the future
- - Upgrade flannel to v0.5.4
+ - Upgrade flannel to v0.5.4 and etcd to 2.2.1
  - Maybe upgrade Kubernetes to v1.1.0, depends on whether they release it as a stable version or not
  - Add some test scripts for even more automation
  - Build the Kubernetes binaries with Go 1.5.1
