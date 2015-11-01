@@ -146,17 +146,6 @@ CGO_ENABLED=0 go get -a -installsuffix cgo --ldflags '-w' github.com/skynetservi
 cp /gopath/bin/skydns /build/bin
 
 
-## EXECHEALTHZ ##
-
-cd /build/kubernetes/contrib/exec-healthz
-
-# Build the binary
-make server
-
-# Copy over the binary
-cp exechealthz /build/bin
-
-
 ## IMAGE REGISTRY ## 
 
 REGISTRY_DIR=$GOPATH/src/github.com/docker/distribution
@@ -190,3 +179,28 @@ ln -s /build/kube-ui /gopath/src/k8s.io/kube-ui
 make kube-ui
 
 cp kube-ui /build/bin
+
+
+## LOAD BALANCER ##
+
+cd /build
+
+curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar -xz
+mv contrib* contrib
+
+
+cd /build/contrib/service-loadbalancer
+
+CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o service_loadbalancer ./service_loadbalancer.go ./loadbalancer_log.go
+
+cp service_loadbalancer /build/bin
+
+## EXECHEALTHZ ##
+
+cd /build/contrib/exec-healthz
+
+# Build the binary
+make server
+
+# Copy over the binary
+cp exechealthz /build/bin
