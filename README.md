@@ -176,7 +176,9 @@ kubectl get svc
 curl $SERVICE_IP
 # --> <p>WELCOME TO NGINX</p>
 
-# Start dns
+# Start dns, this will spin up 4 containers and expose them as a DNS service at ip 10.0.0.10
+# 10.0.0.10 is already enabled as a DNS server in your Arch Linux system, see the file /etc/systemd/resolved.conf.d/dns.conf
+# That file makes /etc/resolv.conf use kube-dns also outside of your containers
 kube-config enable-addon dns
 
 # Maybe the containers landed on our node?
@@ -189,6 +191,12 @@ kubectl --namespace=kube-system get pods,rc,svc
 curl my-nginx.default.svc.cluster.local
 # --> <p>WELCOME TO NGINX</p>
 
+# In some cases a "search [domains]" is added to /etc/resolv.conf
+# In the kubernetes case, these domains are searched: "default.svc.cluster.local svc.cluster.local cluster.local"
+# That means, that you may only write "my-nginx", and it will search in those domains
+curl my-nginx
+# --> <p>WELCOME TO NGINX</p>
+
 # Start the registry
 kube-config enable-addon registry
 
@@ -196,13 +204,24 @@ kube-config enable-addon registry
 kubectl --namespace=kube-system get pods
 
 # Tag an image
-docker tag my-name/my-image registry.kube-system.svc.cluster.local:5000/my-name/my-image
+docker tag my-name/my-image registry.kube-system:5000/my-name/my-image
 
 # And push it to the registry
-docker push registry.kube-system.svc.cluster.local:5000/my-name/my-image
+docker push registry.kube-system:5000/my-name/my-image
 
 # On another node, pull it
-docker pull registry.kube-system.svc.cluster.local:5000/my-name/my-image
+docker pull registry.kube-system:5000/my-name/my-image
+
+# The registry address may be written longer if search isn't specified.
+# registry.kube-system.svc.cluster.local -> registry.kube-system
+
+# The master also proxies the services so that they are accessible from outside
+# The -L flag is there because curl has to follow redirects
+curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/default/services/my-nginx
+
+# Generic command
+# curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/[namespace]/services/[service-name]
+
 
 # On master, run this to see open ports
 netstat -nlp
@@ -219,17 +238,19 @@ kube-config disable-node
 Two addons is available right now (and one experimental)
  - Kubernetes DNS:
    - Every service gets the hostname: `{{my-svc}}.{{my-namespace}}.svc.cluster.local`
-   - Example: `my-awesome-webserver.default.svc.cluster.local` may resolve to ip `10.0.0.154`
-   - Those DNS names is available both in containers and on the node itself (by adding it to `/etc/resolv.conf`)
-   - If you want to access the Kubernetes API easily, `curl -k https://kubernetes.kube-system.svc.cluster.local` or `curl -k https://10.0.0.1` if you remember numbers better.
+   - The default namespace is `default` (surprise), so unless you manually edit something it will land there
+   - Kubernetes internal addon services runs in the namespace `kube-system`
+   - Example: `my-awesome-webserver.default.svc.cluster.local` or just `my-awesome-webserver` may resolve to ip `10.0.0.154`
+   - Those DNS names is available both in containers and on the node itself (kube-config automatically adds the info to `/etc/resolv.conf`)
+   - If you want to access the Kubernetes API easily, `curl -k https://kubernetes` or `curl -k https://10.0.0.1` if you remember numbers better (`-k` stands for insecure as apiserver has no signed certs by default)
    - The DNS server itself has allocated ip `10.0.0.10`
    - The DNS domain is for the moment `cluster.local`
  - Central image registry
    - A registry for storing cluster images if one loses the internet connection for example.
    - Or for cluster images that one not want to publish on Docker Hub
-   - This service is available at this address: `registry.kube-system.svc.cluster.local` or at the `10.0.0.20` ip
-   - Just tag your image: `docker tag my-name/my-image registry.kube-system.svc.cluster.local:5000/my-name/my-image`
-   - And push it to the registry: `docker push registry.kube-system.svc.cluster.local:5000/my-name/my-image`
+   - This service is available at this address: `registry.kube-system` or at the `10.0.0.20` ip
+   - Just tag your image: `docker tag my-name/my-image registry.kube-system:5000/my-name/my-image`
+   - And push it to the registry: `docker push registry.kube-system:5000/my-name/my-image`
  - Kubernetes UI
    - An web frontend for mostly viewing the cluster status
    - [Official project](https://github.com/kubernetes/kube-ui)
