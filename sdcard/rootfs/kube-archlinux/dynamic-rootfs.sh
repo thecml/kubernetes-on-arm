@@ -30,12 +30,6 @@ rootfs(){
 	source ../version
 	echo "K8S_ON_ARM_VERSION=$VERSION" >> $SDCARD_METADATA_FILE
 
-	# Add search to /etc/resolv.conf
-	# But, is there a better way to do this?
-	if [[ -f /etc/systemd/network/eth0.network ]]; then
-		echo -e "UseDomain=true \n Domains=default.svc.cluster.local svc.cluster.local cluster.local" >> /etc/systemd/network/eth0.network
-	fi
-
 	# Parallella patch, specific to this rootfs. Disable overlay, because linux 3.14 doesn't have overlay support
 	if [[ $MACHINENAME == "parallella" ]]; then
 		
