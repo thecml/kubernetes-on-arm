@@ -111,7 +111,7 @@ install(){
 	# Download latest binaries, now we have them in $PATH
 	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
 
-	if [[  $(type -f post_install) == "function" ]]; then
+	if [[  $(type -t post_install) == "function" ]]; then
 		echo "Doing some custom work specific to this board"
 		post_install
 	fi
@@ -178,7 +178,7 @@ install(){
 
 upgrade(){
 	echo "Upgrading the system"
-	if [[ $(type -f os_upgrade) == "function" ]]; then
+	if [[ $(type -t os_upgrade) == "function" ]]; then
 		os_upgrade
 	else
 		pacman -Syu --noconfirm
@@ -282,7 +282,7 @@ require-images(){
 		fi
 	done
 
-	if [[ $FAIL == 1 ]];
+	if [[ $FAIL == 1 ]]; then
 		echo "One or more images failed to pull. Exiting...";
 		exit 1
 	fi
