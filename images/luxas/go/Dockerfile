@@ -32,7 +32,7 @@ RUN chmod +x /version.sh && . /version.sh									&& \
 				upx
 				
 # Build go1.4.x in the other layer, run this if GO_BOOTSTRAP_VERSION is set
-RUN if [ ! -z $GO_BOOTSTRAP_VERSION ]; then
+RUN if [ ! -z $GO_BOOTSTRAP_VERSION ]; then																			&& \
 
 	# Download source code
 	curl -sSL https://golang.org/dl/$GO_BOOTSTRAP_VERSION.src.tar.gz | tar -xz -C /goroot1.4 --strip-components=1 	&& \
@@ -58,11 +58,11 @@ RUN \
 # Instead of:
 # cd /goroot1.4/src && ./make.bash
 #
-# Do this:
+# One may do this:
 # cd /goroot1.4/src && ./make.bash --dist-tool						&& \
 # /goroot1.4/pkg/tool/linux_arm/dist bootstrap -v 					&& \
 # cp /goroot1.4/pkg/tool/linux_arm/go_bootstrap /goroot1.4/bin/go
 #
 # This will not build the whole go1.4, but instead build cmd/dist and the go_bootstrap tool, which is renamed to go
-# Not sure if reliable, but compiles
+# Not sure if reliable, but it compiles
 #
