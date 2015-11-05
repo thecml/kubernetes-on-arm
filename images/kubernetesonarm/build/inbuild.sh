@@ -98,6 +98,10 @@ sed -e 's/ "\${KUBE_TEST_TARGETS\[@\]}"/ /' -i hack/lib/golang.sh
 # Build kubectl statically, instead of hyperkube
 sed -e "s@ hyperkube@ kubectl@" -i hack/lib/golang.sh
 
+# A patch is needed for go1.5.1
+#if [[ $GO_VERSION == "go1.5.1" ]]; then
+#	sed -e "s@@@" -i Godeps/...
+#fi
 
 # Build kubernetes binaries
 ./hack/build-go.sh
@@ -155,6 +159,11 @@ mkdir -p $REGISTRY_DIR
 
 # Download source
 curl -sSL https://github.com/docker/distribution/archive/$REGISTRY_VERSION.tar.gz | tar -xz -C $REGISTRY_DIR --strip-components=1
+
+# A patch is needed for go1.5.1
+#if [[ $GO_VERSION == "go1.5.1" ]]; then
+#	sed -e "s@@@" -i $REGISTRY_DIR/Makefile
+#fi
 
 # And compile. This gopath hack may also be resolved by using godep
 GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH make -C $REGISTRY_DIR $REGISTRY_DIR/bin/registry 
