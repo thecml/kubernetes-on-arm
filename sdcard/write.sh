@@ -42,7 +42,7 @@ Optional argument:
 sdcard/write.sh [disc or sd card] [boot] [os] [rootfs]
 
 Explanation:
-	disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see what letter you sd card have.
+	disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see which letter your sd card has.
 	boot - The type of board you have
 		- Currently supported:
 			- rpi - For Raspberry Pi A, A+, B, B+

@@ -20,3 +20,6 @@ https://github.com/kubernetes/kubernetes/issues/12722
 
 #### RancherOS on Raspberry Pi 2
 https://github.com/rancher/os/issues/417
+
+#### Compile Kubernetes with go1.5.1
+https://github.com/kubernetes/kubernetes/issues/16229

@@ -53,7 +53,7 @@ Usage:
 			- luxas/alpine: My alpine base image
 			- luxas/bench: Benchmark your ARM board compared to a Raspberry Pi 1. Based on Roy Longbottoms Benchmarks
 			- luxas/go: My Golang image
-			- luxas/nginx: Simple nginx image based on alpine. Used mostly for testing.
+			- luxas/nginx-test: Simple nginx image based on alpine. Used mostly for testing.
 			- luxas/nodejs: node.js image based on alpine.
 			- luxas/raspbian: A Raspbian base image. Based on resin/rpi-raspbian.
 
