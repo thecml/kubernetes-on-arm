@@ -14,4 +14,4 @@ ADD service_loadbalancer 		\
 	# Add to root dir: /
 	/
 
-CMD ["/service_loadbalancer"]
+ENTRYPOINT ["/service_loadbalancer"]
