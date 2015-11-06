@@ -6,7 +6,7 @@ After=docker.service
 EnvironmentFile=/etc/kubernetes/k8s.conf
 ExecStartPre=-/usr/bin/docker kill k8s-worker k8s-worker-proxy
 ExecStartPre=-/usr/bin/docker rm k8s-worker k8s-worker-proxy
-ExecStart=/bin/bash -c "source /etc/kubernetes/k8s.conf; exec docker run --name=k8s-worker --net=host -v /var/run/docker.sock:/var/run/docker.sock kubernetesonarm/hyperkube /hyperkube kubelet --pod_infra_container_image="kubernetesonarm/pause" --api-servers=http://${K8S_MASTER_IP}:8080 --v=2 --address=127.0.0.1 --enable-server --hostname-override=$(/usr/bin/hostname -i | /usr/bin/awk '{print $1}')" --cluster-dns=10.0.0.10 --cluster-domain=cluster.local
+ExecStart=/bin/bash -c "source /etc/kubernetes/k8s.conf; exec docker run --name=k8s-master --net=host -v /:/rootfs:ro -v /sys:/sys:ro -v /dev:/dev -v /var/lib/docker/:/var/lib/docker:rw -v /var/lib/kubelet/:/var/lib/kubelet:rw -v /var/run:/var/run:rw --privileged --pid=host kubernetesonarm/hyperkube /hyperkube kubelet --containerized --pod_infra_container_image="kubernetesonarm/pause" --api-servers=http://${K8S_MASTER_IP}:8080 --v=2 --address=127.0.0.1 --enable-server --hostname-override=$(/usr/bin/hostname -i | /usr/bin/awk '{print $1}')" --cluster-dns=10.0.0.10 --cluster-domain=cluster.local
 ExecStartPost=/usr/bin/docker run -d --name=k8s-worker-proxy --net=host --privileged kubernetesonarm/hyperkube /hyperkube proxy --master=http://${K8S_MASTER_IP}:8080 --v=2
 ExecStop=/usr/bin/docker stop k8s-worker k8s-worker-proxy
 Restart=on-failure
