@@ -10,27 +10,29 @@ ENV GOROOT=/goroot \
 	GOARM=6
 
 # Install software in one layer
-RUN chmod +x /version.sh													&& \
-	mkdir /goroot1.4 /goroot /gopath 										&& \
-	apt-install --no-install-recommends										\
+RUN chmod +x /version.sh												&& \
+	mkdir /goroot1.4 /goroot /gopath 									&& \
+	apt-install --no-install-recommends									\
 				# Download software (securely)
-				curl 														\
-				ca-certificates 											\
+				curl 													\
+				ca-certificates 										\
+				rsync													\
 
 				# Version control
-				git 														\
-				mercurial													\
+				git 													\
+				mercurial												\
 				
 				# Build tools
-				gcc 														\
-				g++ 														\
-				make 														\
-				patch 														\
-				libc6-dev 													\
+				gcc 													\
+				g++ 													\
+				make 													\
+				patch 													\
+				libc6-dev 												\
 
 				# Executable packer
 				upx
-				
+
+
 # Build go1.4.x in the other layer, run this if GO_BOOTSTRAP_VERSION is set
 RUN . /version.sh 																									&& \
 	if [ ! -z $GO_BOOTSTRAP_VERSION ]; then																			\
