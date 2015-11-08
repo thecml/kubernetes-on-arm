@@ -15,8 +15,14 @@
             "/hyperkube",
             "controller-manager",
             "--master=127.0.0.1:8080",
-            "--v=2"
-        ]
+            "--v=2",
+            "--service-account-private-key-file=/var/run/kubernetes/apiserver.key",
+            "--root-ca-file=/var/run/kubernetes/apiserver.crt",
+        ],
+        "volumeMounts":[{
+          "name": "kubecerts",
+          "mountPath": "/var/run/kubernetes"
+        }]
       },
       {
         "name": "apiserver",
@@ -29,7 +35,11 @@
             "--etcd-servers=http://127.0.0.1:4001",
             "--cluster-name=kubernetes",
             "--v=2"
-        ]
+        ],
+        "volumeMounts":[{
+          "name": "kubecerts",
+          "mountPath": "/var/run/kubernetes"
+        }]
       },
       {
         "name": "scheduler",
@@ -41,6 +51,12 @@
             "--v=2"
         ]
       }
+    ],
+    "volumes": [
+	    {
+	      "name": "kubecerts",
+	      "emptyDir": {}
+	    }
     ]
   }
 }
