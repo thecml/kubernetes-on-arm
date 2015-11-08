@@ -9,6 +9,9 @@ rootfs(){
 		echo "PermitRootLogin yes" >> $ROOT/etc/ssh/sshd_config
 	fi
 
+	# Shortcut for running tests
+	ln -s $ROOT/etc/kubernetes/source/scripts/run-test.sh $ROOT/usr/bin/run-k8s-test
+
 	# Copy current source
 	mkdir $K8S_DIR/source
 	cp -r $PROJROOT $K8S_DIR/source
