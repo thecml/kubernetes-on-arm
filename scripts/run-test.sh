@@ -2,14 +2,14 @@
 
 usage(){
 	cat <<EOF
-	Run a test...
+Run a test...
 
-	Tests just now:
-	$(ls -l tests | awk '{print $9}')
+Tests just now:
+$(ls -l tests | awk '{print $9}' | grep -o "[^.]*" | grep -v "sh")
 EOF
 }
 
-cd "$( dirname "${BASH_SOURCE[0]}" )"
+cd /etc/kubernetes/source/scripts
 
 if [[ $# == 0 ]]; then
 	usage
@@ -17,4 +17,4 @@ if [[ $# == 0 ]]; then
 fi
 
 mkdir -p logs
-time tests/$1.sh 2>&1 > "logs/$(date +%d%m%y_%H%M)_$1.log" >/dev/stdout
+time tests/$1.sh 2>&1 | tee "logs/$(date +%d%m%y_%H%M)_$1.log"

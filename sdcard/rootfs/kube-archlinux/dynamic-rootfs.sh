@@ -10,7 +10,7 @@ rootfs(){
 	fi
 
 	# Shortcut for running tests
-	ln -s $ROOT/etc/kubernetes/source/scripts/run-test.sh $ROOT/usr/bin/run-k8s-test
+	ln -s ../../etc/kubernetes/source/scripts/run-test.sh $ROOT/usr/bin/run-k8s-test
 
 	# Copy current source
 	mkdir $K8S_DIR/source
