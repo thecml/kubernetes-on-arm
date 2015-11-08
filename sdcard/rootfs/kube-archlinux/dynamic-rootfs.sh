@@ -3,8 +3,11 @@ K8S_DIR="$ROOT/etc/kubernetes"
 SDCARD_METADATA_FILE=$K8S_DIR/SDCard_metadata.conf
 
 rootfs(){
+
 	# Allow ssh connections by root to this machine
-	echo "PermitRootLogin yes" >> $ROOT/etc/ssh/sshd_config
+	if [[ -f $ROOT/etc/ssh/sshd_config ]]; then
+		echo "PermitRootLogin yes" >> $ROOT/etc/ssh/sshd_config
+	fi
 
 	# Copy current source
 	mkdir $K8S_DIR/source
