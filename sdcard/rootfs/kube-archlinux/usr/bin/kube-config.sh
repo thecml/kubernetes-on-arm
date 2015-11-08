@@ -64,7 +64,6 @@ Usage:
 		- Currently defined addons
 				- dns: Makes all services accessible via DNS
 				- registry: Makes a central docker registry
-				- kube-ui: Sets up an UI for Kubernetes. Experimental. Doesn't show anything useful just now, waiting for upstream.
 
 	kube-config disable-node - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong
 	kube-config disable - Synonym to disable-machine

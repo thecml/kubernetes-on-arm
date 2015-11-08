@@ -251,12 +251,8 @@ Two addons is available right now (and one experimental)
    - This service is available at this address: `registry.kube-system` or at the `10.0.0.20` ip
    - Just tag your image: `docker tag my-name/my-image registry.kube-system:5000/my-name/my-image`
    - And push it to the registry: `docker push registry.kube-system:5000/my-name/my-image`
- - Kubernetes UI
-   - An web frontend for mostly viewing the cluster status
-   - [Official project](https://github.com/kubernetes/kube-ui)
-   - `kube-ui` hasn't been released yet, so this is very experimental and going to change
-   - It won't display useful information right now, so use it only if you want to hack on it
-
+  
+`kube-ui` was removed, because the Kubernetes team shifted focus to [dashboard](https://github.com/kubernetes/dashboard).
 
 ## Service management
 

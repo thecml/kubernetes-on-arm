@@ -196,20 +196,20 @@ cp registry /build/bin
 
 ## KUBE UI ##
 
-cd /build
+#cd /build
 
-curl -sSL https://github.com/kubernetes/kube-ui/archive/master.tar.gz | tar -xz
-mv kube-ui* kube-ui
+#curl -sSL https://github.com/kubernetes/kube-ui/archive/master.tar.gz | tar -xz
+#mv kube-ui* kube-ui
 
-cd /build/kube-ui
+#cd /build/kube-ui
 
-go get github.com/jteeuwen/go-bindata/...
+#go get github.com/jteeuwen/go-bindata/...
 
-ln -s /build/kube-ui /gopath/src/k8s.io/kube-ui
+#ln -s /build/kube-ui /gopath/src/k8s.io/kube-ui
 
-make kube-ui
+#make kube-ui
 
-cp kube-ui /build/bin
+#cp kube-ui /build/bin
 
 
 ## LOAD BALANCER ##
