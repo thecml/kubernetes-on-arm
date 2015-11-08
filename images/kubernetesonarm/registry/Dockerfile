@@ -1,7 +1,7 @@
-FROM luxas/raspbian
+FROM luxas/alpine
 
 # Install packages
-RUN apt-install ca-certificates librados2 apache2-utils
+# RUN apk-install ca-certificates
 
 # Copy the binary and the config file
 COPY registry /

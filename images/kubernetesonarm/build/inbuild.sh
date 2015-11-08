@@ -9,6 +9,14 @@ source /version.sh
 # Make it run on a RPi 1 too
 export GOARM=6
 
+# Go can't compile k8s v1.0.x https://github.com/kubernetes/kubernetes/issues/16229
+# Haven't tested this go switch
+if [[ $GO_VERSION == "go1.5.1" && $K8S_VERSION == "v1.0"* ]]; then
+	export GOROOT=/goroot1.4
+	export PATH=$(echo $PATH | sed -e "s@/goroot@/goroot1.4@")
+fi
+
+
 ## ETCD ##
 
 # Download a gzipped archive and extract, much faster
@@ -18,12 +26,15 @@ mv /build/etcd* /build/etcd
 cd /build/etcd
 
 # Apply some 32-bit patches
-#curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/raft.go.patch > raft.go.patch
-#curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/server.go.patch > server.go.patch
-#curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/watcher_hub.go.patch > watcher_hub.go.patch
-#patch etcdserver/raft.go < raft.go.patch
-#patch etcdserver/server.go < server.go.patch
-#patch store/watcher_hub.go < watcher_hub.go.patch
+if [[ $ETCD_VERSION == "v2.0"* || $ETCD_VERSION == "v0"* ]]; then
+	echo "etcd =< v2.0.x needs patches"
+	curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/raft.go.patch > raft.go.patch
+	curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/server.go.patch > server.go.patch
+	curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/watcher_hub.go.patch > watcher_hub.go.patch
+	patch etcdserver/raft.go < raft.go.patch
+	patch etcdserver/server.go < server.go.patch
+	patch store/watcher_hub.go < watcher_hub.go.patch
+fi
 
 # Build etcd
 ./build
@@ -60,48 +71,54 @@ cd /build/kubernetes
 
 # Do not build these packages
 # Now it should be much faster
-TOREMOVE=(
-	"cmd/kube-proxy"
-	"cmd/kube-apiserver"
-	"cmd/kube-controller-manager"
-	"cmd/kubelet"
-	#"cmd/linkcheck"
-	"cmd/kubernetes"
-	"plugin/cmd/kube-scheduler"
+if [[ $K8S_VERSION == "v1.2"* ]]; then
+	echo "Building a v1.2.x branch of kubernetes"
+	TOREMOVE=(
+		"cmd/kube-proxy"
+		"cmd/kube-apiserver"
+		"cmd/kube-controller-manager"
+		"cmd/kubelet"
+		"cmd/kubemark"
+		"cmd/linkcheck"
+		"plugin/cmd/kube-scheduler"
 
-	" kube-apiserver"
-	" kube-controller-manager"
-	" kube-scheduler"
+		" kube-controller-manager"
+		" kube-scheduler"
+	)
+	TOCHANGE=(
+		's/ "\${KUBE_TEST_TARGETS\[@\]}"/ /'
+		"s@ kube-apiserver@ kubectl@"
+	)
+else
+	echo "Building an other branch of kubernetes"
+	TOREMOVE=(
+		"cmd/kube-proxy"
+		"cmd/kube-apiserver"
+		"cmd/kube-controller-manager"
+		"cmd/kubelet"
+		"cmd/kubernetes"
+		"plugin/cmd/kube-scheduler"
 
-	#"cmd/integration"
-	#"cmd/gendocs"
-    #"cmd/genman"
-    #"cmd/mungedocs"
-    #"cmd/genbashcomp"
-    #"cmd/genconversion"
-    #"cmd/gendeepcopy"
-    #"examples/k8petstore/web-server"
-    #"cmd/genswaggertypedocs"
-    #"github.com/onsi/ginkgo/ginkgo"
-    #"test/e2e/e2e.test"
-)
+		" kube-apiserver"
+		" kube-controller-manager"
+		" kube-scheduler"
+	)
+	TOCHANGE=(
+		's/ "\${KUBE_TEST_TARGETS\[@\]}"/ /'
+		"s@ hyperkube@ kubectl@"
+	)
+fi
+
   
 # Loop each and remove them
 for STR in "${TOREMOVE[@]}"; do
 	sed -e "s@ $STR@@" -i hack/lib/golang.sh
 done
 
-
-# Do not build test targets
-sed -e 's/ "\${KUBE_TEST_TARGETS\[@\]}"/ /' -i hack/lib/golang.sh
-
-# Build kubectl statically, instead of hyperkube
-sed -e "s@ hyperkube@ kubectl@" -i hack/lib/golang.sh
-
-# A patch is needed for go1.5.1
-#if [[ $GO_VERSION == "go1.5.1" ]]; then
-#	sed -e "s@@@" -i Godeps/...
-#fi
+# loop each change and replace
+for STR in "${TOCHANGE[@]}"; do
+	sed -e "$STR" -i hack/lib/golang.sh
+done
 
 # Build kubernetes binaries
 ./hack/build-go.sh
@@ -151,7 +168,6 @@ cp /gopath/bin/skydns /build/bin
 
 
 ## IMAGE REGISTRY ## 
-
 REGISTRY_DIR=$GOPATH/src/github.com/docker/distribution
 
 # Make the dir
@@ -160,16 +176,22 @@ mkdir -p $REGISTRY_DIR
 # Download source
 curl -sSL https://github.com/docker/distribution/archive/$REGISTRY_VERSION.tar.gz | tar -xz -C $REGISTRY_DIR --strip-components=1
 
-# A patch is needed for go1.5.1
-#if [[ $GO_VERSION == "go1.5.1" ]]; then
-#	sed -e "s@@@" -i $REGISTRY_DIR/Makefile
-#fi
+cd $REGISTRY_DIR/cmd/registry
+
+GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH go build
+
+# include rados, oss and gce storage drivers (optional)
+# apt-get install -y librados-dev apache2-utils
+# go build --tags include_rados include_oss include_gcs -v
 
 # And compile. This gopath hack may also be resolved by using godep
-GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH make -C $REGISTRY_DIR $REGISTRY_DIR/bin/registry 
+# this is much slower than above
+#GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH make -C $REGISTRY_DIR $REGISTRY_DIR/bin/registry 
+# go get github.com/docker/distribution/cmd/registry
+
 
 # Copy the binary
-cp $REGISTRY_DIR/bin/registry /build/bin
+cp registry /build/bin
 
 
 ## KUBE UI ##
