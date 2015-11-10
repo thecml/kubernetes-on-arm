@@ -11,9 +11,11 @@ FLANNEL_VERSION='v0.5.4'
 REGISTRY_VERSION='v2.2.0'
 
 ## OTHER PROJECTS ##
-# For the moment, go1.4.2 has to be used
-# GO_VERSION='go1.4.2'
+# For the moment, go1.4.3 is a better choice than go1.5.1
+# Because building with go1.5.1 is 2-4x slower than 1.4.3
+# And there's no big difference in the result
+GO_VERSION='go1.4.3'
 
-# New go version
-GO_BOOTSTRAP_VERSION='go1.4.2'
-GO_VERSION='go1.5.1'
+# Enable go1.5.1 by commenting above and uncommenting here
+#GO_BOOTSTRAP_VERSION='go1.4.3'
+#GO_VERSION='go1.5.1'
