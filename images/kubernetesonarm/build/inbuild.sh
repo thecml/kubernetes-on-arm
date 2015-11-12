@@ -12,6 +12,7 @@ export GOARM=6
 # Go can't compile k8s v1.0.x https://github.com/kubernetes/kubernetes/issues/16229
 # Haven't tested this go switch
 if [[ $GO_VERSION == "go1.5.1" && $K8S_VERSION == "v1.0"* ]]; then
+	echo "using go 1.4.x, because of kubernetes#16229"
 	export GOROOT=/goroot1.4
 	export PATH=$(echo $PATH | sed -e "s@/goroot@/goroot1.4@")
 fi
@@ -89,6 +90,10 @@ if [[ $K8S_VERSION == "v1.2"* ]]; then
 		's/ "\${KUBE_TEST_TARGETS\[@\]}"/ /'
 		"s@ kube-apiserver@ kubectl@"
 	)
+
+	# libcontainer ARM issue. That file is by default built only on amd64
+	mv Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump{_amd64,}.go
+	sed -e "s@,amd64@@" -i Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump.go
 else
 	echo "Building an other branch of kubernetes"
 	TOREMOVE=(
