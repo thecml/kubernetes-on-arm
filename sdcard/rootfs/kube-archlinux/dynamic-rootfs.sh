@@ -25,6 +25,9 @@ rootfs(){
 	# Copy the addons ot the kubernetes directory
 	cp -r $PROJROOT/addons $K8S_DIR
 
+	# Move master-multi.json to the static master files
+	cp $PROJROOT/images/kubernetesonarm/hyperkube/master-multi.json $K8S_DIR/static/master/
+
 	# Remember the time we built this SD Card
 	echo -e "SDCARD_BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $SDCARD_METADATA_FILE
 
