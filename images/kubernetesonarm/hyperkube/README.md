@@ -53,7 +53,7 @@ kubelet
 # In which directory kubelet finds the master components configuration
 --config=/etc/kubernetes/manifests-multi
 
-# If you want a minion:
+# If you want a worker:
 # omit the --config 
 # change the --address to 127.0.0.1 (not visible to other nodes)
 # change --api-server to http://${MASTER_IP}:8080

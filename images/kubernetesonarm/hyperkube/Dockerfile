@@ -1,7 +1,11 @@
 FROM luxas/raspbian
 
-# Install hyperkube
-RUN apt-install iptables ca-certificates
+# Install required packages
+RUN apt-install iptables \ 
+				ca-certificates \
+				file \
+				util-linux \
+				socat
 
 # Copy files
 COPY hyperkube /
