@@ -17,7 +17,7 @@ DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d/"
 # The images that are required
 REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
-REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry")
+REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry $K8S_PREFIX/loadbalancer")
 
 DEFAULT_TIMEZONE="Europe/Helsinki"
 DEFAULT_HOSTNAME="kubepi"
@@ -64,9 +64,11 @@ Usage:
 		- Currently defined addons
 				- dns: Makes all services accessible via DNS
 				- registry: Makes a central docker registry
+				- loadbalancer: A loadbalancer that exposes services to the outside world
+				- sleep: A debug addon. Starts two containers: luxas/alpine and luxas/raspbian.
 
 	kube-config disable-node - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong
-	kube-config disable - Synonym to disable-machine
+	kube-config disable - Synonym to disable-node
 	kube-config disable-addon [addon] - Disable an addon, not the whole cluster
 	
 	kube-config delete-data - Clean the /var/lib/etcd directory, where all master data is stored
@@ -297,10 +299,10 @@ load-to-system-docker(){
 }
 
 get-node-type(){
-	local minionstate=$(systemctl is-active k8s-worker)
+	local workerstate=$(systemctl is-active k8s-worker)
 	local masterstate=$(systemctl is-active k8s-master)
-	if [[ minionstate == "active" ]]; then
-		echo "minion";
+	if [[ workerstate == "active" ]]; then
+		echo "worker";
 	elif [[ masterstate == "active" ]]; then
 		echo "master";
 	else
@@ -442,7 +444,7 @@ start-worker(){
 
 	echo "Starting the worker containers"
 
-	# Enable these minion services
+	# Enable these worker services
 	systemctl enable k8s-worker
 	systemctl start k8s-worker
 
@@ -599,5 +601,7 @@ case $1 in
         'info')
 				version;;
 		'help')
+				usage;;
+		*) 
 				usage;;
 esac

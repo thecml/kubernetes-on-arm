@@ -155,6 +155,9 @@ if [[ -f os/$OSNAME/commands.sh ]]; then
 	cat os/$OSNAME/commands.sh >> $CUSTOMCMDFILETMP
 fi
 
+# Insert a blank line that separates the functions
+echo "" >> $CUSTOMCMDFILETMP
+
 # Copy the contents of the custom board file to the temp command file
 if [[ -f os/$OSNAME/$MACHINENAME.sh ]]; then
 	cat os/$OSNAME/$MACHINENAME.sh >> $CUSTOMCMDFILETMP
