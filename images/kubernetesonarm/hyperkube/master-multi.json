@@ -17,7 +17,7 @@
             "--master=127.0.0.1:8080",
             "--v=2",
             "--service-account-private-key-file=/var/run/kubernetes/apiserver.key",
-            "--root-ca-file=/var/run/kubernetes/apiserver.crt",
+            "--root-ca-file=/var/run/kubernetes/apiserver.crt"
         ],
         "volumeMounts":[{
           "name": "kubecerts",
