@@ -5,10 +5,17 @@ RUN apt-install iptables \
 				ca-certificates \
 				file \
 				util-linux \
-				socat
+				socat \
+				curl
 
 # Copy files
-COPY hyperkube /
+COPY hyperkube \
+	setup-files.sh \		
+	make-ca-cert.sh
+	
+	# Copy to rootfs
+	/
+
 COPY master-multi.json /etc/kubernetes/manifests-multi/master.json
 COPY safe_format_and_mount /usr/share/google/safe_format_and_mount
 
