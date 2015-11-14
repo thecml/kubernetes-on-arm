@@ -51,6 +51,19 @@
             "--master=127.0.0.1:8080",
             "--v=2"
         ]
+      },
+      {
+        "name": "kube-proxy",
+        "image": "kubernetesonarm/hyperkube",
+        "command": [
+            "/hyperkube",
+            "proxy",
+            "--master=http://127.0.0.1:8080",
+            "--v=2"
+        ],
+        "securityContext": {
+          "privileged": true
+        }
       }
     ],
     "volumes": [
