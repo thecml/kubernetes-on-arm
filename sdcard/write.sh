@@ -48,7 +48,7 @@ Explanation:
 			- rpi - For Raspberry Pi A, A+, B, B+
 			- rpi-2 - For Raspberry Pi 2 Model B
 			- parallella - The Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel
-			- cubietruck - Feel free to test and return bugs. @luxas doesn't have a cubie, so he can't test it.
+			- cubietruck - For Cubietruck
 	os - The operating system which should be downloaded and installed.
 		- Currently supported:
 			- archlinux - Arch Linux ARM
@@ -114,8 +114,7 @@ BOOT=$TMPDIR/boot
 ROOT=$TMPDIR/root
 PROJROOT=./..
 LOGFILE=/tmp/kubernetes-on-arm.log
-CUSTOMCMDFILETMP=$TMPDIR/customcmd
-CUSTOMCMDFILETARGET=etc/customcmd.sh
+CUSTOMCMDFILETARGET=$ROOT/etc/commands.sh
 
 MACHINENAME=$2
 OSNAME=$3
@@ -141,7 +140,7 @@ fi
 ########################## SOURCE FILES ##############################
 
 # Make some temp directories
-mkdir -p $ROOT $BOOT
+mkdir -p $ROOT $BOOT $(dirname $CUSTOMCMDFILETARGET)
 
 # Ensure they exists	
 if [[ ! -f os/$OSNAME.sh ]]; then
@@ -152,15 +151,15 @@ fi
 
 # Copy the contents of the command file to the temp command file
 if [[ -f os/$OSNAME/commands.sh ]]; then
-	cat os/$OSNAME/commands.sh >> $CUSTOMCMDFILETMP
+	cat os/$OSNAME/commands.sh >> $CUSTOMCMDFILETARGET
 fi
 
 # Insert a blank line that separates the functions
-echo "" >> $CUSTOMCMDFILETMP
+echo "" >> $CUSTOMCMDFILETARGET
 
 # Copy the contents of the custom board file to the temp command file
 if [[ -f os/$OSNAME/$MACHINENAME.sh ]]; then
-	cat os/$OSNAME/$MACHINENAME.sh >> $CUSTOMCMDFILETMP
+	cat os/$OSNAME/$MACHINENAME.sh >> $CUSTOMCMDFILETARGET
 fi
 
 # Source machine and os
@@ -198,9 +197,6 @@ echo "OS written to SD Card"
 
 # And invoke the function
 rootfs
-
-# Write the custom cmd file
-mv $CUSTOMCMDFILETMP $ROOT/$CUSTOMCMDFILETARGET
 
 # Remove the intermediate file
 rm $ROOT/dynamic-rootfs.sh
