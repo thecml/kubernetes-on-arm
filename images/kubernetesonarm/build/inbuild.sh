@@ -72,7 +72,7 @@ cd /build/kubernetes
 
 # Do not build these packages
 # Now it should be much faster
-if [[ $K8S_VERSION == "v1.2"* ]]; then
+if [[ $K8S_VERSION == "v1.2"* || $K8S_VERSION == "v1.1"* ]]; then
 	echo "Building a v1.2.x branch of kubernetes"
 	TOREMOVE=(
 		"cmd/kube-proxy"
