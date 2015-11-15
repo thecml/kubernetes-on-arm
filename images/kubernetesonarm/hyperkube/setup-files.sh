@@ -18,12 +18,17 @@ create_token() {
   echo $(cat /dev/urandom | base64 | tr -d "=+/" | dd bs=32 count=1 2> /dev/null)
 }
 
-echo "admin,admin,admin" > /data/basic_auth.csv
-CERT_DIR=/data /make-ca-cert.sh $(hostname -i)
+if [[ ! -f /data/ca.crt || ! -f /data/server.cert || ! -f /data/server.key || ! -f /data/known_tokens.csv || ! -f /data/basic_auth.csv ]]; then
+	echo "Removing /data, because this script will make new scripts from scratch !!!"
+	rm -r /data
 
-echo "$(create_token),admin,admin" >> /data/known_tokens.csv
-echo "$(create_token),kubelet,kubelet" >> /data/known_tokens.csv
-echo "$(create_token),kube_proxy,kube_proxy" >> /data/known_tokens.csv
+	echo "admin,admin,admin" > /data/basic_auth.csv
+	CERT_DIR=/data /make-ca-cert.sh $(hostname -i)
+
+	echo "$(create_token),admin,admin" >> /data/known_tokens.csv
+	echo "$(create_token),kubelet,kubelet" >> /data/known_tokens.csv
+	echo "$(create_token),kube_proxy,kube_proxy" >> /data/known_tokens.csv
+fi
 
 while true; do
 	sleep 3600
