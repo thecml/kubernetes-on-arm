@@ -2,5 +2,5 @@
 post_install(){
 
 	# Customized commands just for cubietruck
-	pacman -S uboot-cubietruck
+	pacman -S uboot-cubietruck --noconfirm
 }

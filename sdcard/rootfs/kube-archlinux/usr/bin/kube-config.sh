@@ -80,7 +80,7 @@ install(){
 	if [[ -f $KUBERNETES_DIR/dynamic-env/env.conf ]]; then
 		source $KUBERNETES_DIR/dynamic-env/env.conf
 	elif [[ -z $MACHINE || -z $OS ]]; then
-		read -p "Which board is this running on? Options: [rpi, rpi-2, cubietruck]. " MACHINE
+		read -p "Which board is this running on? Options: [rpi, rpi-2, cubietruck, parallella]. " MACHINE
 		read -p "Which OS do you have? Options: [archlinux]. " OS
 
 		# Write the info to the file
@@ -105,7 +105,7 @@ EOF
 		pacman -Syu --noconfirm
 
 		echo "Now were going to install some packages"
-		pacman -S $PKGS_TO_INSTALL --noconfirm
+		pacman -S $PKGS_TO_INSTALL --noconfirm --needed
 	fi
 
 	# Create a symlink to the dropin location, so docker will use overlay
@@ -126,7 +126,7 @@ EOF
 	#ln -s $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest $KUBERNETES_DIR/binaries
 
 	# Download latest binaries, now we have them in $PATH
-	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
+	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $KUBERNETES_DIR/binaries
 
 	if [[  $(type -t post_install) == "function" ]]; then
 		echo "Doing some custom work specific to this board"

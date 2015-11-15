@@ -46,11 +46,4 @@ EOF
 
 	source ../version
 	echo "K8S_ON_ARM_VERSION=$VERSION" >> $SDCARD_METADATA_FILE
-
-	# Parallella patch, specific to this rootfs. Disable overlay, because linux 3.14 doesn't have overlay support
-	if [[ $MACHINENAME == "parallella" ]]; then
-		
-		sed -e "s@-s overlay@@" -i $K8S_DIR/dropins/docker-flannel.conf
-		sed -e "s@-s overlay@@" -i $K8S_DIR/dropins/docker-overlay.conf
-	fi
 }
