@@ -10,8 +10,6 @@ KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
 PROJECT_SOURCE=$KUBERNETES_DIR/source
 K8S_PREFIX="kubernetesonarm"
 
-COMMANDS_FILE=/etc/commands.sh
-
 DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d/"
 
 # The images that are required
@@ -29,10 +27,7 @@ if [[ ! -f $KUBERNETES_CONFIG ]]; then
 	echo "K8S_MASTER_IP=127.0.0.1" > $KUBERNETES_CONFIG
 fi
 
-# Source the commands, e.g. os_install, os_upgrade, post_install
-if [[ -f $COMMANDS_FILE ]]; then
-	source $COMMANDS_FILE
-fi
+
 # Source the config
 source $KUBERNETES_CONFIG
 
@@ -81,12 +76,31 @@ EOF
 
 install(){
 
+	# Source the commands, e.g. os_install, os_upgrade, post_install
+	if [[ -f $KUBERNETES_DIR/dynamic-env/env.conf ]]; then
+		source $KUBERNETES_DIR/dynamic-env/env.conf
+	elif [[ -z $MACHINE || -z $OS ]]; then
+		read -p "Which board is this running on? Options: [rpi, rpi-2, cubietruck]. " MACHINE
+		read -p "Which OS do you have? Options: [archlinux]. " OS
+
+		# Write the info to the file
+		cat > $KUBERNETES_DIR/dynamic-env/env.conf <<EOF
+OS=$OS
+MACHINE=$MACHINE
+EOF
+	fi
+
+	# Source the files
+	source $KUBERNETES_DIR/dynamic-env/$MACHINE.sh
+	source $KUBERNETES_DIR/dynamic-env/$OS.sh
+
 	# If we have a external command file, use it
 	if [[ $(type -t os_install) == "function" ]]; then
 
 		echo "Installing required packages for this OS"
 		os_install $PKGS_TO_INSTALL
 	else
+		# Fallback on archlinux for the moment
 		echo "Updating the system..."
 		pacman -Syu --noconfirm
 
@@ -142,7 +156,7 @@ install(){
 			[yY]*)
 				swap;;
 		esac
-	elif [[ $SWAP == 1 ]]; then
+	elif [[ $SWAP == 1 || $SWAP == "y" || $SWAP == "Y" ]]; then
 		swap
 	fi
 
@@ -174,7 +188,7 @@ install(){
 			*)
 				reboot;;
 		esac
-	elif [[ $REBOOT == 1 ]]; then
+	elif [[ $REBOOT == 1 || $REBOOT == "y" || $REBOOT == "Y" ]]; then
 		reboot
 	fi
 }

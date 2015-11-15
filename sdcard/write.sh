@@ -108,13 +108,11 @@ else
 fi
 
 # A tmp dir to store things in, a boot partition and the root filesystem
-# TODO: use mktemp... instead of hard-coded dir
 TMPDIR=$(mktemp -d /tmp/writesdcard.XXXXXXXX)
 BOOT=$TMPDIR/boot
 ROOT=$TMPDIR/root
 PROJROOT=./..
 LOGFILE=/tmp/kubernetes-on-arm.log
-CUSTOMCMDFILETARGET=$ROOT/etc/commands.sh
 
 MACHINENAME=$2
 OSNAME=$3
@@ -140,26 +138,13 @@ fi
 ########################## SOURCE FILES ##############################
 
 # Make some temp directories
-mkdir -p $ROOT $BOOT $(dirname $CUSTOMCMDFILETARGET)
+mkdir -p $ROOT $BOOT
 
 # Ensure they exists	
 if [[ ! -f os/$OSNAME.sh ]]; then
 	echo "os/$OSNAME.sh not found. That file is required. Exiting..."
 	rm -r $TMPDIR
 	exit 1
-fi
-
-# Copy the contents of the command file to the temp command file
-if [[ -f os/$OSNAME/commands.sh ]]; then
-	cat os/$OSNAME/commands.sh >> $CUSTOMCMDFILETARGET
-fi
-
-# Insert a blank line that separates the functions
-echo "" >> $CUSTOMCMDFILETARGET
-
-# Copy the contents of the custom board file to the temp command file
-if [[ -f os/$OSNAME/$MACHINENAME.sh ]]; then
-	cat os/$OSNAME/$MACHINENAME.sh >> $CUSTOMCMDFILETARGET
 fi
 
 # Source machine and os

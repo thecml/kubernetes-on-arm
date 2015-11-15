@@ -30,6 +30,12 @@ rootfs(){
 	# Symlink the addons to an easier path
 	ln -s ./source/addons $K8S_DIR
 
+	# Inform the newly created SD Cards' scripts about which files to use.
+	cat > $K8S_DIR/dynamic-env/env.conf <<EOF
+OS=$OSNAME
+MACHINE=$MACHINENAME
+EOF
+
 	# Remember the time we built this SD Card
 	echo -e "SDCARD_BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $SDCARD_METADATA_FILE
 
