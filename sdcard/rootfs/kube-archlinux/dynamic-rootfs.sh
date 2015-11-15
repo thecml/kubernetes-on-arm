@@ -25,7 +25,7 @@ rootfs(){
 
  	# Symlink latest built binaries to an easier path
 	mkdir -p $K8S_DIR/source/images/kubernetesonarm/_bin/latest
-	ln -s ./source/kubernetesonarm/_bin/latest $K8S_DIR/binaries
+	ln -s ./source/images/kubernetesonarm/_bin/latest $K8S_DIR/binaries
 
 	# Symlink the addons to an easier path
 	ln -s ./source/addons $K8S_DIR
