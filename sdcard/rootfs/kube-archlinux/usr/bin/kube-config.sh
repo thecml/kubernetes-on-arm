@@ -64,7 +64,7 @@ Usage:
 		- Currently defined addons
 				- dns: Makes all services accessible via DNS
 				- registry: Makes a central docker registry
-				- loadbalancer: A loadbalancer that exposes services to the outside world
+				- loadbalancer: A loadbalancer that exposes services to the outside world (experimental)
 				- sleep: A debug addon. Starts two containers: luxas/alpine and luxas/raspbian.
 
 	kube-config disable-node - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong
@@ -83,6 +83,8 @@ install(){
 
 	# If we have a external command file, use it
 	if [[ $(type -t os_install) == "function" ]]; then
+
+		echo "Installing required packages for this OS"
 		os_install $PKGS_TO_INSTALL
 	else
 		echo "Updating the system..."
@@ -93,9 +95,9 @@ install(){
 	fi
 
 	# Create a symlink to the dropin location, so docker will use overlay
-	mkdir -p $DOCKER_DROPIN_DIR
-	ln -s $KUBERNETES_DIR/dropins/docker-overlay.conf $DOCKER_DROPIN_DIR
-	systemctl daemon-reload
+	#mkdir -p $DOCKER_DROPIN_DIR
+	#ln -s $KUBERNETES_DIR/dropins/docker-overlay.conf $DOCKER_DROPIN_DIR
+	#systemctl daemon-reload
 
 	# But do not start docker now, it won't work.
 
@@ -106,8 +108,8 @@ install(){
 	echo "Downloading prebuilt binaries. It is possible to build them manually later."
 	
 	# First, symlink the latest binaries directory to a better place
-	mkdir -p $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
-	ln -s $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest $KUBERNETES_DIR/binaries
+	#mkdir -p $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
+	#ln -s $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest $KUBERNETES_DIR/binaries
 
 	# Download latest binaries, now we have them in $PATH
 	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
@@ -134,7 +136,7 @@ install(){
 
 	# Has the user explicitely specified it? If not, ask.
 	if [[ -z $SWAP ]]; then
-		read -p "Do you want to create an 1GB swapfile (useful for compiling)? n is default [Y/n] " swapanswer
+		read -p "Do you want to create an 1GB swapfile (required for compiling)? n is default [y/N] " swapanswer
 		
 		case $swapanswer in
 			[yY]*)
@@ -187,7 +189,7 @@ upgrade(){
 }
 
 swap(){
-	echo "Make an 1GB swapfile, NOTE: it takes up precious SD Card space"
+	echo "Makes an 1GB swapfile, NOTE: it takes up precious SD Card space"
 
 	# Check that the swapfile doesn't already exist
 	if [[ ! -f /swapfile ]]; then
@@ -448,6 +450,9 @@ start-worker(){
 	systemctl enable k8s-worker
 	systemctl start k8s-worker
 
+	# Enable proxy mode for the worker
+	kubectl -s http://$K8S_MASTER_IP annotate node $(hostname -i | awk '{print $1}') net.beta.kubernetes.io/proxy-mode=iptables
+
 	echo "Worker Kubernetes services enabled"
 }
 
@@ -512,11 +517,16 @@ disable(){
 
 
 remove-etcd-datadir(){
-	read -p "Do you want to delete all Kubernetes data about this cluster? n is default [Y/n] " removeanswer
+	read -p "Do you want to delete all Kubernetes data about this cluster? m(ove) is default, which moves the directories to {,old}. y deletes them and n exits [M/n/y] " removeanswer
 	case $removeanswer in
+		[nN]*)
+			echo "Exiting...";;
 		[yY]*)
-			rm -r /var/lib/etcd
+			rm -r /var/lib/kubernetes
 			echo "Deleted all Kubernetes data";;
+		*)
+			mv /var/lib/kubernetes{,old}
+			echo "Moved all directories to {,old}";;
 	esac
 }
 
@@ -550,6 +560,8 @@ version(){
     if [ "$?" == "0" ]; then
 
     	echo "docker version: $(docker version | grep "Server version" | awk '{print $3}')"
+
+    	# TODO: maybe get version from /etc/kubernetes/binaries/version.sh instead
     	# Do we have hyperkube? Then output version
       	if [[ ! -z $(docker images | grep $K8S_PREFIX/hyperkube) ]]; then
       		echo "kubernetes version: $(docker run --rm $K8S_PREFIX/hyperkube /hyperkube --version | grep -o "v[0-9\.]*" | cut -c2-)"

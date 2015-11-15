@@ -17,22 +17,24 @@ rootfs(){
 	cp -r $PROJROOT $K8S_DIR/source
 
 	# Remove the .sh
-	mv $ROOT/usr/bin/kube-config.sh $ROOT/usr/bin/kube-config
+	mv $ROOT/usr/bin/kube-config{.sh,}
 
 	# Make the docker dropin directory
 	mkdir -p $ROOT/usr/lib/systemd/system/docker.service.d
+	ln -s ../../../../../etc/kubernetes/dropins/docker-overlay.conf $ROOT/usr/lib/systemd/system/docker.service.d/docker-overlay.conf
 
-	# Copy the addons ot the kubernetes directory
-	cp -r $PROJROOT/addons $K8S_DIR
+ 	# Symlink latest built binaries to an easier path
+	mkdir -p $K8S_DIR/source/images/kubernetesonarm/_bin/latest
+	ln -s ./source/kubernetesonarm/_bin/latest $K8S_DIR/binaries
 
-	# Move master-multi.json to the static master files
-	cp $PROJROOT/images/kubernetesonarm/hyperkube/master-multi.json $K8S_DIR/static/master/
+	# Symlink the addons to an easier path
+	ln -s ./source/addons $K8S_DIR
 
 	# Remember the time we built this SD Card
 	echo -e "SDCARD_BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $SDCARD_METADATA_FILE
 
 	COMMIT=$(git log --oneline 2>&1 | head -1 | awk '{print $1}')
-	if [[ $COMMIT != "bash:" && $COMMIT != "fatal:" ]]; then
+	if [[ $COMMIT != "bash:"* && $COMMIT != "fatal:"* ]]; then
 		echo "K8S_ON_ARM_COMMIT=$COMMIT" >> $SDCARD_METADATA_FILE
 	fi
 
