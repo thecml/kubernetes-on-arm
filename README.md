@@ -74,14 +74,11 @@ kube-config install
 
 # It will ask for which hostname you want. Defaults to kubepi.
 
-# It will also ask if it should download prebuilt docker images
-# If you aren't planning to build and hack the images yourself, answer y
-
 # Last question is whether you want to reboot
 # You must do this, otherwise docker will behave very strange and fail
 
 # If you want to run this script non-interactively, do this:
-# TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi DOWNLOAD_IMAGES=1 REBOOT=0 kube-config install
+# TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
 # This script runs in 2-3 mins
 ```
 Kubernetes should work on Raspberry Pi 1 (A, A+, B, B+), which is armv6, Raspberry Pi 2 (armv7).   
@@ -222,7 +219,6 @@ curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/default/services/my-ngin
 # Generic command
 # curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/[namespace]/services/[service-name]
 
-
 # On master, run this to see open ports
 netstat -nlp
 
@@ -264,7 +260,7 @@ Systemd services:
  - flannel: Starts the `kubernetesonarm/flannel` container. Depends on `etcd`.
  - docker: Plain docker service. Dropins are symlinked. Depends on `flannel`.
  - k8s-master: Service that starts up the main master components
- - k8s-minion: Service that starts up `kubelet` and the `proxy`.
+ - k8s-worker: Service that starts up `kubelet` and the `proxy`.
 
 
 Useful commands for troubleshooting: 
