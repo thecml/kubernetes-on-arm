@@ -455,22 +455,34 @@ start-worker(){
 start-addon(){
 	if [[ is-active ]]; then
 
-		# The addon images are required
-		# Todo, make faster
-		require-images ${REQUIRED_ADDON_IMAGES[@]}
+		if [[ -d $ADDONS_DIR/$1 ]];
 
-		# Invoke an optional addon function
-		case $1 in
-			'dns') addon-dns;;
+			# The addon images are required
+			require-images ${REQUIRED_ADDON_IMAGES[@]}
 
-			# For each file in the addon dir, kubectl create
-			*) 	for FILE in $ADDONS_DIR/$1/*.yaml; do
-					kubectl create -f $FILE
-				done;;
-		esac
-			
+			# The kube-system namespace is required
+			NAMESPACE=`eval "kubectl get namespaces | grep kube-system | cat"`
 
-		echo "Started addon: $1"
+			# Create kube-system if necessary
+			if [[ ! "$NAMESPACE" ]]; then
+				kubectl create -f $ADDONS_DIR/kube-system.yaml
+			fi
+
+			# Invoke an optional addon function
+			case $1 in
+				'dns') addon-dns;;
+
+				# For each file in the addon dir, kubectl create
+				*) 	for FILE in $ADDONS_DIR/$1/*.yaml; do
+						kubectl create -f $FILE
+					done;;
+			esac
+
+			echo "Started addon: $1"
+		else
+			echo "This addon doesn't exist: $1"
+		fi
+
 	else
 		echo "Kubernetes is not running!"
 	fi
@@ -479,12 +491,16 @@ start-addon(){
 stop-addon(){
 	if [[ is-active ]]; then
 
-		# Stop all services
-		for FILE in $ADDONS_DIR/$1/*.yaml; do
-			kubectl delete -f $FILE
-		done
+		if [[ -d $ADDONS_DIR/$1 ]];
+			# Stop all services
+			for FILE in $ADDONS_DIR/$1/*.yaml; do
+				kubectl delete -f $FILE
+			done
 
-		echo "Stopped addon: $1"
+			echo "Stopped addon: $1"
+		else
+			echo "This addon doesn't exist: $1"
+		fi
 	else
 		echo "Kubernetes is not running!"
 	fi
