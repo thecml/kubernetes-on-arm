@@ -225,27 +225,9 @@ EOF
 
 # This is faster than Docker Hub
 download_imgs(){
-	
-	# If the temp dir exists, remove and recreate
-	if [[ -d /tmp/downloadk8s ]]; then
-		rm -rf /tmp/downloadk8s
-	fi
-
-	# Make the directory
-	mkdir -p /tmp/downloadk8s
-
+	# Approx. 10 secs faster than doing this with two commands, now ~160 secs
 	echo "Downloading Kubernetes docker images from Github"
-	# Get the uploaded archive
-	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | tar -xz -C /tmp/downloadk8s
-
-	echo "Loading them to docker"
-	# And load it to docker
-	docker load -i /tmp/downloadk8s/images.tar
-
-	echo "Finished loading them to docker"
-
-	# And remove the temp
-	rm -r /tmp/downloadk8s
+	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | tar -xz -O | docker load
 }
 
 ### --------------------------------- HELPERS -----------------------------------
