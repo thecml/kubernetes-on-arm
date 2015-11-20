@@ -17,10 +17,10 @@ main() {
 	mkdir -p $OUT
 
 	echo "Saving docker images: "
-	time docker save ${IMAGES[@]} | xz > $OUT/images.tar.xz
+	docker save ${IMAGES[@]} | gzip > $OUT/images.tar.gz
 
 	echo "Bundling binaries: "
-	time tar -czf $OUT/binaries.tar.gz /etc/kubernetes/binaries/*
+	tar -czf $OUT/binaries.tar.gz /etc/kubernetes/binaries/*
 
 	cp /etc/kubernetes/binaries/kubectl $OUT
 
