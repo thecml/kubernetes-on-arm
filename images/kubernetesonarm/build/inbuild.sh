@@ -73,7 +73,7 @@ cd /build/kubernetes
 # Do not build these packages
 # Now it should be much faster
 if [[ $K8S_VERSION == "v1.2"* || $K8S_VERSION == "v1.1"* ]]; then
-	echo "Building a v1.2.x branch of kubernetes"
+	echo "Building a >= v1.1.x branch of kubernetes"
 	TOREMOVE=(
 		"cmd/kube-proxy"
 		"cmd/kube-apiserver"
@@ -94,8 +94,11 @@ if [[ $K8S_VERSION == "v1.2"* || $K8S_VERSION == "v1.1"* ]]; then
 	# libcontainer ARM issue. That file is by default built only on amd64
 	mv Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump{_amd64,}.go
 	sed -e "s@,amd64@@" -i Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump.go
+
+	# Patch the nsenter writer, this is fixed on master: #16969
+	sed -e "s@echo@printf@" -i pkg/util/io/writer.go
 else
-	echo "Building an other branch of kubernetes"
+	echo "Building an old branch of kubernetes"
 	TOREMOVE=(
 		"cmd/kube-proxy"
 		"cmd/kube-apiserver"
@@ -140,7 +143,7 @@ cd build/pause
 
 # Copy over the binaries
 cp pause /build/bin
-cp /gopath/bin/goupx /build/bin
+#cp /gopath/bin/goupx /build/bin
 
 ## KUBE2SKY ##
 
