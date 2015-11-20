@@ -11,7 +11,7 @@ RUN apt-install iptables \
 # Copy files
 COPY hyperkube \
 	setup-files.sh \		
-	make-ca-cert.sh
+	make-ca-cert.sh \
 	
 	# Copy to rootfs
 	/

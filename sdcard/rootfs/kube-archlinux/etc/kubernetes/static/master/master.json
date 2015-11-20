@@ -15,15 +15,13 @@
             "/hyperkube",
             "controller-manager",
             "--master=127.0.0.1:8080",
-            "--v=4",
-            "--terminated-pod-gc-threshold=100",
-            "--min-resync-period=3m",
-            "--service-account-private-key-file=/srv/kubernetes/server.key",
-            "--root-ca-file=/srv/kubernetes/ca.crt"
+            "--v=2",
+            "--service-account-private-key-file=/var/run/kubernetes/apiserver.key",
+            "--root-ca-file=/var/run/kubernetes/apiserver.crt"
         ],
         "volumeMounts":[{
           "name": "kubecerts",
-          "mountPath": "/srv/kubernetes"
+          "mountPath": "/var/run/kubernetes"
         }]
       },
       {
@@ -38,17 +36,11 @@
             "--etcd-servers=http://127.0.0.1:4001",
             "--cluster-name=kubernetes",
             "--allow-privileged=true",
-            "--min-request-timeout=300",
-            "--client-ca-file=/srv/kubernetes/ca.crt",
-            "--tls-cert-file=/srv/kubernetes/server.cert",
-            "--tls-private-key-file=/srv/kubernetes/server.key",
-            "--basic-auth-file=/srv/kubernetes/basic_auth.csv",
-            "--token-auth-file=/srv/kubernetes/known_tokens.csv",
-            "--v=4"
+            "--v=2"
         ],
         "volumeMounts":[{
           "name": "kubecerts",
-          "mountPath": "/srv/kubernetes"
+          "mountPath": "/var/run/kubernetes"
         }]
       },
       {
@@ -73,28 +65,16 @@
         "securityContext": {
           "privileged": true
         }
-      },
-      {
-        "name": "setup",
-        "image": "kubernetesonarm/hyperkube",
-        "command": [
-            "/setup-files.sh"
-        ],
-        "volumeMounts": [
-          {
-            "name": "kubecerts",
-            "mountPath": "/data"
-          }
-        ]
       }
     ],
     "volumes": [
-	    {
-	      "name": "kubecerts",
-	      "hostPath": {
+      {
+        "name": "kubecerts",
+        "hostPath": {
           "path": "/var/lib/kubernetes/certs"
         }
-	    }
+      }
     ]
   }
 }
+

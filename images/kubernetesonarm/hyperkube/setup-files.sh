@@ -20,10 +20,10 @@ create_token() {
 
 if [[ ! -f /data/ca.crt || ! -f /data/server.cert || ! -f /data/server.key || ! -f /data/known_tokens.csv || ! -f /data/basic_auth.csv ]]; then
 	echo "Removing /data, because this script will make new scripts from scratch !!!"
-	rm -r /data
+	rm -rf /data/*
 
 	echo "admin,admin,admin" > /data/basic_auth.csv
-	CERT_DIR=/data /make-ca-cert.sh $(hostname -i)
+	CERT_DIR=/data /make-ca-cert.sh $(hostname -I | awk '{print $1}')
 
 	echo "$(create_token),admin,admin" >> /data/known_tokens.csv
 	echo "$(create_token),kubelet,kubelet" >> /data/known_tokens.csv
