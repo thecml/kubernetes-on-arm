@@ -43,9 +43,9 @@ spec:
             cpu: 100m
             memory: 50Mi
         args:
-        # command = "/kube2sky"
+#        command = "/kube2sky"
         - -domain=cluster.local
-        - -kube_master_url=KUBEMASTER
+#        - -kube_master_url=KUBEMASTER
       - name: skydns
         image: kubernetesonarm/skydns
         resources:
