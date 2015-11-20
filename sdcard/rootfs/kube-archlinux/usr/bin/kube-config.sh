@@ -376,6 +376,11 @@ start-master(){
 	systemctl enable k8s-master
 	systemctl start k8s-master
 
+	# TODO: wait for k8s to function, with some timeout and annotate the node
+	# echo "Waiting for Kubernetes to start, you may Ctrl-C this if you need. However, if you do that, you won't have iptables proxy mode"
+	# kubectl annotate node $(hostname -i | awk '{print $1}') net.beta.kubernetes.io/proxy-mode=iptables
+	# kill kube-proxy
+
 	echo "Master Kubernetes services enabled"
 }
 
@@ -453,6 +458,7 @@ start-worker(){
 }
 
 start-addon(){
+	# TODO: this check doesn't work
 	if [[ is-active ]]; then
 
 		if [[ -d $ADDONS_DIR/$1 ]];
@@ -470,7 +476,7 @@ start-addon(){
 
 			# Invoke an optional addon function
 			case $1 in
-				'dns') addon-dns;;
+				#'dns') addon-dns;;
 
 				# For each file in the addon dir, kubectl create
 				*) 	for FILE in $ADDONS_DIR/$1/*.yaml; do
@@ -535,9 +541,12 @@ remove-etcd-datadir(){
 			echo "Exiting...";;
 		[yY]*)
 			rm -r /var/lib/kubernetes
+			rm -r /var/lib/kubelet
 			echo "Deleted all Kubernetes data";;
 		*)
+			rm -r /var/lib/kubeletold /var/lib/kubernetesold
 			mv /var/lib/kubernetes{,old}
+			mv /var/lib/kubelet{,old}
 			echo "Moved all directories to {,old}";;
 	esac
 }
@@ -573,11 +582,16 @@ version(){
 
     	echo "docker version: $(docker version | grep "Server version" | awk '{print $3}')"
 
-    	# TODO: maybe get version from /etc/kubernetes/binaries/version.sh instead
-    	# Do we have hyperkube? Then output version
-      	if [[ ! -z $(docker images | grep $K8S_PREFIX/hyperkube) ]]; then
-      		echo "kubernetes version: $(docker run --rm $K8S_PREFIX/hyperkube /hyperkube --version | grep -o "v[0-9\.]*" | cut -c2-)"
-      	fi
+    	# if kubectl exists, output k8s server version. If there is no server, output client Version
+    	if [[ -f $(which kubectl) ]]; then
+    		SERVER_K8S=$(kubectl version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
+
+    		if [[ ! -z $SERVER_K8S ]]; then
+    			echo "kubernetes version: $SERVER_K8S"
+    		else
+    			echo "kubectl version: $(kubectl version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
+    		fi
+    	fi
     fi
 }
 
