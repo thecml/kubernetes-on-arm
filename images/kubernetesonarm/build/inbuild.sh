@@ -96,7 +96,7 @@ if [[ $K8S_VERSION == "v1.2"* || $K8S_VERSION == "v1.1"* ]]; then
 	sed -e "s@,amd64@@" -i Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump.go
 
 	# Patch the nsenter writer, this is fixed on master: #16969
-	sed -e "s@echo@printf@" -i pkg/util/io/writer.go
+	curl -sSL https://raw.githubusercontent.com/kubernetes/kubernetes/8c1d820435670e410f8fd54401906c3d387c2098/pkg/util/io/writer.go > pkg/util/io/writer.go
 else
 	echo "Building an old branch of kubernetes"
 	TOREMOVE=(
@@ -228,11 +228,11 @@ curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar -xz
 mv contrib* contrib
 
 
-cd /build/contrib/service-loadbalancer
+#cd /build/contrib/service-loadbalancer
 
-CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o service_loadbalancer ./service_loadbalancer.go ./loadbalancer_log.go
+#CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o service_loadbalancer ./service_loadbalancer.go ./loadbalancer_log.go
 
-cp service_loadbalancer /build/bin
+#cp service_loadbalancer /build/bin
 
 ## EXECHEALTHZ ##
 
