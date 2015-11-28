@@ -451,8 +451,8 @@ start-worker(){
 	systemctl enable k8s-worker
 	systemctl start k8s-worker
 
-	# Enable proxy mode for the worker
-	kubectl -s http://$K8S_MASTER_IP annotate node $(hostname -i | awk '{print $1}') net.beta.kubernetes.io/proxy-mode=iptables
+	# Enable proxy mode for the worker, included in future release
+	# kubectl -s http://$K8S_MASTER_IP:8080 annotate node $(hostname -i | awk '{print $1}') net.beta.kubernetes.io/proxy-mode=iptables
 
 	echo "Worker Kubernetes services enabled"
 }
@@ -461,7 +461,7 @@ start-addon(){
 	# TODO: this check doesn't work
 	if [[ is-active ]]; then
 
-		if [[ -d $ADDONS_DIR/$1 ]];
+		if [[ -d $ADDONS_DIR/$1 ]]; then
 
 			# The addon images are required
 			require-images ${REQUIRED_ADDON_IMAGES[@]}
@@ -497,7 +497,7 @@ start-addon(){
 stop-addon(){
 	if [[ is-active ]]; then
 
-		if [[ -d $ADDONS_DIR/$1 ]];
+		if [[ -d $ADDONS_DIR/$1 ]]; then
 			# Stop all services
 			for FILE in $ADDONS_DIR/$1/*.yaml; do
 				kubectl delete -f $FILE
@@ -540,11 +540,13 @@ remove-etcd-datadir(){
 		[nN]*)
 			echo "Exiting...";;
 		[yY]*)
-			rm -r /var/lib/kubernetes
-			rm -r /var/lib/kubelet
+			umount $(mount | grep /var/lib/kubelet | awk '{print $3}')
+			rm -rf /var/lib/kubernetes
+			rm -rf /var/lib/kubelet
 			echo "Deleted all Kubernetes data";;
 		*)
-			rm -r /var/lib/kubeletold /var/lib/kubernetesold
+			umount $(mount | grep /var/lib/kubelet | awk '{print $3}')
+			rm -rf /var/lib/kubeletold /var/lib/kubernetesold
 			mv /var/lib/kubernetes{,old}
 			mv /var/lib/kubelet{,old}
 			echo "Moved all directories to {,old}";;
