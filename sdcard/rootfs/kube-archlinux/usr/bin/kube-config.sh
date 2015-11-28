@@ -15,12 +15,12 @@ DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d/"
 # The images that are required
 REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
-REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry $K8S_PREFIX/loadbalancer")
+REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry")
 
 DEFAULT_TIMEZONE="Europe/Helsinki"
 DEFAULT_HOSTNAME="kubepi"
 
-LATEST_DOWNLOAD_RELEASE="v0.5.5"
+LATEST_DOWNLOAD_RELEASE="v0.6.0"
 
 # If the config doesn't exist, create
 if [[ ! -f $KUBERNETES_CONFIG ]]; then
@@ -53,20 +53,20 @@ Usage:
 			- luxas/raspbian: A Raspbian base image. Based on resin/rpi-raspbian.
 
 	kube-config enable-master - Enable the master services and then kubernetes is ready to use
-		- FYI, etcd data will be stored in the /var/lib/etcd directory. Backup that directory if you have important data.
+		- FYI, etcd data will be stored in the /var/lib/kubernetes/etcd directory. Backup that directory if you have important data.
 	kube-config enable-worker - Enable the worker services and then kubernetes has a new node
 	kube-config enable-addon [addon] - Enable an addon
 		- Currently defined addons
 				- dns: Makes all services accessible via DNS
 				- registry: Makes a central docker registry
-				- loadbalancer: A loadbalancer that exposes services to the outside world (experimental)
+				- loadbalancer: A loadbalancer that exposes services to the outside world. Coming soon...
 				- sleep: A debug addon. Starts two containers: luxas/alpine and luxas/raspbian.
 
 	kube-config disable-node - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong
 	kube-config disable - Synonym to disable-node
 	kube-config disable-addon [addon] - Disable an addon, not the whole cluster
 	
-	kube-config delete-data - Clean the /var/lib/etcd directory, where all master data is stored
+	kube-config delete-data - Clean the /var/lib/kubernetes and /var/lib/kubelet directories, where all master data is stored
 
 	kube-config info - Outputs some version information and info about your board and Kubernetes
 	kube-config help - Display this help
@@ -108,22 +108,14 @@ EOF
 		pacman -S $PKGS_TO_INSTALL --noconfirm --needed
 	fi
 
-	# Create a symlink to the dropin location, so docker will use overlay
-	#mkdir -p $DOCKER_DROPIN_DIR
-	#ln -s $KUBERNETES_DIR/dropins/docker-overlay.conf $DOCKER_DROPIN_DIR
-	#systemctl daemon-reload
+	
 
-	# But do not start docker now, it won't work.
-
-	# Enable the system-docker service and restart both
+	# Enable the docker and system-docker service
+	# But don't start them now, it won't work.
 	systemctl enable system-docker docker
-	systemctl stop docker
+	systemctl stop system-docker docker
 
 	echo "Downloading prebuilt binaries. It is possible to build them manually later."
-	
-	# First, symlink the latest binaries directory to a better place
-	#mkdir -p $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
-	#ln -s $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest $KUBERNETES_DIR/binaries
 
 	# Download latest binaries, now we have them in $PATH
 	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $KUBERNETES_DIR/binaries
@@ -175,7 +167,6 @@ EOF
 	else
 		hostnamectl set-hostname $NEW_HOSTNAME
 	fi
-
 
 
 	# Reboot?
@@ -391,6 +382,7 @@ start-worker(){
 	disable >/dev/null
 	sleep 1
 
+	# TODO: make this specifyable non-interactively
 	# Check if we have a connection
 	if [[ $K8S_MASTER_IP == "127.0.0.1" || $(checkformaster) != "OK" ]]; then
 
@@ -474,15 +466,10 @@ start-addon(){
 				kubectl create -f $ADDONS_DIR/kube-system.yaml
 			fi
 
-			# Invoke an optional addon function
-			case $1 in
-				#'dns') addon-dns;;
-
-				# For each file in the addon dir, kubectl create
-				*) 	for FILE in $ADDONS_DIR/$1/*.yaml; do
+			# Invoke an optional addon function, if there is one
+			for FILE in $ADDONS_DIR/$1/*.yaml; do
 						kubectl create -f $FILE
-					done;;
-			esac
+			done
 
 			echo "Started addon: $1"
 		else
@@ -510,17 +497,6 @@ stop-addon(){
 	else
 		echo "Kubernetes is not running!"
 	fi
-}
-
-# Start the dns customized
-addon-dns(){
-	# Replace the KUBEMASTER placeholder with the master ip temporary, until service accounts is in place
-	if [[ $K8S_MASTER_IP == "127.0.0.1" ]]; then
-		K8S_MASTER_IP=$(hostname -i | awk '{print $1}')
-	fi
-
-	sed -e "s@KUBEMASTER@http://$K8S_MASTER_IP:8080@" $ADDONS_DIR/dns/dns-rc.yaml | kubectl create -f -
-	kubectl create -f $ADDONS_DIR/dns/dns-svc.yaml
 }
 
 disable(){
