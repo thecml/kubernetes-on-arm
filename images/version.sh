@@ -5,7 +5,7 @@
 
 ## GITHUB PROJECTS ##
 # These projects are downloaded from "github.com/user/repo/archive/$VERSION.tar.gz"
-K8S_VERSION='v1.1.1'
+K8S_VERSION='v1.1.2'
 ETCD_VERSION='v2.2.1'
 FLANNEL_VERSION='v0.5.4'
 REGISTRY_VERSION='v2.2.0'
