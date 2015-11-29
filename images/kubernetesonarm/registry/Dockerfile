@@ -1,7 +1,7 @@
-FROM luxas/alpine
+FROM luxas/raspbian
 
-# Install packages
-# RUN apk-install ca-certificates
+# Install certificates
+RUN apt-install ca-certificates
 
 # Copy the binary and the config file
 COPY registry /
