@@ -6,11 +6,15 @@ os_install(){
 	os_upgrade
 	# pacman -S $@ --noconfirm --needed
 
-	# Install this manually, docker v1.7.1
-	pacman -S bridge-utils iproute2 device-mapper sqlite git
-	curl -sSL https://s3.amazonaws.com/docker-armv7/docker-1:1.7.1-2-armv7h.pkg.tar.xz > /var/cache/pacman/pkg/docker-1:1.7.1-2-armv7h.pkg.tar.xz
-	pacman -U  /var/cache/pacman/pkg/docker-1:1.7.1-2-armv7h.pkg.tar.xz
-
+	if [[ $MACHINE == "rpi" ]]; then
+		pacman -S $@ --noconfirm --needed
+	else
+		# for armv7
+		# Install this manually, docker v1.7.1
+		pacman -S bridge-utils iproute2 device-mapper sqlite git --noconfirm --needed
+		curl -sSL https://s3.amazonaws.com/docker-armv7/docker-1:1.7.1-2-armv7h.pkg.tar.xz > /var/cache/pacman/pkg/docker-1:1.7.1-2-armv7h.pkg.tar.xz
+		pacman -U  /var/cache/pacman/pkg/docker-1:1.7.1-2-armv7h.pkg.tar.xz --noconfirm
+	fi
 	# Add more commands here, archlinux specific
 }
 
