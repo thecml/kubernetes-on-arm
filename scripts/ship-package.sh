@@ -49,11 +49,11 @@ else
 Packages Kubernetes images, binaries and kubectl to a target
 
 Usage:
-PACKAGE=(1=default|0) scripts/mk-release.sh [disc or partition or absolute path]
+PACKAGE=(1=default|0) scripts/ship-package.sh [disc or partition or absolute path]
 
 Examples:
-PACKAGE=0 scripts/mk-release.sh /dev/sda2
-PACKAGE=1 scripts/mk-release.sh /dev/sda [/dev/sda1 automatically chosen]
-scripts/mk-release.sh /etc/k8s-artifacts
+PACKAGE=0 scripts/ship-package.sh /dev/sda2
+PACKAGE=1 scripts/ship-package.sh /dev/sda [/dev/sda1 automatically chosen]
+scripts/ship-package.sh /etc/k8s-artifacts
 EOF
 fi
