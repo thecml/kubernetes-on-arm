@@ -3,7 +3,7 @@
 main() {
 	cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
-	OUT=release/latest
+	OUT=$(pwd)/release/latest
 
 	source scripts/images.sh
 
@@ -12,7 +12,6 @@ main() {
 
 		mv release/{latest,$BUILD_DATE}
 	fi
-
 
 	mkdir -p $OUT
 
@@ -38,7 +37,7 @@ main() {
 		echo "REPO_VERSION=$VERSION" >> $OUT/meta.sh
 	fi
 
-	echo "Output in $(pwd)/$OUT: "
+	echo "Output in $OUT: "
 	ls -lh $OUT
 
 	echo "Metadata file: $OUT/meta.sh"
