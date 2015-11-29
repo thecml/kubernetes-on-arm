@@ -1,8 +1,44 @@
-# Images build speed
+# Images build speed and size
 
 These images are built on a Raspberry Pi 2.
 
- ## 0.5.5
+
+## 0.6.0
+  - luxas/raspbian: 273 s
+  - luxas/alpine: 47 s
+  - luxas/go: 1042 s
+
+  - kubernetesonarm/build: 1248 s
+  - kubernetesonarm/flannel: 119 s
+  - kubernetesonarm/etcd: 14 s 
+  - kubernetesonarm/hyperkube: 242 s
+  - kubernetesonarm/pause: 1 s 
+  - kubernetesonarm/exechealthz: 5 s
+  - kubernetesonarm/skydns: 4 s
+  - kubernetesonarm/kube2sky: 5 s
+  - kubernetesonarm/registry: 157 s
+
+```bash
+$ ls -lh
+total 134M
+-rwxr-xr-x 1 root root  11M Nov 28 17:37 etcd
+-rwxr-xr-x 1 root root 9.1M Nov 28 17:37 etcdctl
+-rwxr-xr-x 1 root root 3.6M Nov 28 17:50 exechealthz
+-rwxr-xr-x 1 root root  13M Nov 28 17:38 flanneld
+-rwxr-xr-x 1 root root  45M Nov 28 17:44 hyperkube
+-rwxr-xr-x 1 root root  14M Nov 28 17:46 kube2sky
+-rwxr-xr-x 1 root root  18M Nov 28 17:44 kubectl
+-rwxr-xr-x 1 root root 222K Nov 28 17:45 pause
+-rwxr-xr-x 1 root root  13M Nov 28 17:49 registry
+-rwxr-xr-x 1 root root  10M Nov 28 17:48 skydns
+-rwxr-xr-x 1 root root  717 Nov 28 17:54 version.sh
+
+```
+
+
+Total time: 3157 s, 52 min 37 sec
+
+## 0.5.5
   - luxas/raspbian: 254 s
   - luxas/alpine: 41 s
   - luxas/go: 1135 s
@@ -17,12 +53,29 @@ These images are built on a Raspberry Pi 2.
   - kubernetesonarm/kube2sky: 3 s
   - kubernetesonarm/registry: 168 s
 
-  Total time for kube-config: 2769 s, 46min 9s
+```bash
+$ ls -lh
+total 109M
+-rwxr-xr-x 1 root root 5.1M Oct 14 23:44 etcd
+-rwxr-xr-x 1 root root 4.7M Oct 14 23:44 etcdctl
+-rwxr-xr-x 1 root root 3.6M Oct 14 23:44 exechealthz
+-rwxr-xr-x 1 root root 9.0M Oct 14 23:44 flanneld
+-rwxr-xr-x 1 root root  38M Oct 14 23:44 hyperkube
+-rwxr-xr-x 1 root root  13M Oct 14 23:44 kube2sky
+-rwxr-xr-x 1 root root  15M Oct 14 23:44 kubectl
+-rwxr-xr-x 1 root root 222K Oct 14 23:44 pause
+-rwxr-xr-x 1 root root  13M Oct 14 23:44 registry
+-rwxr-xr-x 1 root root 9.5M Oct 14 23:44 skydns
+-rwxr-xr-x 1 root root  482 Oct 14 23:44 version.sh
+```
 
- ## 0.5.0
+Total time for kube-config: 2769 s, 46 min 9 sec
+
+## 0.5.0
  - luxas/raspbian: 254 s
  - luxas/alpine: 36 s
  - luxas/go: 1140 s
+
  - kubernetesonarm/build: 857 s
  - kubernetesonarm/flannel: 115 s
  - kubernetesonarm/etcd: 8 s 
@@ -32,10 +85,10 @@ These images are built on a Raspberry Pi 2.
  - kubernetesonarm/skydns: 4 s
  - kubernetesonarm/kube2sky: 5 s
 
- Total time for kube-config: 2574 s, 42min 54sec
+ Total time for kube-config: 2574 s, 42 min 54 sec
 
 
- ## 0.4.9
+## 0.4.9
  - luxas/raspbian: 241 s
  - luxas/alpine: 43 s
  - luxas/go: 1151 s

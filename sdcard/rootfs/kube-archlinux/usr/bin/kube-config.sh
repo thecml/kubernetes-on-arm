@@ -118,6 +118,7 @@ EOF
 	echo "Downloading prebuilt binaries. It is possible to build them manually later."
 
 	# Download latest binaries, now we have them in $PATH
+	mkdir -p /etc/kubernetes/source/images/kubernetesonarm/_bin/latest
 	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $KUBERNETES_DIR/binaries
 
 	if [[  $(type -t post_install) == "function" ]]; then
@@ -218,7 +219,8 @@ EOF
 download_imgs(){
 	# Approx. 10 secs faster than doing this with two commands, now ~160 secs
 	echo "Downloading Kubernetes docker images from Github"
-	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | tar -xz -O | docker load
+	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | gzip -dc | docker load
+	# v0.5.5 curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | tar -xz -O | docker load
 }
 
 ### --------------------------------- HELPERS -----------------------------------
@@ -367,11 +369,6 @@ start-master(){
 	systemctl enable k8s-master
 	systemctl start k8s-master
 
-	# TODO: wait for k8s to function, with some timeout and annotate the node
-	# echo "Waiting for Kubernetes to start, you may Ctrl-C this if you need. However, if you do that, you won't have iptables proxy mode"
-	# kubectl annotate node $(hostname -i | awk '{print $1}') net.beta.kubernetes.io/proxy-mode=iptables
-	# kill kube-proxy
-
 	echo "Master Kubernetes services enabled"
 }
 
@@ -414,6 +411,7 @@ start-worker(){
 		download_imgs
 	fi
 
+	# TODO: checks for flannel in main docker, but it may already be in system-docker
 	require-images ${REQUIRED_WORKER_IMAGES[@]}
 
 	echo "Transferring images to system-docker, if necessary"
@@ -468,7 +466,7 @@ start-addon(){
 
 			# Invoke an optional addon function, if there is one
 			for FILE in $ADDONS_DIR/$1/*.yaml; do
-						kubectl create -f $FILE
+				kubectl create -f $FILE
 			done
 
 			echo "Started addon: $1"
@@ -561,7 +559,7 @@ version(){
     	echo "docker version: $(docker version | grep "Server version" | awk '{print $3}')"
 
     	# if kubectl exists, output k8s server version. If there is no server, output client Version
-    	if [[ -f $(which kubectl) ]]; then
+    	if [[ -f $(which kubectl 2>&1) ]]; then
     		SERVER_K8S=$(kubectl version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
 
     		if [[ ! -z $SERVER_K8S ]]; then

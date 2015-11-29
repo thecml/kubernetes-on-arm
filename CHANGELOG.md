@@ -1,5 +1,18 @@
 ## Changelog
 
+ - v0.6.0
+   - A new, more customizable way to write the SD Card, allows for more OSes in the future
+     - Automates post-installation for cubietruck.
+   - Upgrade k8s => 1.1.2, flannel => v0.5.4, etcd => 2.2.1, registry => 2.2.0, go => 1.4.3
+   - Now it's possible to build the Kubernetes binaries with Go 1.5.1, but it's much slower so it's not default
+   - Add some test scripts for even more automation
+   - Fix the bug that makes this not run on armv6, e.g. Raspberry Pi 1
+   - Add windows downloads
+   - Now `ServiceAccount` `secrets` are working as they should
+     - Make dns use ServiceAccount tokens
+   - `kube-proxy` runs in a container under `kubelet` on master
+   - Now it's possible to reboot and k8s restarts automatically
+   - Many small bugfixes and improvments
  - v0.5.8
    - Enhanced the SD Card write process
    - Now cubietruck is supported

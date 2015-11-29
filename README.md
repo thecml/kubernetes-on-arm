@@ -3,7 +3,7 @@
 #### Kubernetes on a Raspberry Pi? Is that possible?
 
 #### Yes, now it is.    
-Imagine... Your own testbed for Kubernetes with cheap Raspberry Pis. 
+Imagine... Your own testbed for Kubernetes with cheap Raspberry Pis and friends. 
 
 ![Image of Kubernetes and Raspberry Pi](docs/raspberrypi-joins-kubernetes.png)
 
@@ -18,7 +18,7 @@ The installer will write Arch Linux ARM to your SD Card, and include some Kubern
 
  - Step 1: Insert the SD Card into your computer
  - Step 2: Open a Linux command line, e. g. Ubuntu Terminal
-   - Windows downloads coming soon...
+   - [Windows downloads](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.6.0)
  - Step 3: Install git in order to download this project, e. g. `sudo apt-get install git`
  - Step 4: Check which letter your SD Card has, similar to `/dev/sdb`
    - Run `sudo fdisk -l` to list all hard drives connected to the computer
@@ -81,10 +81,12 @@ kube-config install
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
 # This script runs in 2-3 mins
 ```
-Kubernetes should work on Raspberry Pi 1 (A, A+, B, B+), which is armv6, Raspberry Pi 2 (armv7).   
-Right now there's an issue for `armv6`, so it isn't usable on a Pi 1 at the moment.    
-Read about the Parallella board [here](docs/parallella-status.md) 
-Experimental cubietruck support is also present.
+
+Kubernetes should work on: 
+ - Raspberry Pi 1 A, A+, B, B+, ZERO, which is armv6
+ - Raspberry Pi 2 Model B, armv7
+ - Parallella, armv7, [read more](docs/parallella-status.md)
+ - Cubietruck, armv7
 
 ## Build the Docker images for ARM
 
@@ -102,15 +104,15 @@ kube-config build-images
 # Build all addons
 kube-config build-addons
 
-# This script will take approximately 45 min on a Raspberry Pi 2
+# These scripts will run approximately 45 min on a Raspberry Pi 2
 # Grab yourself a coffee during the time!
 ```
 
 The script will produce these Docker images:    
- - luxas/raspbian: Is a stripped `resin/rpi-raspbian` image. Docs coming soon...
- - luxas/alpine: Is a Alpine Linux image. Only 8 MB. Based on `mini-containers/base`. Docs coming soon...
- - luxas/go: Is a Golang image, which is used for building repositories on ARM. Docs coming soon...
- - kubernetesonarm/build: This image downloads all source code and builds it for ARM. Docs coming soon...
+ - luxas/raspbian: Is a stripped `resin/rpi-raspbian` image.
+ - luxas/alpine: Is a Alpine Linux image. Only 8 MB. Based on `mini-containers/base` source.
+ - luxas/go: Is a Golang image, which is used for building repositories on ARM.
+ - kubernetesonarm/build: This image downloads all source code and builds it for ARM.
 
 These images are used in the cluster:
  - kubernetesonarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs](images/kubernetesonarm/etcd/README.md)
@@ -123,7 +125,6 @@ These images are used in the cluster:
 ## Setup Kubernetes
 
 ```bash
-
 # To enable the master service, run
 kube-config enable-master
 
@@ -138,7 +139,6 @@ kube-config enable-worker
 ## Use Kubernetes
 
 ```bash
-
 # Some examples
 
 # See which commands kube-config has
@@ -219,14 +219,17 @@ curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/default/services/my-ngin
 # Generic command
 # curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/[namespace]/services/[service-name]
 
-# On master, run this to see open ports
+# On master, run if you want to see open ports
 netstat -nlp
 
 # See cluster info
 kubectl cluster-info
 
-# Disable the node if you want
+# Disable this node. This always reverts the "kube-config enable-*" commands
 kube-config disable-node
+
+# Remove the data for the cluster
+kube-config delete-data
 ```
 
 ## Addons
@@ -244,7 +247,7 @@ Two addons is available right now (and one experimental)
  - Central image registry
    - A registry for storing cluster images if one loses the internet connection for example.
    - Or for cluster images that one not want to publish on Docker Hub
-   - This service is available at this address: `registry.kube-system` or at the `10.0.0.20` ip
+   - This service is available at this address: `registry.kube-system`
    - Just tag your image: `docker tag my-name/my-image registry.kube-system:5000/my-name/my-image`
    - And push it to the registry: `docker push registry.kube-system:5000/my-name/my-image`
   
@@ -255,7 +258,7 @@ Two addons is available right now (and one experimental)
 The `kube-archlinux` rootfs (the only one atm) uses systemd services for starting/stopping containers.
 
 Systemd services: 
- - system-docker: Or `bootstrap-docker`. Used for running `etcd` and `flannel`.
+ - system-docker: Or `docker-bootstrap`. Used for running `etcd` and `flannel`.
  - etcd: Starts the `kubernetesonarm/etcd` container. Depends on `system-docker`.
  - flannel: Starts the `kubernetesonarm/flannel` container. Depends on `etcd`.
  - docker: Plain docker service. Dropins are symlinked. Depends on `flannel`.
@@ -279,6 +282,10 @@ This project is under development.
 ## Future work
 
 See the [ROADMAP](ROADMAP.md)
+
+## License
+
+[MIT License](LICENSE)
 
 ## Goals for this project
 
