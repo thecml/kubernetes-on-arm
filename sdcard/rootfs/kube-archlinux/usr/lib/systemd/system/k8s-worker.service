@@ -3,8 +3,8 @@ Description=The Worker Components for Kubernetes
 After=docker.service
 
 [Service]
-ExecStartPre=-/usr/bin/docker kill k8s-worker
-ExecStartPre=-/usr/bin/docker rm k8s-worker
+ExecStartPre=-/usr/bin/docker kill k8s-worker k8s-worker-proxy
+ExecStartPre=-/usr/bin/docker rm k8s-worker k8s-worker-proxy
 ExecStartPre=-/usr/bin/mkdir -p /etc/kubernetes/static/worker
 ExecStart=/bin/bash -c "source /etc/kubernetes/k8s.conf; exec docker run 								\
 						--name=k8s-worker 																\
@@ -30,7 +30,15 @@ ExecStart=/bin/bash -c "source /etc/kubernetes/k8s.conf; exec docker run 							
 							--enable-server 															\
 							--hostname-override=$(/usr/bin/hostname -i | /usr/bin/awk '{print $1}') 	\
 							--config=/etc/kubernetes/manifests"
-ExecStop=/usr/bin/docker stop k8s-worker
+							
+ExecStartPost=/usr/bin/docker run -d 																	\
+						--name=k8s-worker-proxy 														\
+						--net=host 																		\
+						--privileged 																	\
+						kubernetesonarm/hyperkube /hyperkube proxy 										\
+							--master=http://${K8S_MASTER_IP}:8080 										\
+							--v=2
+ExecStop=/usr/bin/docker stop k8s-worker k8s-worker-proxy
 EnvironmentFile=/etc/kubernetes/k8s.conf
 Restart=on-failure
 RestartSec=5
