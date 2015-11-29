@@ -1,12 +1,13 @@
 #!/bin/bash
+# TODO: make this test reliable
 
 kube-config info
 
-TMPFILE=$(mktemp /tmp/k8s-up.XXXXXXX)
-{ time kube-config enable-master }; 2>&1 > $TMPFILE > /dev/stdout 
+time kube-config enable-master
 
 SECS=0
-while [[ -z $(docker ps | grep "apiserver") ]]; do sleep 1; ((SECS++)); done
+while [[ $(curl -m 1 -sSIk https://10.0.0.1 | head -1 2>&1) != *"OK"* ]]; do sleep 1; ((SECS++)); done
+#while [[ -z $(docker ps | grep "apiserver") ]]; do sleep 1; ((SECS++)); done
 
 echo "Time before apiserver came up: $SECS"
 
@@ -14,32 +15,64 @@ docker ps
 
 kube-config info
 
-time kubectl run my-nginx --image=luxas/nginx-test --replicas=3
+kubectl run my-nginx --image=luxas/nginx-test --replicas=3
 
 SECS=0
 while [[ $(kubectl get po | grep "my-nginx" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((SECS++)); done
 
 echo "Time before nginx came up: $SECS"
 
-time kubectl expose rc/my-nginx --port=80
+kubectl expose rc/my-nginx --port=80
 
 sleep 2
 
-SVCIP=$(kubectl get svc | grep my-nginx | awk '{print $4}')
+SVCIP=$(kubectl get svc | grep my-nginx | awk '{print $2}')
 
 if [[ $(curl -sSL $SVCIP) == "<p>WELCOME TO NGINX</p>" ]]; then
 	echo "nginx service test passed"
 	curl $SVCIP
 fi
 
-time kube-config enable-addon dns
+kube-config enable-addon dns
 
 SECS=0
 while [[ $(kubectl --namespace=kube-system get po | grep "kube-dns" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((SECS++)); done
 echo "Time before dns came up: $SECS"
 
-#time kube-config enable-addon registry
+sleep 5
 
-#SECS=0
-#while [[ $(kubectl --namespace=kube-system get po | grep "kube-dns" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((SECS++)); done
-#echo "Seconds to come up for dns: $SECS_TO_COME_UP"
+if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
+	echo "nginx dns service test passed"
+	curl -sSL my-nginx
+fi
+
+if [[ $(curl -Lk https://kubernetes/api/v1/proxy/namespaces/default/services/my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
+	echo "nginx master proxy test passed"
+	curl -Lk https://kubernetes/api/v1/proxy/namespaces/default/services/my-nginx
+fi
+
+
+kube-config enable-addon registry
+
+SECS=0
+while [[ $(kubectl --namespace=kube-system get po | grep "registry" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((SECS++)); done
+echo "Seconds to come up for registry: $SECS"
+
+SVCIP=$(kubectl get svc --all-namespaces | grep registry | awk '{print $3}')
+
+if [[ $(curl -sSLI $SVCIP:5000 | head -1) == *"OK"* ]]; then
+	echo "registry is up"
+fi
+
+docker tag luxas/nginx-test registry.kube-system:5000/nginx-pro
+docker push registry.kube-system:5000/nginx-pro
+
+ls -la /var/lib/registry 
+du -sh /var/lib/registry
+
+echo "one token: "
+cat $(mount | grep /var/lib/kubelet | awk '{print $3}' | head -1)/token
+echo
+echo "one ca.crt"
+cat $(mount | grep /var/lib/kubelet | awk '{print $3}' | head -1)/ca.crt
+echo

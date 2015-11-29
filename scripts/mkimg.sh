@@ -25,7 +25,7 @@ if [[ -f $TARGET_FILE ]]; then
 	read -p "The target file will be removed. Continue? [Y/n] " continueanswer
 
 	case $continueanswer in
-		[nN])
+		[nN]*)
 			exit;;
 	esac
 fi

@@ -2,35 +2,58 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
+PACKAGE=${PACKAGE:-1}
 
 # Move to an USB or a folder
 if [[ $# == 1 ]]; then
 
-	# But, first package binaries
-	scripts/package.sh
+    # But, first package binaries
+    if [[ $PACKAGE == 1 ]]; then
 
-	BUILDDIR=release/latest
-	OUTDIR=$1
+		echo "Packaging artifacts..."
+        scripts/package.sh
+    fi
 
-	# If the target is a partition
-	if [[ $(fdisk -l | grep $1 | wc -l) == 1 && $1 == "/dev/"* ]]; then
+    BUILDDIR=release/latest
+    OUTDIR=$1
 
-		DIR=$(mktemp -d /tmp/package-k8s.XXXXXX)
+    # If the target is a disc
+    if [[ $1 == "/dev/"* ]]; then
 
-		mount $1 $DIR
+    	DIR=$(mktemp -d /tmp/package-k8s.XXXXXX)
 
-		OUTDIR="$DIR/$(date +%d%m%y_%H%M)"
-		
+	    if [[ $(fdisk -l | grep $1 | wc -l) == 1 ]]; then
+
+	        echo "Using partition $1"
+	        mount $1 $DIR
+	    else
+	    	echo "Using partition ${1}1"
+	        mount ${1}1 $DIR
+	    fi
+
+	   	OUTDIR="$DIR/kubernetesonarm_$(date +%d%m%y_%H%M)"
 	fi
 
-	mkdir -p $OUTDIR
+    mkdir -p $OUTDIR
 
-	cp $BUILDDIR/* $OUTDIR
+    echo "Copying files..."
+    cp $BUILDDIR/* $OUTDIR
 
-
-	if [[ ! -z $DIR ]]; then
-		umount $DIR
-		rm -r $DIR
-	fi
+    if [[ ! -z $DIR ]]; then
+    	echo "Unmounting the disc"
+        umount $DIR
+        rm -r $DIR
+    fi
 else
+	cat <<EOF
+Packages Kubernetes images, binaries and kubectl to a target
+
+Usage:
+PACKAGE=(1=default|0) scripts/mk-release.sh [disc or partition or absolute path]
+
+Examples:
+PACKAGE=0 scripts/mk-release.sh /dev/sda2
+PACKAGE=1 scripts/mk-release.sh /dev/sda [/dev/sda1 automatically chosen]
+scripts/mk-release.sh /etc/k8s-artifacts
+EOF
 fi

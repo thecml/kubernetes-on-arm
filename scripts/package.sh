@@ -20,7 +20,9 @@ main() {
 	docker save ${IMAGES[@]} | gzip > $OUT/images.tar.gz
 
 	echo "Bundling binaries: "
-	tar -czf $OUT/binaries.tar.gz /etc/kubernetes/binaries/*
+	cd /etc/kubernetes/binaries/
+	tar -czf $OUT/binaries.tar.gz *
+	cd -
 
 	cp /etc/kubernetes/binaries/kubectl $OUT
 
@@ -36,14 +38,14 @@ main() {
 		echo "REPO_VERSION=$VERSION" >> $OUT/meta.sh
 	fi
 
-	echo "Output in $OUT: "
+	echo "Output in $(pwd)/$OUT: "
 	ls -lh $OUT
 
 	echo "Metadata file: $OUT/meta.sh"
 	cat $OUT/meta.sh
 
 
-	# Took 16 min 55 secs
+	# Took ~4 minutes
 }
 
 time main
