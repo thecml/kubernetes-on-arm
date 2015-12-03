@@ -45,10 +45,11 @@ Explanation:
 	disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see which letter your sd card has.
 	boot - The type of board you have
 		- Currently supported:
-			- rpi - For Raspberry Pi A, A+, B, B+
-			- rpi-2 - For Raspberry Pi 2 Model B
-			- parallella - The Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel
-			- cubietruck - For Cubietruck
+			- rpi - Raspberry Pi A, A+, B, B+
+			- rpi-2 - Raspberry Pi 2 Model B
+			- parallella - Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel
+			- cubietruck - Cubietruck
+			- bananapro - Banana Pro
 	os - The operating system which should be downloaded and installed.
 		- Currently supported:
 			- archlinux - Arch Linux ARM
