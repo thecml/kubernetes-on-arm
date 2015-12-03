@@ -21,26 +21,23 @@ then
 fi
 
 # Create the latest dir
-mkdir -p $BIN $OUT
+mkdir -p $OUT
 
 # Copy over all binaries, now the binaries are in _bin/latest/bin
 docker cp $CID:/build/bin $OUT
 
 # It shouldn't be like that, move everything to _bin/latest
 mv $OUT/bin/* $OUT
+rm -r $OUT/bin
 
-
-# Copy the versions file to our directory
+# Copy the version file to our directory
 cp ../../version.sh $OUT/version.sh
 
 # And append the build date
 echo -e "\nBUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $OUT/version.sh
 
-rm -f /usr/bin/kubectl
-
-cp $OUT/kubectl /usr/bin/
-
-rm -r $OUT/bin
+#rm -f /usr/bin/kubectl
+#cp $OUT/kubectl /usr/bin/
 
 # Remove the temporary container, saves space
 docker rm $CID
