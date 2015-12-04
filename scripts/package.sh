@@ -5,7 +5,7 @@ main() {
 
 	OUT=$(pwd)/release/latest
 
-	source scripts/images.sh
+	source scripts/common.sh
 
 	if [[ -d $OUT ]]; then
 		source $OUT/meta.sh

@@ -14,36 +14,17 @@ if [[ $# == 1 ]]; then
         scripts/package.sh
     fi
 
+    source scripts/common.sh
+
     BUILDDIR=release/latest
-    OUTDIR=$1
-
-    # If the target is a disc
-    if [[ $1 == "/dev/"* ]]; then
-
-    	DIR=$(mktemp -d /tmp/package-k8s.XXXXXX)
-
-	    if [[ $(fdisk -l | grep $1 | wc -l) == 1 ]]; then
-
-	        echo "Using partition $1"
-	        mount $1 $DIR
-	    else
-	    	echo "Using partition ${1}1"
-	        mount ${1}1 $DIR
-	    fi
-
-	   	OUTDIR="$DIR/kubernetesonarm_$(date +%d%m%y_%H%M)"
-	fi
+    OUTDIR="$(parse-path-or-disc $1)/kubernetesonarm_$(date +%d%m%y_%H%M)"
 
     mkdir -p $OUTDIR
 
     echo "Copying files..."
     cp $BUILDDIR/* $OUTDIR
 
-    if [[ ! -z $DIR ]]; then
-    	echo "Unmounting the disc"
-        umount $DIR
-        rm -r $DIR
-    fi
+    cleanup-path-or-disc
 else
 	cat <<EOF
 Packages Kubernetes images, binaries and kubectl to a target

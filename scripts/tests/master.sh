@@ -1,6 +1,12 @@
 #!/bin/bash
 # TODO: make this test reliable
 
+if [[ ! -f $(which kubectl) ]]; then
+	echo "kubectl not in PATH"
+	echo "Failing"
+	exit
+fi
+
 kube-config info
 
 time kube-config enable-master
@@ -30,7 +36,7 @@ SVCIP=$(kubectl get svc | grep my-nginx | awk '{print $2}')
 
 if [[ $(curl -sSL $SVCIP) == "<p>WELCOME TO NGINX</p>" ]]; then
 	echo "nginx service test passed"
-	curl $SVCIP
+	curl -sSL $SVCIP
 fi
 
 kube-config enable-addon dns
@@ -46,9 +52,9 @@ if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
 	curl -sSL my-nginx
 fi
 
-if [[ $(curl -Lk https://kubernetes/api/v1/proxy/namespaces/default/services/my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
+if [[ $(curl -sSLk https://kubernetes/api/v1/proxy/namespaces/default/services/my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
 	echo "nginx master proxy test passed"
-	curl -Lk https://kubernetes/api/v1/proxy/namespaces/default/services/my-nginx
+	curl -sSLk https://kubernetes/api/v1/proxy/namespaces/default/services/my-nginx
 fi
 
 
