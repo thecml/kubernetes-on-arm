@@ -3,5 +3,4 @@ Name=eth0
 
 [Network]
 DHCP=yes
-UseDomains=yes
 Domains=default.svc.cluster.local svc.cluster.local cluster.local
