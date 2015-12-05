@@ -139,7 +139,7 @@ allwinnerdownload(){
 	if [[ $MACHINENAME == "cubietruck" ]]; then
 		curl -sSL http://archlinuxarm.org/os/sunxi/boot/cubietruck/u-boot-sunxi-with-spl.bin > $TMPDIR/u-boot-sunxi-with-spl.bin
 	elif [[ $MACHINENAME == "bananapro" ]]; then
-		curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.0/u-boot-sunxi-with-spl.bin > $TMPDIR/u-boot-sunxi-with-spl.bin
+		curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.0/banana-u-boot-sunxi-with-spl.bin > $TMPDIR/u-boot-sunxi-with-spl.bin
 	fi
 
 	dd if=$TMPDIR/u-boot-sunxi-with-spl.bin of=$SDCARD bs=1024 seek=8

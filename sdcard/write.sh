@@ -45,7 +45,7 @@ Explanation:
 	disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see which letter your sd card has.
 	boot - The type of board you have
 		- Currently supported:
-			- rpi - Raspberry Pi A, A+, B, B+
+			- rpi - Raspberry Pi A, A+, B, B+, ZERO
 			- rpi-2 - Raspberry Pi 2 Model B
 			- parallella - Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel
 			- cubietruck - Cubietruck
@@ -55,10 +55,10 @@ Explanation:
 			- archlinux - Arch Linux ARM
 	rootfs - Prepopulated rootfs with scripts and such.
 		- Currently supported: 
-			- kube-archlinux - Kubernetes scripts prepopulated (optional)
+			- kube-systemd - Kubernetes scripts prepopulated (optional)
 
 Example:
-sdcard/write.sh /dev/sdb rpi-2 archlinux kube-archlinux
+sdcard/write.sh /dev/sdb rpi-2 archlinux kube-systemd
 EOF
 }
 
@@ -141,9 +141,22 @@ fi
 # Make some temp directories
 mkdir -p $ROOT $BOOT
 
-# Ensure they exists	
+# Ensure the OS exists	
 if [[ ! -f os/$OSNAME.sh ]]; then
 	echo "os/$OSNAME.sh not found. That file is required. Exiting..."
+	rm -r $TMPDIR
+	exit 1
+fi
+
+# Rewrite for compability
+if [[ $ROOTFSNAME == "kube-archlinux" ]]; then
+	echo "DEPRECATED: kube-archlinux is a deprecated name. Use kube-systemd. Continuing with kube-systemd anyway..."
+	ROOTFSNAME="kube-systemd"
+fi
+
+# Ensure the rootfs exists	
+if [[ ! -d rootfs/$ROOTFSNAME ]]; then
+	echo "rootfs/$ROOTFSNAME not found. That rootfs doesn't exist. Exiting..."
 	rm -r $TMPDIR
 	exit 1
 fi

@@ -36,7 +36,7 @@ else
 		echo "Writing the SD Card"
 		# Partition the sdcard a little bit smaller than our .img file
 		export SDCARDSIZE=$((SIZE-12))
-		time QUIET=1 sdcard/write.sh $DISC $BOARD archlinux kube-archlinux
+		time QUIET=1 sdcard/write.sh $DISC $BOARD archlinux kube-systemd
 	fi
 
 	IMGFILE="$TARGET_DIR/kubernetes-on-arm-$VERSION-$BOARD.img"

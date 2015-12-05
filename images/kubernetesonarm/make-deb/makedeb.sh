@@ -8,13 +8,13 @@ cd /kubernetes-on-arm
 export PROJROOT=$(pwd)	
 export ROOT=$(mktemp -d /tmp/make-deb.XXXX)	
 
-# Copy kube-archlinux source to /tmp
-cp -r $PROJROOT/sdcard/rootfs/kube-archlinux/* $ROOT 
+# Copy kube-systemd source to /tmp
+cp -r $PROJROOT/sdcard/rootfs/kube-systemd/* $ROOT 
 
 source $ROOT/dynamic-rootfs.sh	
 cd sdcard
 
-# Invoke the function that customizes the kube-archlinux with symlinks and stuff
+# Invoke the function that customizes the kube-systemd with symlinks and stuff
 rootfs
 
 # That file is temporary
