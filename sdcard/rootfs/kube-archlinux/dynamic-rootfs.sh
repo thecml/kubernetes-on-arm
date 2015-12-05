@@ -23,7 +23,7 @@ rootfs(){
 	mkdir -p $ROOT/usr/lib/systemd/system/docker.service.d
 	ln -s ../../../../../etc/kubernetes/dropins/docker-overlay.conf $ROOT/usr/lib/systemd/system/docker.service.d/docker-overlay.conf
 
- 	# Symlink latest built binaries to an easier path
+ 	# Symlink latest built binaries to an easier path, TODO: seems to fail
 	mkdir -p $K8S_DIR/source/images/kubernetesonarm/_bin/latest
 	ln -s ./source/images/kubernetesonarm/_bin/latest $K8S_DIR/binaries
 

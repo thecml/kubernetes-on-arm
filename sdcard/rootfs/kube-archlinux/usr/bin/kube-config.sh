@@ -118,7 +118,7 @@ EOF
 	echo "Downloading prebuilt binaries. It is possible to build them manually later."
 
 	# Download latest binaries, now we have them in $PATH
-	mkdir -p /etc/kubernetes/source/images/kubernetesonarm/_bin/latest
+	mkdir -p $KUBERNETES_DIR/source/images/kubernetesonarm/_bin/latest
 	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $KUBERNETES_DIR/binaries
 
 	if [[  $(type -t post_install) == "function" ]]; then
@@ -355,7 +355,8 @@ start-master(){
 	systemctl start etcd flannel
 
 	# Wait for etcd and flannel
-	sleep 5
+	sleep 8
+	# TODO: wait for flannel file
 
 	# Create a symlink to the dropin location, so docker will use flannel. Also starts docker
 	dropins-enable-flannel
@@ -427,7 +428,8 @@ start-worker(){
 	systemctl start flannel
 
 	# Wait for flannel
-	sleep 5
+	sleep 8
+	# TODO: wait for flannel file
 
 	# Create a symlink to the dropin location, so docker will use flannel
 	dropins-enable-flannel
@@ -440,9 +442,6 @@ start-worker(){
 	# Enable these worker services
 	systemctl enable k8s-worker
 	systemctl start k8s-worker
-
-	# Enable proxy mode for the worker, included in future release
-	# kubectl -s http://$K8S_MASTER_IP:8080 annotate node $(hostname -i | awk '{print $1}') net.beta.kubernetes.io/proxy-mode=iptables
 
 	echo "Worker Kubernetes services enabled"
 }
@@ -543,7 +542,7 @@ version(){
 	if [[ -f $KUBERNETES_DIR/SDCard_metadata.conf ]]; then
 		source $KUBERNETES_DIR/SDCard_metadata.conf
 		D=$SDCARD_BUILD_DATE
-		echo "SD Card was built: $(echo $D | cut -c1-2)-$(echo $D | cut -c3-4)-20$(echo $D | cut -c5-6) $(echo $D | cut -c8-9):$(echo $D | cut -c10-11)"
+		echo "SD Card/deb package was built: $(echo $D | cut -c1-2)-$(echo $D | cut -c3-4)-20$(echo $D | cut -c5-6) $(echo $D | cut -c8-9):$(echo $D | cut -c10-11)"
 		echo
 		echo "kubernetes-on-arm: "
 		echo "Latest commit: $K8S_ON_ARM_COMMIT"
@@ -569,6 +568,8 @@ version(){
     		fi
     	fi
     fi
+
+    # ps aux | grep " $1 " | grep -v grep | grep -v docker | awk '{print $10}'
 }
 
 # If nothing is specified, return usage

@@ -1,4 +1,4 @@
-# README for Arch Linux ARM with Kubernetes enabled
+### README for Arch Linux ARM with Kubernetes enabled
 
 v0.6.0
 
@@ -10,20 +10,20 @@ More docs will be included in future releases
      - docker-flannel.conf - A dropin file which reads /var/lib/flannel/subnet.env and commands docker to use that flannel subnet
      - docker-overlay.conf - The "normal" dropin, which is enabled when kubernetes isn't. Fixes a systemd bug, uses overlay and plays well with system-docker
    - dynamic-env/
-     - env.conf
+     - env.conf - 
      - ...
    - static/
      - master/
-       - master.json
+       - master.json - This file is important. This is the definition of the master´s Kubernetes components, which run as a static pod
      - worker/
-       - 
+       - empty dir...
    - source/
-     - ...
+     - This project´s source. All `kubernetes-on-arm` code copied when the `rootfs` was packaged.
    - binaries/
-     - symlink to source/images/kubernetesonarm/_bin/latest
+     - symlink to `source/images/kubernetesonarm/_bin/latest`
    - addons/
-     - symlink to source/addons
-   - k8s.conf
+     - symlink to `source/addons`
+   - k8s.conf - Configuration file
  - profile.d/
    - binaries-in-PATH.sh 
    - system-docker.sh
