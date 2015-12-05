@@ -513,17 +513,21 @@ remove-etcd-datadir(){
 		[nN]*)
 			echo "Exiting...";;
 		[yY]*)
-			umount $(mount | grep /var/lib/kubelet | awk '{print $3}')
-			rm -rf /var/lib/kubernetes
-			rm -rf /var/lib/kubelet
+			umount-kubelet
+			rm -rf /var/lib/kubernetes /var/lib/kubelet
 			echo "Deleted all Kubernetes data";;
 		*)
-			umount $(mount | grep /var/lib/kubelet | awk '{print $3}')
+			umount-kubelet
 			rm -rf /var/lib/kubeletold /var/lib/kubernetesold
 			mv /var/lib/kubernetes{,old}
 			mv /var/lib/kubelet{,old}
 			echo "Moved all directories to {,old}";;
 	esac
+}
+umount-kubelet(){
+	if [[ ! -z $(mount | grep /var/lib/kubelet | awk '{print $3}') ]]; then
+		umount $(mount | grep /var/lib/kubelet | awk '{print $3}')
+	fi
 }
 
 version(){
