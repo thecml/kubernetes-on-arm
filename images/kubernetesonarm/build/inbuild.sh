@@ -228,11 +228,11 @@ curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar -xz
 mv contrib* contrib
 
 
-#cd /build/contrib/service-loadbalancer
+cd /build/contrib/service-loadbalancer
 
-#CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o service_loadbalancer ./service_loadbalancer.go ./loadbalancer_log.go
+CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o service_loadbalancer ./service_loadbalancer.go ./loadbalancer_log.go
 
-#cp service_loadbalancer /build/bin
+cp service_loadbalancer /build/bin
 
 ## EXECHEALTHZ ##
 
