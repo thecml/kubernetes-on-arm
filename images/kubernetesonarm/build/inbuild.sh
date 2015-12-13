@@ -243,3 +243,13 @@ make server
 
 # Copy over the binary
 cp exechealthz /build/bin
+
+
+## SCALE DEMO ##
+cd /build/contrib/scale-demo/aggregator
+
+make aggregator
+
+cd /build/contrib/scale-demo/vegeta
+
+make loader
