@@ -23,6 +23,10 @@ if [[ ! -f /data/ca.crt || ! -f /data/server.cert || ! -f /data/server.key || ! 
 	rm -rf /data/*
 
 	echo "admin,admin,admin" > /data/basic_auth.csv
+
+	# This group is required
+	addgroup kube-cert
+
 	CERT_DIR=/data /make-ca-cert.sh $(hostname -I | awk '{print $1}')
 
 	echo "$(create_token),admin,admin" >> /data/known_tokens.csv

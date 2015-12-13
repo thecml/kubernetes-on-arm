@@ -12,6 +12,13 @@ The core Kubernetes image. Used in the whole Kubernetes cluster, on both master 
 The hyperkube is a all-in-one binary. 
 It includes `apiserver`, `controller-manager`, `scheduler`, `kubelet` and `kube-proxy`.
 
+
+Must be dynamically built, otherwise it will fail with this fatal error: 
+```
+Error: failed to create kubelet: cAdvisor is unsupported in this build
+failed to create kubelet: cAdvisor is unsupported in this build
+```
+
 Examples:
 
 ```

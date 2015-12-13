@@ -6,7 +6,8 @@ RUN apt-install iptables \
 				file \
 				util-linux \
 				socat \
-				curl
+				curl \
+				ethtool
 
 # Copy files
 COPY hyperkube \
