@@ -3,7 +3,6 @@
 # Catch errors
 trap 'exit' ERR
 
-PKGS_TO_INSTALL="docker git"
 KUBERNETES_DIR=/etc/kubernetes
 ADDONS_DIR=$KUBERNETES_DIR/addons
 KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
@@ -16,6 +15,8 @@ DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d/"
 REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry")
+
+STATIC_DOCKER_DOWNLOAD="https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.0/docker-1.8.2"
 
 DEFAULT_TIMEZONE="Europe/Helsinki"
 DEFAULT_HOSTNAME="kubepi"
@@ -54,7 +55,7 @@ Usage:
 
 	kube-config enable-master - Enable the master services and then kubernetes is ready to use
 		- FYI, etcd data will be stored in the /var/lib/kubernetes/etcd directory. Backup that directory if you have important data.
-	kube-config enable-worker - Enable the worker services and then kubernetes has a new node
+	kube-config enable-worker [master-ip] - Enable the worker services and then kubernetes has a new node
 	kube-config enable-addon [addon] - Enable an addon
 		- Currently defined addons
 				- dns: Makes all services accessible via DNS
@@ -76,12 +77,15 @@ EOF
 
 install(){
 
-	# Source the commands, e.g. os_install, os_upgrade, post_install
+	# Source the commands, e.g. os_install, os_upgrade, os_post_install, post_install
 	if [[ -f $KUBERNETES_DIR/dynamic-env/env.conf ]]; then
 		source $KUBERNETES_DIR/dynamic-env/env.conf
 	elif [[ -z $MACHINE || -z $OS ]]; then
-		read -p "Which board is this running on? Options: [rpi, rpi-2, cubietruck, parallella]. " MACHINE
-		read -p "Which OS do you have? Options: [archlinux]. " OS
+		read -p "Which board is this running on? Options: [rpi, rpi-2, cubietruck, parallella, bananapro]. " MACHINE
+		read -p "Which OS do you have? Options: [archlinux, hypriotos, systemd]. " OS
+
+		# Set systemd as a default
+		OS=${OS:-"systemd"}
 
 		# Write the info to the file
 		cat > $KUBERNETES_DIR/dynamic-env/env.conf <<EOF
@@ -98,22 +102,15 @@ EOF
 	if [[ $(type -t os_install) == "function" ]]; then
 
 		echo "Installing required packages for this OS"
-		os_install $PKGS_TO_INSTALL
+		os_install
 	else
-		# Fallback on archlinux for the moment
-		echo "Updating the system..."
-		pacman -Syu --noconfirm
-
-		echo "Now were going to install some packages"
-		pacman -S $PKGS_TO_INSTALL --noconfirm --needed
+		echo "OS not supported. Quitting..."
+		exit
 	fi
 
 	
-
 	# Enable the docker and system-docker service
-	# But don't start them now, it won't work.
 	systemctl enable system-docker docker
-	systemctl stop system-docker docker
 
 	echo "Downloading prebuilt binaries. It is possible to build them manually later."
 
@@ -126,19 +123,9 @@ EOF
 		post_install
 	fi
 
-
-	if [[ -z $TIMEZONE ]]; then
-		read -p "Which timezone should be set? Defaults to $DEFAULT_TIMEZONE. " timezoneanswer
-
-		# Defaults to Helsinki
-		if [[ -z $timezoneanswer ]]; then
-			timedatectl set-timezone $DEFAULT_TIMEZONE
-		else
-			timedatectl set-timezone $timezoneanswer
-		fi
-		
-	else
-		timedatectl set-timezone $TIMEZONE
+	if [[  $(type -t os_post_install) == "function" ]]; then
+		echo "Doing some custom work specific to this OS"
+		os_post_install
 	fi
 
 	# Has the user explicitely specified it? If not, ask.
@@ -154,25 +141,9 @@ EOF
 	fi
 
 
-	# Only set if its specified
-	if [[ -z $NEW_HOSTNAME ]]; then
-		read -p "What hostname do you want? Defaults to $DEFAULT_HOSTNAME. " hostnameanswer
-
-		# Defaults to kubepi
-		if [[ -z $hostnameanswer ]]; then
-			hostnamectl set-hostname $DEFAULT_HOSTNAME
-		else
-			hostnamectl set-hostname $hostnameanswer
-		fi
-		
-	else
-		hostnamectl set-hostname $NEW_HOSTNAME
-	fi
-
-
 	# Reboot?
 	if [[ -z $REBOOT ]]; then
-		read -p "Do you want to reboot now? A reboot is required for Docker to function. Y is default. [Y/n] " rebootanswer
+		read -p "Do you want to reboot now? A reboot is required for Docker to function if it was installed now. Y is default. [Y/n] " rebootanswer
 
 		case $rebootanswer in
 			[nN]*)
@@ -189,8 +160,6 @@ upgrade(){
 	echo "Upgrading the system"
 	if [[ $(type -t os_upgrade) == "function" ]]; then
 		os_upgrade
-	else
-		pacman -Syu --noconfirm
 	fi
 }
 
@@ -209,9 +178,7 @@ swap(){
 		swapon /swapfile
 
 		# And recreate it on every boot
-		cat >> /etc/fstab <<EOF
-/swapfile  none  swap  defaults  0  0
-EOF
+		echo "/swapfile  none  swap  defaults  0  0" >> /etc/fstab
 	fi
 }
 
@@ -224,11 +191,6 @@ download_imgs(){
 }
 
 ### --------------------------------- HELPERS -----------------------------------
-
-# A forwarder to the build script in the repo
-build(){
-	$PROJECT_SOURCE/images/build.sh "$@"
-}
 
 # Remove all docker dropins. They are symlinks, so it doesn't matter
 dropins-clean(){
@@ -260,13 +222,13 @@ require-images(){
 
 	# Loop every image, check if it exists
 	for IMAGE in "$@"; do
-		if [[ -z $(docker images | grep "$IMAGE") ]]; then
+		if [[ -z $(docker $2 images | grep "$IMAGE") ]]; then
 
 			# If it doesn't exist, try to pull
 			echo "Pulling $IMAGE from Docker Hub"
 			docker pull $IMAGE
 			
-			if [[ -z $(docker images | grep "$IMAGE") ]]; then
+			if [[ -z $(docker $2 images | grep "$IMAGE") ]]; then
 
 				echo "Pull failed. Try to pull this image yourself: $IMAGE"
 				FAIL=1
@@ -303,17 +265,26 @@ get-node-type(){
 
 # Is kubernetes enabled?
 is-active(){
-	if [[ get-node-type != "" ]]; then
-		return 1;
+	if [[ $(get-node-type) != "" ]]; then
+		echo 1;
 	else 
-		return 0;
+		echo 0;
 	fi
 }
 
 checkformaster(){
-	# If ping doesn't return unknown, its OK
-	if [[ -z $(ping -c1 $K8S_MASTER_IP | grep unknown) ]]; then
+	if [[ $(curl -m 5 -sSIk http://$1:8080 | head -1) == *"OK"* ]]; then
 		echo "OK"
+	fi
+}
+
+# Update variable in k8s.conf
+# Example: updateconfig K8S_MASTER_IP [new value]
+updateconfig(){
+	if [[ -z $(cat $KUBERNETES_CONFIG | grep $1) ]]; then
+		echo "$1=$2" >> $KUBERNETES_CONFIG
+	else
+		sed -i "/$1/c\\$1=$2" $KUBERNETES_CONFIG
 	fi
 }
 
@@ -339,7 +310,7 @@ start-master(){
 	require-images ${REQUIRED_MASTER_IMAGES[@]}
 
 	# Say that our master is on this board
-	echo "K8S_MASTER_IP=127.0.0.1" > $KUBERNETES_CONFIG
+	updateconfig K8S_MASTER_IP 127.0.0.1
 
 	echo "Transferring images to system-docker, if necessary"
 	# Load these master images to system-docker
@@ -364,13 +335,13 @@ start-master(){
 	# Wait for docker to come up
 	sleep 5
 
-	echo "Starting the master containers"
+	echo "Starting master components in docker containers"
 
 	# Enable these master services
 	systemctl enable k8s-master
 	systemctl start k8s-master
 
-	echo "Master Kubernetes services enabled"
+	echo "Kubernetes master services enabled"
 }
 
 start-worker(){
@@ -380,27 +351,22 @@ start-worker(){
 	disable >/dev/null
 	sleep 1
 
+	IP=${1:-$K8S_MASTER_IP}
+
+	echo "Using master ip: $IP"
+	updateconfig K8S_MASTER_IP $IP
+
 	# TODO: make this specifyable non-interactively
 	# Check if we have a connection
-	if [[ $K8S_MASTER_IP == "127.0.0.1" || $(checkformaster) != "OK" ]]; then
+	if [[ $(checkformaster) != "OK" ]]; then
+		cat <<EOF
+Kubernetes Master IP is required.
+Value right now: $IP
+Exiting...
 
-		# Ask for the ip
-		read -p "What is the Master IP? It isn't specified or reachable at the moment. " masteripanswer
-
-		# Required
-		if [[ -z $masteripanswer ]]; then
-			echo "Kubernetes Master IP is required. Exiting..."
-			exit 1
-		else
-			echo "K8S_MASTER_IP=$masteripanswer" > $KUBERNETES_CONFIG
-			K8S_MASTER_IP=$masteripanswer
-		fi
-
-		# Check again and fail if it's not working now either
-		if [[ $(checkformaster) != "OK" ]]; then
-			echo "The Master IP you provided isn't reachable. Exiting..."
-			exit
-		fi
+Command:
+kube-config enable-worker [master-ip]
+EOF
 	fi
 
 	echo "Checks so all images are present"
@@ -437,18 +403,17 @@ start-worker(){
 	# Wait for docker to come up
 	sleep 5
 
-	echo "Starting the worker containers"
+	echo "Starting worker components in docker containers"
 
 	# Enable these worker services
 	systemctl enable k8s-worker
 	systemctl start k8s-worker
 
-	echo "Worker Kubernetes services enabled"
+	echo "Kubernetes worker services enabled"
 }
 
 start-addon(){
-	# TODO: this check doesn't work
-	if [[ is-active ]]; then
+	if [[ $(is-active) == 1 ]]; then
 
 		if [[ -d $ADDONS_DIR/$1 ]]; then
 
@@ -479,7 +444,7 @@ start-addon(){
 }
 
 stop-addon(){
-	if [[ is-active ]]; then
+	if [[ $(is-active) == 1 ]]; then
 
 		if [[ -d $ADDONS_DIR/$1 ]]; then
 			# Stop all services
@@ -566,14 +531,27 @@ version(){
     		SERVER_K8S=$(kubectl version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
 
     		if [[ ! -z $SERVER_K8S ]]; then
-    			echo "kubernetes version: $SERVER_K8S"
+    			echo "kubernetes server version: $SERVER_K8S"
+    			echo
+    			echo "CPU Time:"
+    			echo "kubelet: $(getcputime kubelet)"
+    			echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
+
+    			if [[ get-node-type == "master" ]]; then
+    				echo "apiserver: $(getcputime apiserver)"
+    				echo "controller-manager: $(getcputime controller-manager)"
+    				echo "scheduler: $(getcputime scheduler)"
+    				echo "proxy: $(getcputime proxy)"
+    			fi
     		else
-    			echo "kubectl version: $(kubectl version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
+    			echo "kubernetes client version: $(kubectl version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
     		fi
     	fi
     fi
+}
 
-    # ps aux | grep " $1 " | grep -v grep | grep -v docker | awk '{print $10}'
+getcputime(){
+	echo $(ps aux | grep " $1 " | grep -v grep | grep -v docker | awk '{print $10}')
 }
 
 # If nothing is specified, return usage
@@ -588,11 +566,9 @@ case $1 in
                 install;;
         'upgrade')
 				upgrade;;
-
-
         'build')
 				shift
-				build $@;;
+				$PROJECT_SOURCE/images/build.sh $@;;
         'build-images')
                 build ${REQUIRED_MASTER_IMAGES[@]};;
         'build-addons')

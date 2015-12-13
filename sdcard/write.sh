@@ -9,12 +9,12 @@ require()
 	PACKAGE=$2
 
 	# If the $BINARY path -e(xists)
-	if [[ ! -e $(which $BINARY) ]]; then
+	if [[ ! -e $(which $BINARY 2>&1) ]]; then
 		
-		if [[ -e $(which pacman) ]]; then # Is pacman present?
+		if [[ -e $(which pacman 2>&1) ]]; then # Is pacman present?
 			pacman -S $PACKAGE --noconfirm
 			
-		elif [[ -e $(which apt-get) ]]; then # Is apt-get present?
+		elif [[ -e $(which apt-get 2>&1) ]]; then # Is apt-get present?
 			apt-get install -y $PACKAGE
 		else
 			echo "The required package $PACKAGE with the binary $BINARY isn't present now. Install it."
@@ -165,8 +165,9 @@ fi
 source os/$OSNAME.sh
 
 # OS must provide:
-# initos()
 # mountpartitions()
+# initos()
+# cleanup()
 
 # Mount them
 mountpartitions
