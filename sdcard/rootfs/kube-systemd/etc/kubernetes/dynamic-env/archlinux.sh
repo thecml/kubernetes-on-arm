@@ -38,36 +38,6 @@ os_upgrade(){
 }
 
 os_post_install(){
-
+	# When on Arch Linux, we've just installed docker, so reboot before use.
 	systemctl stop system-docker docker
-
-	# Only set if its specified
-	if [[ -z $NEW_HOSTNAME ]]; then
-		read -p "What hostname do you want? Defaults to $DEFAULT_HOSTNAME. " hostnameanswer
-
-		# Defaults to kubepi
-		if [[ -z $hostnameanswer ]]; then
-			hostnamectl set-hostname $DEFAULT_HOSTNAME
-		else
-			hostnamectl set-hostname $hostnameanswer
-		fi
-		
-	else
-		hostnamectl set-hostname $NEW_HOSTNAME
-	fi
-
-	# Set timezone
-	if [[ -z $TIMEZONE ]]; then
-		read -p "Which timezone should be set? Defaults to $DEFAULT_TIMEZONE. " timezoneanswer
-
-		# Defaults to Helsinki
-		if [[ -z $timezoneanswer ]]; then
-			timedatectl set-timezone $DEFAULT_TIMEZONE
-		else
-			timedatectl set-timezone $timezoneanswer
-		fi
-		
-	else
-		timedatectl set-timezone $TIMEZONE
-	fi
 }

@@ -3,6 +3,13 @@
 # Catch errors
 trap 'exit' ERR
 
+# Root is required
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  usage
+  exit 1
+fi
+
 KUBERNETES_DIR=/etc/kubernetes
 ADDONS_DIR=$KUBERNETES_DIR/addons
 KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
@@ -27,7 +34,6 @@ LATEST_DOWNLOAD_RELEASE="v0.6.0"
 if [[ ! -f $KUBERNETES_CONFIG ]]; then
 	echo "K8S_MASTER_IP=127.0.0.1" > $KUBERNETES_CONFIG
 fi
-
 
 # Source the config
 source $KUBERNETES_CONFIG
@@ -80,7 +86,7 @@ install(){
 	# Source the commands, e.g. os_install, os_upgrade, os_post_install, post_install
 	if [[ -f $KUBERNETES_DIR/dynamic-env/env.conf ]]; then
 		source $KUBERNETES_DIR/dynamic-env/env.conf
-	elif [[ -z $MACHINE || -z $OS ]]; then
+	elif [[ -z $MACHINE || -z $OS || $MACHINE == "" || $OS == "" ]]; then
 		read -p "Which board is this running on? Options: [rpi, rpi-2, cubietruck, parallella, bananapro]. " MACHINE
 		read -p "Which OS do you have? Options: [archlinux, hypriotos, systemd]. " OS
 
@@ -126,6 +132,24 @@ EOF
 	if [[  $(type -t os_post_install) == "function" ]]; then
 		echo "Doing some custom work specific to this OS"
 		os_post_install
+	fi
+
+	# Set hostname
+	if [[ -z $NEW_HOSTNAME ]]; then
+		read -p "What hostname do you want? Defaults to $DEFAULT_HOSTNAME. " hostnameanswer
+
+		hostnamectl set-hostname ${hostnameanswer:-$DEFAULT_HOSTNAME}
+	else
+		hostnamectl set-hostname $NEW_HOSTNAME
+	fi
+
+	# Set timezone
+	if [[ -z $TIMEZONE ]]; then
+		read -p "Which timezone should be set? Defaults to $DEFAULT_TIMEZONE. " timezoneanswer
+
+		timedatectl set-timezone ${timezoneanswer:-$DEFAULT_TIMEZONE}
+	else
+		timedatectl set-timezone $TIMEZONE
 	fi
 
 	# Has the user explicitely specified it? If not, ask.
@@ -524,7 +548,7 @@ version(){
     docker ps 2> /dev/null 1> /dev/null
     if [ "$?" == "0" ]; then
 
-    	echo "docker version: $(docker version | grep "Server version" | awk '{print $3}')"
+    	echo "docker version: $(docker --version | awk '{print $3}')"
 
     	# if kubectl exists, output k8s server version. If there is no server, output client Version
     	if [[ -f $(which kubectl 2>&1) ]]; then
