@@ -27,7 +27,7 @@ cp -f $DOCKERFILEDIR/Dockerfile .
 #sed -e "s@RUN gem install --no-rdoc --no-ri fpm@#RUN gem install --no-rdoc --no-ri fpm@" -i Dockerfile
 
 # Install make if needed
-if [[ -f $(which pacman) ]]; then
+if [[ -f $(which pacman 2>&1) ]]; then
 	pacman -S make --noconfirm --needed
 fi
 

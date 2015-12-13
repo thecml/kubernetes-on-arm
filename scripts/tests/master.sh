@@ -1,7 +1,7 @@
 #!/bin/bash
 # TODO: make this test reliable
 
-if [[ ! -f $(which kubectl) ]]; then
+if [[ ! -f $(which kubectl 2>&1) ]]; then
 	echo "kubectl not in PATH"
 	echo "Failing"
 	exit
