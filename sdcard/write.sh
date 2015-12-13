@@ -53,6 +53,7 @@ Explanation:
 	os - The operating system which should be downloaded and installed.
 		- Currently supported:
 			- archlinux - Arch Linux ARM
+			- hypriotos - HypriotOS
 	rootfs - Prepopulated rootfs with scripts and such.
 		- Currently supported: 
 			- kube-systemd - Kubernetes scripts prepopulated (optional)
