@@ -175,20 +175,6 @@ mountpartitions
 
 echo "Partitions mounted"
 
-# Populate rootfs
-if [[ -d rootfs/$ROOTFSNAME ]]; then
-
-	# Prepopulate the rootfs
-	cp -r rootfs/$ROOTFSNAME/* $ROOT
-
-	# If we've a dynamic rootfs, don't invoke it, but load it
-	if [[ -f $ROOT/dynamic-rootfs.sh ]]; then
-		
-		# Source the dynamic rootfs script
-		source $ROOT/dynamic-rootfs.sh
-	fi
-fi
-
 echo "Downloading OS and writing to SD Card"
 
 # Download a tar file and extract it, requires $MACHINENAME
@@ -196,11 +182,25 @@ initos
 
 echo "OS written to SD Card"
 
-# And invoke the function
-rootfs
+# Populate rootfs
+if [[ -d rootfs/$ROOTFSNAME ]]; then
 
-# Remove the intermediate file
-rm $ROOT/dynamic-rootfs.sh
+	# Prepopulate the rootfs
+	cp -r rootfs/$ROOTFSNAME/* $ROOT
+
+	# If we've a dynamic rootfs, invoke it
+	if [[ -f $ROOT/dynamic-rootfs.sh ]]; then
+		
+		# Source the dynamic rootfs script
+		source $ROOT/dynamic-rootfs.sh
+
+		# And invoke the function
+		rootfs
+
+		# Remove the intermediate file
+		rm $ROOT/dynamic-rootfs.sh
+	fi
+fi
 
 # Clean up
 # Unmount boot and root, call the os file

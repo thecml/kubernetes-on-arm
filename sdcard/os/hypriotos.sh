@@ -4,6 +4,7 @@
 mountpartitions(){
 	# Partition the sd card
 	# There's nothing to do here, because all this is made with dd
+	echo "No extra partition work has to be done. Continuing..."
 }
 
 # Invoked by sdcard/write
