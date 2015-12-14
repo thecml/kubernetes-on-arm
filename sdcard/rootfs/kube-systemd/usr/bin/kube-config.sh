@@ -47,6 +47,7 @@ With this utility, you can setup Kubernetes on ARM!
 Usage: 
 	kube-config install - Installs docker and makes your board ready for kubernetes
 	kube-config upgrade - Upgrade current operating system packages to latest version.
+		- WARNING: Do not upgrade if you are a Arch Linux ARMv7 user!! docker 1.9.1 has an odd bug
 
 	kube-config build-images - Build the Kubernetes images locally
 	kube-config build-addons - Build the Kubernetes addon images locally
@@ -246,13 +247,13 @@ require-images(){
 
 	# Loop every image, check if it exists
 	for IMAGE in "$@"; do
-		if [[ -z $(docker $2 images | grep "$IMAGE") ]]; then
+		if [[ -z $(docker images | grep "$IMAGE") ]]; then
 
 			# If it doesn't exist, try to pull
 			echo "Pulling $IMAGE from Docker Hub"
 			docker pull $IMAGE
 			
-			if [[ -z $(docker $2 images | grep "$IMAGE") ]]; then
+			if [[ -z $(docker images | grep "$IMAGE") ]]; then
 
 				echo "Pull failed. Try to pull this image yourself: $IMAGE"
 				FAIL=1
@@ -278,9 +279,9 @@ load-to-system-docker(){
 get-node-type(){
 	local workerstate=$(systemctl is-active k8s-worker)
 	local masterstate=$(systemctl is-active k8s-master)
-	if [[ workerstate == "active" ]]; then
+	if [[ $workerstate == "active" ]]; then
 		echo "worker";
-	elif [[ masterstate == "active" ]]; then
+	elif [[ $masterstate == "active" ]]; then
 		echo "master";
 	else
 		echo "";
@@ -561,7 +562,7 @@ version(){
     			echo "kubelet: $(getcputime kubelet)"
     			echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
 
-    			if [[ get-node-type == "master" ]]; then
+    			if [[ $(get-node-type) == "master" ]]; then
     				echo "apiserver: $(getcputime apiserver)"
     				echo "controller-manager: $(getcputime controller-manager)"
     				echo "scheduler: $(getcputime scheduler)"
