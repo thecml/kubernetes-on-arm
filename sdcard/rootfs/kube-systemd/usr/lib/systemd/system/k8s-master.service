@@ -6,30 +6,29 @@ After=docker.service
 ExecStartPre=-/usr/bin/docker kill k8s-master
 ExecStartPre=-/usr/bin/docker rm k8s-master
 ExecStartPre=-/usr/bin/mkdir -p /etc/kubernetes/static/master
-ExecStart=/bin/bash -c "exec docker run 																\
-						--name=k8s-master 																\
-						--net=host 																		\
-						-v /etc/kubernetes/static/master:/etc/kubernetes/manifests-multi 				\
-						-v /:/rootfs:ro 																\
-						-v /sys:/sys:ro 																\
-						-v /dev:/dev 																	\
-						-v /var/lib/docker/:/var/lib/docker:rw 											\
-						-v /var/lib/kubelet:/var/lib/kubelet:rw 										\
-						-v /var/run:/var/run:rw 														\
-						--privileged 																	\
-						--pid=host 																		\
-						kubernetesonarm/hyperkube /hyperkube kubelet 									\
-							--allow-privileged=true 													\
-							--containerized 															\
-							--pod_infra_container_image="kubernetesonarm/pause" 						\
-							--api-servers=http://localhost:8080 										\
-							--cluster-dns=10.0.0.10 													\
-							--cluster-domain=cluster.local 												\
-							--v=2 																		\
-							--address=0.0.0.0 															\
-							--enable-server 															\
-							--hostname-override=$(/usr/bin/hostname -i | /usr/bin/awk '{print $1}') 	\
-							--config=/etc/kubernetes/manifests-multi"
+ExecStart=/usr/bin/docker run 															\
+					--name=k8s-master 													\
+					--net=host 															\
+					-v /etc/kubernetes/static/master:/etc/kubernetes/manifests-multi	\
+					-v /:/rootfs:ro 													\
+					-v /sys:/sys:ro 													\
+					-v /dev:/dev 														\
+					-v /var/lib/docker/:/var/lib/docker:rw 								\
+					-v /var/lib/kubelet:/var/lib/kubelet:rw 							\
+					-v /var/run:/var/run:rw 											\
+					--privileged 														\
+					--pid=host 															\
+					kubernetesonarm/hyperkube /hyperkube kubelet 						\
+						--allow-privileged=true 										\
+						--containerized 												\
+						--pod_infra_container_image=kubernetesonarm/pause				\
+						--api-servers=http://localhost:8080 							\
+						--cluster-dns=10.0.0.10 										\
+						--cluster-domain=cluster.local 									\
+						--v=2 															\
+						--address=0.0.0.0 												\
+						--enable-server 												\
+						--config=/etc/kubernetes/manifests-multi
 ExecStop=/usr/bin/docker stop k8s-master
 Restart=on-failure
 RestartSec=5
