@@ -14,8 +14,8 @@ REGISTRY_VERSION='v2.2.1'
 # For the moment, go1.4.3 is a better choice than go1.5.1
 # Because building with go1.5.1 is 2-4x slower than 1.4.3
 # And there's no big difference in the result
-# GO_VERSION='go1.4.3'
+GO_VERSION='go1.4.3'
 
 # Enable go1.5.1 by commenting above and uncommenting here
-GO_BOOTSTRAP_VERSION='go1.4.3'
-GO_VERSION='go1.5.2'
+# GO_BOOTSTRAP_VERSION='go1.4.3'
+# GO_VERSION='go1.5.2'
