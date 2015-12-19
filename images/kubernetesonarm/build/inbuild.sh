@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Make the build dir
-mkdir -p /build/bin
-
 # Get version variables
 source /version.sh
 
@@ -10,21 +7,35 @@ source /version.sh
 export GOARM=6
 
 # Go can't compile k8s v1.0.x https://github.com/kubernetes/kubernetes/issues/16229
-# Haven't tested this go switch
+# Haven't tested this
 if [[ $GO_VERSION == "go1.5.1" && $K8S_VERSION == "v1.0"* ]]; then
 	echo "using go 1.4.x, because of kubernetes#16229"
 	export GOROOT=/goroot1.4
 	export PATH=$(echo $PATH | sed -e "s@/goroot@/goroot1.4@")
 fi
 
+K8S_DIR="$GOPATH/src/k8s.io/kubernetes"
+K8S_CONTRIB="$GOPATH/src/k8s.io/contrib"
+ETCD_DIR="$GOPATH/src/github.com/coreos/etcd"
+FLANNEL_DIR="$GOPATH/src/github.com/coreos/flannel"
+REGISTRY_DIR="$GOPATH/src/github.com/docker/distribution"
+
+# Make directories
+mkdir -p 	/build/bin 										\
+			$K8S_DIR										\
+			$K8S_CONTRIB									\
+			$GOPATH/src/github.com/GoogleCloudPlatform		\
+			$ETCD_DIR 										\
+			$FLANNEL_DIR 									\
+			$REGISTRY_DIR
+
+# Symlink /gopath/src/k8s.io/kubernetes and the old /gopath/src/github.com/GoogleCloudPlatform/kubernetes
+ln -s /gopath/src/k8s.io/kubernetes /gopath/src/github.com/GoogleCloudPlatform/kubernetes
 
 ## ETCD ##
-
-# Download a gzipped archive and extract, much faster
-curl -sSL -k https://github.com/coreos/etcd/archive/$ETCD_VERSION.tar.gz | tar -C /build -xz
-mv /build/etcd* /build/etcd
-
-cd /build/etcd
+# Download a gzipped archive and extract
+curl -sSL https://github.com/coreos/etcd/archive/$ETCD_VERSION.tar.gz | tar -C $ETCD_DIR -xz --strip-components=1
+cd $ETCD_DIR
 
 # Apply some 32-bit patches
 if [[ $ETCD_VERSION == "v2.0"* || $ETCD_VERSION == "v0"* ]]; then
@@ -45,51 +56,24 @@ cp bin/* /build/bin
 
 
 ## FLANNEL ##
+# Download a gzipped archive and extract
+curl -sSL https://github.com/coreos/flannel/archive/$FLANNEL_VERSION.tar.gz | tar -C $FLANNEL_DIR -xz --strip-components=1
+cd $FLANNEL_DIR
 
-# Download a gzipped archive and extract, much faster
-curl -sSL -k https://github.com/coreos/flannel/archive/$FLANNEL_VERSION.tar.gz | tar -C /build -xz
-mv /build/flannel* /build/flannel
-
-cd /build/flannel
-
-# And build
+# And build dynamically
 ./build
 
 # Copy over the binaries
 cp bin/* /build/bin
 
-
 ### KUBERNETES ###
+# Download a gzipped archive and extract
+curl -sSL https://github.com/kubernetes/kubernetes/archive/$K8S_VERSION.tar.gz | tar -C $K8S_DIR -xz --strip-components=1
+cd $K8S_DIR
 
-# Download a gzipped archive and extract, much faster
-curl -sSL -k https://github.com/kubernetes/kubernetes/archive/$K8S_VERSION.tar.gz | tar -C /build -xz
-mv /build/kubernetes* /build/kubernetes
-
-cd /build/kubernetes
-
-
-## PATCHES FOR K8S BUILDING
-
-# Do not build these packages
-# Now it should be much faster
+## Patches for building Kubernetes
 if [[ $K8S_VERSION == "v1.2"* || $K8S_VERSION == "v1.1"* ]]; then
 	echo "Building a >= v1.1.x branch of kubernetes"
-	TOREMOVE=(
-		"cmd/kube-proxy"
-		"cmd/kube-apiserver"
-		"cmd/kube-controller-manager"
-		"cmd/kubelet"
-		"cmd/kubemark"
-		"cmd/linkcheck"
-		"plugin/cmd/kube-scheduler"
-
-		" kube-controller-manager"
-		" kube-scheduler"
-	)
-	TOCHANGE=(
-		's/ "\${KUBE_TEST_TARGETS\[@\]}"/ /'
-		"s@ kube-apiserver@ kubectl@"
-	)
 
 	# libcontainer ARM issue. That file is by default built only on amd64
 	mv Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump{_amd64,}.go
@@ -99,63 +83,32 @@ if [[ $K8S_VERSION == "v1.2"* || $K8S_VERSION == "v1.1"* ]]; then
 	curl -sSL https://raw.githubusercontent.com/kubernetes/kubernetes/8c1d820435670e410f8fd54401906c3d387c2098/pkg/util/io/writer.go > pkg/util/io/writer.go
 else
 	echo "Building an old branch of kubernetes"
-	TOREMOVE=(
-		"cmd/kube-proxy"
-		"cmd/kube-apiserver"
-		"cmd/kube-controller-manager"
-		"cmd/kubelet"
-		"cmd/kubernetes"
-		"plugin/cmd/kube-scheduler"
-
-		" kube-apiserver"
-		" kube-controller-manager"
-		" kube-scheduler"
-	)
-	TOCHANGE=(
-		's/ "\${KUBE_TEST_TARGETS\[@\]}"/ /'
-		"s@ hyperkube@ kubectl@"
-	)
 fi
 
-  
-# Loop each and remove them
-for STR in "${TOREMOVE[@]}"; do
-	sed -e "s@ $STR@@" -i hack/lib/golang.sh
-done
+# Build kubectl statically
+export KUBE_STATIC_OVERRIDES="kubectl"
 
-# loop each change and replace
-for STR in "${TOCHANGE[@]}"; do
-	sed -e "$STR" -i hack/lib/golang.sh
-done
-
-# Build kubernetes binaries
-./hack/build-go.sh
+# Build only these two kubernetes binaries
+./hack/build-go.sh \
+	cmd/hyperkube \
+	cmd/kubectl
 
 # Copy over the binaries
 cp _output/local/bin/linux/arm/* /build/bin
 
 ## PAUSE ##
-
-cd build/pause
+cd $K8S_DIR/build/pause
 
 # Build the binary
 ./prepare.sh
 
 # Copy over the binaries
 cp pause /build/bin
-#cp /gopath/bin/goupx /build/bin
 
 ## KUBE2SKY ##
+cd $K8S_DIR/cluster/addons/dns/kube2sky
 
-cd /build/kubernetes/cluster/addons/dns/kube2sky
-
-# Required for building this
-# It makes the current kubernetes repo location accessible from the default gopath location
-mkdir -p /gopath/src/github.com/GoogleCloudPlatform /gopath/src/k8s.io/
-ln -s /build/kubernetes /gopath/src/github.com/GoogleCloudPlatform/kubernetes
-ln -s /build/kubernetes /gopath/src/k8s.io/kubernetes
-
-# Build for arm
+# Build for arm, fixed on master, #18669
 sed -e "s@GOARCH=amd64@GOARCH=arm@" -i Makefile
 
 # Build the binary
@@ -166,7 +119,6 @@ cp kube2sky /build/bin
 
 
 ## SKYDNS ##
-
 # Compile the binary statically, requires mercurial
 #go get github.com/skynetservices/skydns
 CGO_ENABLED=0 go get -a -installsuffix cgo --ldflags '-w' github.com/skynetservices/skydns
@@ -175,15 +127,9 @@ CGO_ENABLED=0 go get -a -installsuffix cgo --ldflags '-w' github.com/skynetservi
 cp /gopath/bin/skydns /build/bin
 
 
-## IMAGE REGISTRY ## 
-REGISTRY_DIR=$GOPATH/src/github.com/docker/distribution
-
-# Make the dir
-mkdir -p $REGISTRY_DIR
-
-# Download source
+## IMAGE REGISTRY ##
+# Download a gzipped archive and extract
 curl -sSL https://github.com/docker/distribution/archive/$REGISTRY_VERSION.tar.gz | tar -xz -C $REGISTRY_DIR --strip-components=1
-
 cd $REGISTRY_DIR/cmd/registry
 
 GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH go build
@@ -197,46 +143,24 @@ GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH go build
 #GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH make -C $REGISTRY_DIR $REGISTRY_DIR/bin/registry 
 # go get github.com/docker/distribution/cmd/registry
 
-
 # Copy the binary
 cp registry /build/bin
 
 
-## KUBE UI ##
-
-#cd /build
-
-#curl -sSL https://github.com/kubernetes/kube-ui/archive/master.tar.gz | tar -xz
-#mv kube-ui* kube-ui
-
-#cd /build/kube-ui
-
-#go get github.com/jteeuwen/go-bindata/...
-
-#ln -s /build/kube-ui /gopath/src/k8s.io/kube-ui
-
-#make kube-ui
-
-#cp kube-ui /build/bin
-
+## K8S CONTRIB ##
+curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar -xz -C $K8S_CONTRIB --strip-components=1
 
 ## LOAD BALANCER ##
+cd $K8S_CONTRIB/service-loadbalancer
 
-cd /build
+# Build the binary
+make server
 
-curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar -xz
-mv contrib* contrib
-
-
-cd /build/contrib/service-loadbalancer
-
-CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o service_loadbalancer ./service_loadbalancer.go ./loadbalancer_log.go
-
+# Copy the binary
 cp service_loadbalancer /build/bin
 
 ## EXECHEALTHZ ##
-
-cd /build/contrib/exec-healthz
+cd $K8S_CONTRIB/exec-healthz
 
 # Build the binary
 make server
@@ -244,12 +168,17 @@ make server
 # Copy over the binary
 cp exechealthz /build/bin
 
-
 ## SCALE DEMO ##
-cd /build/contrib/scale-demo/aggregator
+cd $K8S_CONTRIB/scale-demo/aggregator
 
 make aggregator
 
-cd /build/contrib/scale-demo/vegeta
+cp aggregator /build/bin
 
-make loader
+cd $K8S_CONTRIB/scale-demo/vegeta
+
+# Build the binary
+CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o loader
+# make loader
+
+cp loader /build/bin
