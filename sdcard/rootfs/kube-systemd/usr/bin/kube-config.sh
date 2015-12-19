@@ -544,12 +544,12 @@ version(){
 		echo
 	fi
 
-	echo "systemd version: $(systemctl --version | head -1 | cut -c9-)"
+	echo "systemd version: v$(systemctl --version | head -1 | cut -c9-)"
 	# Is docker running?
     docker ps 2> /dev/null 1> /dev/null
     if [ "$?" == "0" ]; then
 
-    	echo "docker version: $(docker --version | awk '{print $3}')"
+    	echo "docker version: v$(docker --version | awk '{print $3}' | sed -e 's/,$//')"
 
     	# if kubectl exists, output k8s server version. If there is no server, output client Version
     	if [[ -f $(which kubectl 2>&1) ]]; then
@@ -595,9 +595,9 @@ case $1 in
 				shift
 				$PROJECT_SOURCE/images/build.sh $@;;
         'build-images')
-                build ${REQUIRED_MASTER_IMAGES[@]};;
+                $PROJECT_SOURCE/images/build.sh ${REQUIRED_MASTER_IMAGES[@]};;
         'build-addons')
-				build ${REQUIRED_ADDON_IMAGES[@]};;
+				$PROJECT_SOURCE/images/build.sh ${REQUIRED_ADDON_IMAGES[@]};;
 
 
         'enable-master')
