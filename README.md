@@ -12,7 +12,7 @@ Imagine... Your own testbed for Kubernetes with cheap Raspberry Pis and friends.
 
 ## Download and build a SD Card
 
-The first thing you will do, is to create a SD Card for your Pi. Alternatively, you may use the `.deb` deployment
+The first thing you will do, is to create a SD Card for your Pi. Alternatively, you may use the [`.deb` deployment](#deb-deployment)
 
 Supported OSes/boards:
 - Arch Linux ARM **(archlinux)**
@@ -25,7 +25,7 @@ Supported OSes/boards:
   - Raspberry Pi 1 A, A+, B, B+, armv6 **(rpi)**
   - Raspberry Pi 2 Model B, armv7 **(rpi-2)**
 
-[Windows downloads](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.6.0)    
+[Windows downloads](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.6.0)   
 Prebuilt SD Card images for Windows:
  - archlinux/rpi/v0.6.0
  - archlinux/rpi-2/v0.6.0
@@ -60,41 +60,18 @@ sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-systemd
 # This script runs in 3-4 mins
 ```
 
-## `.deb` deployment
-If you have already made a SD Card and your device is up and running, what can you do instead?
-For that, I've made a `.deb` package, so you could install it easily
-
-```bash
-# The OS have to be systemd based, e. g. HypriotOS, Debian Jessie, Arch Linux ARM, Ubuntu 15.04
-
-# Download the latest package
-curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/downloads/v0.6.2/kube-systemd.deb > kube-systemd.deb
-
-# Requires dpkg, which is preinstalled in at least all Debian/Ubuntu OSes
-dpkg -i kube-systemd.deb
-
-# Setup the enviroinment
-# It will ask which board it's running on and which OS
-# It will download prebuilt binaries
-# And make a swap file if plan to compile things
-# If docker was installed before this, you don't have to reboot
-kube-config install
-
-# Start the master or worker
-kube-config enable-master
-kube-config enable-worker [master ip]
-
-# Get some info about the node
-kube-config info
-```
-
 ## Setup your board from an SD Card
 
 Boot your board and log into it.    
-The user/password is: **root/root** or **alarm/alarm**      
-Yes, I know. Root enabled via ssh isn´t that good.
-But the task to enhance ssh security is left as an exercise to the user.      
-These scripts requires root. So if you login via **alarm**, then `su root` when you´re going to do some serious hacking :)
+
+Arch Linux users: 
+ - The user/password is: **root/root** or **alarm/alarm**      
+ - Yes, I know. Root enabled via ssh isn´t that good.
+ - But the task to enhance ssh security is left as an exercise to the user.      
+ - These scripts requires root. So if you login via **alarm**, then `su root` when you´re going to do some serious hacking :)
+HypriotOS users:
+ - The user/password is: **pi/raspberry** or **root/hypriot**
+ - Remember to prepend all commands that are here with `sudo`
 
 ```bash
 # This script will install and setup docker etc.
@@ -113,16 +90,62 @@ kube-config install
 # It will ask for which hostname you want. Defaults to kubepi.
 
 # Last question is whether you want to reboot
-# You must do this, otherwise docker will behave very strange and fail
+# You must do this now, otherwise docker will behave very strange and fail
+
+# I've built docker v1.8.2 statically for ARMv6, if you want to use that binary instead of pacman's prepend the command with STATICALLY_DOCKER=1 like the other variables. This is experimental.
 
 # If you want to run this script non-interactively, do this:
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
 # This script runs in 2-3 mins
 ```
 
+## Setup Kubernetes
+
+If you want to change something in the source, edit as you want build the images before you do this (next chapter)
+These script are important in the setup process. 
+They spin up all required services in the right order.  
+If you skipped the build process, this may take ~10min, depending on your internet connection.
+
+```bash
+# To enable the master service, run
+kube-config enable-master
+
+# To enable the worker service, run
+kube-config enable-worker [master-ip]
+```
+
+## `.deb` deployment
+If you have already made a SD Card and your device is up and running, what can you do instead?
+For that, I've made a `.deb` package, so you could install it easily
+
+```bash
+# The OS have to be systemd based, e. g. HypriotOS, Debian Jessie, Arch Linux ARM, Ubuntu 15.04
+
+# Download the latest package
+curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/downloads/v0.6.2/kube-systemd.deb > kube-systemd.deb
+wget https://github.com/luxas/kubernetes-on-arm/releases/downloads/v0.6.2/kube-systemd.deb
+
+# Requires dpkg, which is preinstalled in at least all Debian/Ubuntu OSes
+dpkg -i kube-systemd.deb
+
+# Setup the enviroinment
+# It will ask which board it's running on and which OS
+# It will download prebuilt binaries
+# And make a swap file if plan to compile things
+# A reboot is required for it to function fully
+kube-config install
+
+# Start the master or worker
+kube-config enable-master
+kube-config enable-worker [master ip]
+
+# Get some info about the node
+kube-config info
+```
+
 ## (Optional) Build the Docker images for ARM
 
-With these scripts, all required binaries are compiled.     
+With these scripts, all required binaries are compiled.   
 Proceed to [Setup Kubernetes](#setup-kubernetes) if you want to get your cluster up-and-running fast
 
 ```bash
@@ -149,19 +172,7 @@ These core images are used in the cluster:
  - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs](images/kubernetesonarm/hyperkube/README.md)
  - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs](images/kubernetesonarm/pause/README.md)
 
-## Setup Kubernetes
 
-These script are important in the setup process. 
-They spin up all required services in the right order.   
-If you skipped the build process, this may take ~10min, depending on your internet connection.
-
-```bash
-# To enable the master service, run
-kube-config enable-master
-
-# To enable the worker service, run
-kube-config enable-worker [master-ip]
-```
 
 ## Use Kubernetes (the fun part begins here)
 
@@ -305,6 +316,22 @@ Two addons is available right now
    - And push it to the registry: `docker push registry.kube-system:5000/my-name/my-image`
   
 `kube-ui` was removed, because the Kubernetes team shifted focus to [dashboard](https://github.com/kubernetes/dashboard).
+
+## Access your cluster
+
+ - `apiserver` proxy:
+   - This is enabled by default by apiserver
+   - Type this URL in a browser or use `curl`
+   - `curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/[namespace]/services/[service-name]`
+   - You may build a proxy in front of this with `nginx` that forwards all requests to the apiserver proxy
+ - connect via flannel
+   - It's possible to start `flannel` and `kube-proxy` on another computer **in the same network** and access all services
+   - Run these two commands from a `amd64` machine with docker:
+     - `docker run --net=host -d --privileged -v /dev/net:/dev/net quay.io/coreos/flannel:0.5.4 /opt/bin/flanneld --etcd-endpoints=http://$MASTER_IP:4001`
+     - `docker run --net=host -d --privileged gcr.io/google_containers/hyperkube:v1.1.1 /hyperkube proxy --master=http://$MASTER_IP:8080 --v=2`'
+    - And replace $MASTER_IP with the actual ip of your master pi
+    - The consuming `amd64` computer can access all services
+    - For example: `curl -k https://10.0.0.1`
 
 ## Service management
 
