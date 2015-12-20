@@ -10,6 +10,7 @@ metadata:
 spec:
   selector:
     k8s-app: registry
+  clusterIP: 10.0.0.20
   ports:
   - name: registry
     port: 5000
