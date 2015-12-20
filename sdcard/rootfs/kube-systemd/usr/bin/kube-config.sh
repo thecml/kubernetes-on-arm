@@ -52,13 +52,7 @@ Usage:
 	kube-config build-images - Build the Kubernetes images locally
 	kube-config build-addons - Build the Kubernetes addon images locally
 	kube-config build [image] - Build an image, which is included in the kubernetes-on-arm repository
-		- Options with the luxas prefix:
-			- luxas/alpine: My alpine base image
-			- luxas/bench: Benchmark your ARM board compared to a Raspberry Pi 1. Based on Roy Longbottoms Benchmarks
-			- luxas/go: My Golang image
-			- luxas/nginx-test: Simple nginx image based on alpine. Used mostly for testing.
-			- luxas/nodejs: node.js image based on alpine.
-			- luxas/raspbian: A Raspbian base image. Based on resin/rpi-raspbian.
+		- Check for options in $PROJECT_SOURCE/images
 
 	kube-config enable-master - Enable the master services and then kubernetes is ready to use
 		- FYI, etcd data will be stored in the /var/lib/kubernetes/etcd directory. Backup that directory if you have important data.
@@ -67,10 +61,9 @@ Usage:
 		- Currently defined addons
 				- dns: Makes all services accessible via DNS
 				- registry: Makes a central docker registry
-				- loadbalancer: A loadbalancer that exposes services to the outside world. Coming soon...
 				- sleep: A debug addon. Starts two containers: luxas/alpine and luxas/raspbian.
 
-	kube-config disable-node - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong
+	kube-config disable-node - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong or you just want to stop Kubernetes
 	kube-config disable - Synonym to disable-node
 	kube-config disable-addon [addon] - Disable an addon, not the whole cluster
 	
@@ -80,7 +73,7 @@ Usage:
 	kube-config help - Display this help
 EOF
 }
-
+#				- loadbalancer: A loadbalancer that exposes services to the outside world. Coming soon...
 
 install(){
 
@@ -125,16 +118,6 @@ EOF
 	mkdir -p $KUBERNETES_DIR/source/images/kubernetesonarm/_bin/latest
 	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $KUBERNETES_DIR/binaries
 
-	if [[  $(type -t post_install) == "function" ]]; then
-		echo "Doing some custom work specific to this board"
-		post_install
-	fi
-
-	if [[  $(type -t os_post_install) == "function" ]]; then
-		echo "Doing some custom work specific to this OS"
-		os_post_install
-	fi
-
 	# Set hostname
 	if [[ -z $NEW_HOSTNAME ]]; then
 		read -p "What hostname do you want? Defaults to $DEFAULT_HOSTNAME. " hostnameanswer
@@ -165,10 +148,19 @@ EOF
 		swap
 	fi
 
+	if [[  $(type -t post_install) == "function" ]]; then
+		echo "Doing some custom work specific to this board"
+		post_install
+	fi
+
+	if [[  $(type -t os_post_install) == "function" ]]; then
+		echo "Doing some custom work specific to this OS"
+		os_post_install
+	fi
 
 	# Reboot?
 	if [[ -z $REBOOT ]]; then
-		read -p "Do you want to reboot now? A reboot is required for Docker to function if it was installed now. Y is default. [Y/n] " rebootanswer
+		read -p "Do you want to reboot now? A reboot is required for Docker to function. Y is default. [Y/n] " rebootanswer
 
 		case $rebootanswer in
 			[nN]*)
@@ -183,6 +175,9 @@ EOF
 
 upgrade(){
 	echo "Upgrading the system"
+
+	source $KUBERNETES_DIR/dynamic-env/env.conf
+	source $KUBERNETES_DIR/dynamic-env/$OS.sh
 	if [[ $(type -t os_upgrade) == "function" ]]; then
 		os_upgrade
 	fi
