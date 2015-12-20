@@ -34,7 +34,13 @@ os_install(){
 
 
 os_upgrade(){
-	pacman -Syu --noconfirm
+
+	if [[ $MACHINE == "rpi" ]]; then
+		pacman -Syu --noconfirm
+	else
+		echo "Won't upgrade your system. It would result in a corrupt docker download from pacman."
+		echo "If you want to do it anyway, run pacman -Syu"
+	fi
 }
 
 os_post_install(){
