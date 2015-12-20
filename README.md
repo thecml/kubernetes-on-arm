@@ -65,13 +65,15 @@ sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-systemd
 Boot your board and log into it.    
 
 Arch Linux users: 
- - The user/password is: **root/root** or **alarm/alarm**      
- - Yes, I know. Root enabled via ssh isn´t that good.
- - But the task to enhance ssh security is left as an exercise to the user.      
+ - The user/password is: **root/root** or **alarm/alarm**        
  - These scripts requires root. So if you login via **alarm**, then `su root` when you´re going to do some serious hacking :)
+
 HypriotOS users:
  - The user/password is: **pi/raspberry** or **root/hypriot**
- - Remember to prepend all commands that are here with `sudo`
+ - Remember to prepend all commands with `sudo` if you are the `pi` user
+
+Yes, I know. Root enabled via ssh isn´t that good.
+But the task to enhance ssh security is left as an exercise to the user.  
 
 ```bash
 # This script will install and setup docker etc.
@@ -79,7 +81,7 @@ kube-config install
 
 # First, it will update the system and install docker
 # Then it will download prebuilt Kubernetes binaries
-# If you build kubernetesonarm/build, then all binaries will be replaced with that version
+# Later, if you build kubernetesonarm/build, then all binaries will be replaced with that version
 
 # The script will ask you for timezone. Defaults to Europe/Helsinki
 # Run "timedatectl list-timezones" before to check for values
@@ -101,7 +103,7 @@ kube-config install
 
 ## Setup Kubernetes
 
-If you want to change something in the source, edit as you want build the images before you do this (next chapter)
+If you want to change something in the source, edit files in `/etc/kubernetes/source/images` and run `kube-config build-images` before you do this
 These script are important in the setup process. 
 They spin up all required services in the right order.  
 If you skipped the build process, this may take ~10min, depending on your internet connection.
@@ -132,7 +134,7 @@ dpkg -i kube-systemd.deb
 # It will ask which board it's running on and which OS
 # It will download prebuilt binaries
 # And make a swap file if plan to compile things
-# A reboot is required for it to function fully
+# A reboot is required for it to function properly
 kube-config install
 
 # Start the master or worker
@@ -143,14 +145,13 @@ kube-config enable-worker [master ip]
 kube-config info
 ```
 
-## (Optional) Build the Docker images for ARM
+### (Optional) Build the Docker images for ARM
 
-With these scripts, all required binaries are compiled.   
-Proceed to [Setup Kubernetes](#setup-kubernetes) if you want to get your cluster up-and-running fast
+With this script, the required docker images are built, then the Kubernetes binaries and last, the Kubernetes images used when running.
 
 ```bash
 
-# Build all master images
+# Build all required images
 kube-config build-images
 
 # Build all addons
@@ -171,7 +172,6 @@ These core images are used in the cluster:
  - kubernetesonarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs](images/kubernetesonarm/flannel/README.md)
  - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs](images/kubernetesonarm/hyperkube/README.md)
  - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs](images/kubernetesonarm/pause/README.md)
-
 
 
 ## Use Kubernetes (the fun part begins here)
@@ -273,11 +273,11 @@ kube-config delete-data
 
 ## Custom alternatives
 
-If you already have set up a lot of devices and already are familiar with one OS, just grab the binaries [here](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.6.0) or pull the images from Docker Hub.
+If you already have set up a lot of devices and already are familiar with one OS, just grab the binaries [here](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.6.2) or pull the images from Docker Hub.
 
 ```
 # Get the binaries and put them in /usr/bin
-curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.0/binaries.tar.gz | tar -xz -C /usr/bin
+curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.2/binaries.tar.gz | tar -xz -C /usr/bin
 
 # Pull the images for master
 docker pull kubernetesonarm/hyperkube
@@ -291,7 +291,7 @@ docker pull kubernetesonarm/hyperkube
 docker pull kubernetesonarm/flannel
 docker pull kubernetesonarm/pause
 ```
-Then check the service files here for the right commands to use: https://github.com/luxas/kubernetes-on-arm/tree/v0.6.0/sdcard/rootfs/kube-archlinux/usr/lib/systemd/system
+Then check the service files here for the right commands to use: https://github.com/luxas/kubernetes-on-arm/tree/v0.6.2/sdcard/rootfs/kube-systemd/usr/lib/systemd/system
 
 #### However, only use this method if you know what you are doing and want to customize just for your need
 #### Otherwise, use the SD Card method or deb package for an easy installation
@@ -356,7 +356,9 @@ Useful commands for troubleshooting:
 
 ## Beta version
 
-This project is under development.
+This project is under development.  
+I develop things on the [`dev` branch](tree/dev)
+
 [Changelog](CHANGELOG.md)
 
 ## Future work
@@ -375,7 +377,8 @@ The primary boards used for testing is Raspberry Pi 2´s.
 My goal for this project is that it should be as small as possible, while retaining its flexibility.  
 It should also be as easy as possible for people, who don´t know anything about Kubernetes, to get started.
 
-I also have opened a proposal for Kubernetes on ARM: [kubernetes/kubernetes#17981](https://github.com/kubernetes/kubernetes/issues/17981)
+I also have opened a proposal for Kubernetes on ARM: [kubernetes/kubernetes#17981](https://github.com/kubernetes/kubernetes/issues/17981).  
+The long-term goal most of this functionality should be present in core Kubernetes.
 
 It should be easy in the future to add support for new boards and operating systems.
 
