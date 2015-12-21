@@ -7,7 +7,7 @@ CID=$(docker run -d kubernetesonarm/make-deb /bin/bash)
 
 docker cp $CID:/build-deb .
 
-mkdir ../_debs
+mkdir -p ../_debs
 
 mv -f build-deb/*.deb ../_debs
 

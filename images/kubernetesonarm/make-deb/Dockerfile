@@ -3,7 +3,7 @@ FROM luxas/raspbian
 ENV PACKAGE_NAME=kubernetes-on-arm		\
 	PACKAGE_REVISION=-1					\
 	PACKAGE_ARCH=armhf					\
-	PACKAGE_GIT_TAG=v0.6.0
+	PACKAGE_GIT_TAG=v0.6.2
 # package git tag may also be "master"
 
 COPY makedeb.sh /

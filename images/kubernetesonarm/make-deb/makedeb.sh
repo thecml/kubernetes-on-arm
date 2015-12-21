@@ -41,7 +41,7 @@ Section: admin
 Priority: optional
 Homepage: https://github.com/luxas/kubernetes-on-arm
 Description: Kubernetes for ARM devices
-EOF													
+EOF
 
 # Generate MD5 checksums
 (cd $ROOT; find . -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums) && \
