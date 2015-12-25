@@ -1,9 +1,25 @@
 #!/bin/bash
-# TODO: make this test reliable
+
+declare -r RED="\033[0;31m"
+declare -r GREEN="\033[0;32m"
+declare -r YELLOW="\033[0;33m"
+
+function echo_green {
+  echo -e "${GREEN}$1"; tput sgr0
+}
+
+function echo_red {
+  echo -e "${RED}$1"; tput sgr0
+}
+
+function echo_yellow {
+  echo -e "${YELLOW}$1"; tput sgr0
+}
+
 
 if [[ ! -f $(which kubectl 2>&1) ]]; then
-	echo "kubectl not in PATH"
-	echo "Failing"
+	echo_red "kubectl not in PATH"
+	echo_red "Failing"
 	exit
 fi
 
@@ -11,11 +27,11 @@ kube-config info
 
 time kube-config enable-master
 
-SECS=0
-while [[ $(curl -m 1 -sSIk https://10.0.0.1 | head -1 2>&1) != *"OK"* ]]; do sleep 1; ((SECS++)); done
+APISERVER_SECS=0
+while [[ $(curl -m 1 -sSIk https://10.0.0.1 | head -1 2>&1) != *"OK"* ]]; do sleep 1; ((APISERVER_SECS++)); done
 #while [[ -z $(docker ps | grep "apiserver") ]]; do sleep 1; ((SECS++)); done
 
-echo "Time before apiserver came up: $SECS"
+echo_yellow "Seconds before apiserver came up: $APISERVER_SECS"
 
 docker ps
 
@@ -23,62 +39,126 @@ kube-config info
 
 kubectl run my-nginx --image=luxas/nginx-test --replicas=3
 
-SECS=0
-while [[ $(kubectl get po | grep "my-nginx" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((SECS++)); done
+NGINX_SECS=0
+while [[ $(kubectl get po | grep "my-nginx" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((NGINX_SECS++)); done
 
-echo "Time before nginx came up: $SECS"
+echo_yellow "Seconds before nginx came up: $NGINX_SECS"
 
 kubectl expose rc/my-nginx --port=80
 
 sleep 2
 
 SVCIP=$(kubectl get svc | grep my-nginx | awk '{print $2}')
+SERVICE_WORKING=0
 
 if [[ $(curl -sSL $SVCIP) == "<p>WELCOME TO NGINX</p>" ]]; then
-	echo "nginx service test passed"
+	echo_green "nginx service test passed"
+	SERVICE_WORKING=1
 	curl -sSL $SVCIP
 fi
 
-kube-config enable-addon dns
+kube-config enable-addon sleep
 
-SECS=0
-while [[ $(kubectl --namespace=kube-system get po | grep "kube-dns" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((SECS++)); done
-echo "Time before dns came up: $SECS"
+SLEEP_SECS=0
+while [[ $(kubectl get po | grep "sleep" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((SLEEP_SECS++)); done
+echo_yellow "Seconds before the sleep addon came up: $SLEEP_SECS"
 
 sleep 5
 
+kube-config enable-addon dns
+
+DNS_SECS=0
+while [[ $(kubectl --namespace=kube-system get po | grep "kube-dns" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((DNS_SECS++)); done
+echo_yellow "Seconds before dns came up: $DNS_SECS"
+
+sleep 5
+DNS_HOST_WORKING=0
+DNS_POD_WORKING=0
+APISERVER_PROXY=0
+
 if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
-	echo "nginx dns service test passed"
+	echo_green "nginx dns on host test passed"
+	DNS_HOST_WORKING=1
 	curl -sSL my-nginx
 fi
 
+if [[ $(kubectl exec -it alpine-sleep -- curl my-nginx.default.svc.cluster.local) == "<p>WELCOME TO NGINX</p>" ]]; then
+	echo_green "nginx dns in a pod test passed"
+	DNS_POD_WORKING=1
+fi
+
 if [[ $(curl -sSLk https://kubernetes/api/v1/proxy/namespaces/default/services/my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
-	echo "nginx master proxy test passed"
-	curl -sSLk https://kubernetes/api/v1/proxy/namespaces/default/services/my-nginx
+	echo_green "nginx master proxy test passed"
+	curl -sSLk https://10.0.0.1/api/v1/proxy/namespaces/default/services/my-nginx
+	APISERVER_PROXY=1
 fi
 
 
 kube-config enable-addon registry
 
-SECS=0
-while [[ $(kubectl --namespace=kube-system get po | grep "registry" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((SECS++)); done
-echo "Seconds to come up for registry: $SECS"
+REGISTRY_SECS=0
+while [[ $(kubectl --namespace=kube-system get po | grep "registry" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((REGISTRY_SECS++)); done
+echo_yellow "Seconds before registry came up: $REGISTRY_SECS"
 
 SVCIP=$(kubectl get svc --all-namespaces | grep registry | awk '{print $3}')
+REGISTRY_UP=0
 
 if [[ $(curl -sSLI $SVCIP:5000 | head -1) == *"OK"* ]]; then
-	echo "registry is up"
+	REGISTRY_UP=1
+	echo_green "registry is up"
 fi
 
-docker tag luxas/nginx-test registry.kube-system:5000/nginx-pro
-docker push registry.kube-system:5000/nginx-pro
+docker tag -f luxas/nginx-test 10.0.0.20:5000/nginx-two
+time docker push 10.0.0.20:5000/nginx-two
 
 ls -la /var/lib/registry 
-du -sh /var/lib/registry
+echo_yellow "Size of the registry dir after push: $(du -sh /var/lib/registry | awk '{print $1}')"
 
-echo "one token: "
+echo_yellow "one token: "
 cat $(mount | grep /var/lib/kubelet | awk '{print $3}' | head -1)/token
 echo
-echo "one ca.crt"
+echo_yellow "one ca.crt"
 cat $(mount | grep /var/lib/kubelet | awk '{print $3}' | head -1)/ca.crt
 echo
+
+
+
+kubectl get rc,po,svc,ep,secrets,serviceaccounts,ev,hpa,ds --all-namespaces
+kubectl get no,ns,cs
+docker images
+docker ps
+
+
+
+echo_yellow "Summary:"
+echo
+echo "Seconds before apiserver came up: $APISERVER_SECS"
+echo "Seconds before nginx came up: $NGINX_SECS"
+echo "Seconds before dns came up: $DNS_SECS"
+echo "Seconds before registry came up: $REGISTRY_SECS"
+echo 
+if [[ $SERVICE_WORKING == 1 ]]; then
+	echo_green "Services in Kubernetes are working"
+else
+	echo_red "Services in Kubernetes aren't working"
+fi
+if [[ $DNS_HOST_WORKING == 1 ]]; then
+	echo_green "DNS on host is working"
+else
+	echo_red "DNS on host isn't working"
+fi
+if [[ $DNS_POD_WORKING == 1 ]]; then
+	echo_green "DNS in pods host is working"
+else
+	echo_red "DNS in pods isn't working"
+fi
+if [[ $APISERVER_PROXY == 1 ]]; then
+	echo_green "The apiserver proxy is working"
+else
+	echo_red "The apiserver proxy isn't working"
+fi
+if [[ $SERVICE_WORKING == 1 ]]; then
+	echo_green "The registry is up and running"
+else
+	echo_red "The registry isn't up"
+fi
