@@ -2,13 +2,7 @@
 
 # Catch errors
 trap 'exit' ERR
-
-# Root is required
-if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root"
-  usage
-  exit 1
-fi
+set -e
 
 KUBERNETES_DIR=/etc/kubernetes
 ADDONS_DIR=$KUBERNETES_DIR/addons
@@ -32,7 +26,10 @@ LATEST_DOWNLOAD_RELEASE="v0.6.0"
 
 # If the config doesn't exist, create
 if [[ ! -f $KUBERNETES_CONFIG ]]; then
-	echo "K8S_MASTER_IP=127.0.0.1" > $KUBERNETES_CONFIG
+	cat > $KUBERNETES_CONFIG <<EOF
+K8S_MASTER_IP=127.0.0.1
+FLANNEL_SUBNET=10.1.0.0/16
+EOF
 fi
 
 # Source the config
@@ -74,6 +71,13 @@ Usage:
 EOF
 }
 #				- loadbalancer: A loadbalancer that exposes services to the outside world. Coming soon...
+
+# Root is required
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  usage
+  exit 1
+fi
 
 install(){
 

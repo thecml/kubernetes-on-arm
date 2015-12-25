@@ -22,6 +22,10 @@ os_install(){
 
 		# Download docker daemon
 		curl -sSL $STATIC_DOCKER_DOWNLOAD > /usr/bin/docker
+		chmod +x /usr/bin/docker
+
+		# Add the docker group, so the daemon starts
+		groupadd docker
 
 		# Enable the service files
 		mv /usr/lib/systemd/system/docker.service{.backup,}
