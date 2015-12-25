@@ -17,9 +17,9 @@ cd sdcard
 # Invoke the function that customizes the kube-systemd with symlinks and stuff
 rootfs
 
-# That file is temporary
+# That file is temporary, do not include env information in the .deb file
 rm $ROOT/dynamic-rootfs.sh
-
+rm $ROOT/etc/kubernetes/dynamic-env/env.conf
 
 ### PART 2: MAKE DEB
 # Inspired by: https://github.com/hypriot/rpi-docker-builder/blob/master/builder.sh
