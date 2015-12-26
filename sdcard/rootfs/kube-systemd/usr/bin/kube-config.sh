@@ -22,7 +22,7 @@ STATIC_DOCKER_DOWNLOAD="https://github.com/luxas/kubernetes-on-arm/releases/down
 DEFAULT_TIMEZONE="Europe/Helsinki"
 DEFAULT_HOSTNAME="kubepi"
 
-LATEST_DOWNLOAD_RELEASE="v0.6.0"
+LATEST_DOWNLOAD_RELEASE="v0.6.2"
 
 # If the config doesn't exist, create
 if [[ ! -f $KUBERNETES_CONFIG ]]; then
@@ -380,7 +380,6 @@ start-worker(){
 	echo "Using master ip: $IP"
 	updateconfig K8S_MASTER_IP $IP
 
-	# TODO: make this specifyable non-interactively
 	# Check if we have a connection
 	if [[ $(checkformaster) != "OK" ]]; then
 		cat <<EOF
@@ -557,7 +556,7 @@ version(){
     		if [[ ! -z $SERVER_K8S ]]; then
     			echo "kubernetes server version: $SERVER_K8S"
     			echo
-    			echo "CPU Time:"
+    			echo "CPU Time (minutes):"
     			echo "kubelet: $(getcputime kubelet)"
     			echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
 
