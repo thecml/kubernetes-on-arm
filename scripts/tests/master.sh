@@ -82,7 +82,7 @@ if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
 	curl -sSL my-nginx
 fi
 
-if [[ $(kubectl exec -it alpine-sleep -- curl my-nginx.default.svc.cluster.local) == "<p>WELCOME TO NGINX</p>" ]]; then
+if [[ $(kubectl exec -it alpine-sleep -- curl -sSL my-nginx.default.svc.cluster.local) == "<p>WELCOME TO NGINX</p>" ]]; then
 	echo_green "nginx dns in a pod test passed"
 	DNS_POD_WORKING=1
 fi
