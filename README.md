@@ -94,7 +94,7 @@ kube-config install
 # Last question is whether you want to reboot
 # You must do this now, otherwise docker will behave very strange and fail
 
-# I've built docker v1.8.2 statically for ARMv6, if you want to use that binary instead of pacman's prepend the command with STATICALLY_DOCKER=1 like the other variables. This is experimental.
+# I've built docker v1.8.2 statically, if you want to use that binary instead of pacman's prepend the command with STATICALLY_DOCKER=1 like the other variables. This is experimental.
 
 # If you want to run this script non-interactively, do this:
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
@@ -120,11 +120,14 @@ kube-config enable-worker [master-ip]
 If you have already made a SD Card and your device is up and running, what can you do instead?
 For that, I've made a `.deb` package, so you could install it easily
 
+If you already have set up your Pi with latest Raspbian OS for example, follow this guide.
+
 ```bash
 # The OS have to be systemd based, e. g. HypriotOS, Debian Jessie, Arch Linux ARM, Ubuntu 15.04
 
 # Download the latest package
 curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/downloads/v0.6.2/kube-systemd.deb > kube-systemd.deb
+# or
 wget https://github.com/luxas/kubernetes-on-arm/releases/downloads/v0.6.2/kube-systemd.deb
 
 # Requires dpkg, which is preinstalled in at least all Debian/Ubuntu OSes
@@ -132,10 +135,13 @@ dpkg -i kube-systemd.deb
 
 # Setup the enviroinment
 # It will ask which board it's running on and which OS
+# If your OS is Hypriot or Arch Linux, choose that. Otherwise, choose systemd
 # It will download prebuilt binaries
 # And make a swap file if plan to compile things
 # A reboot is required for it to function properly
 kube-config install
+
+## ----- REBOOT -----
 
 # Start the master or worker
 kube-config enable-master
@@ -201,6 +207,9 @@ kubectl get nodes
 
 # Expose the replication controller "my-nginx" as a service
 kubectl expose rc/my-nginx --port=80
+
+# If you want to expose your application on the host, use the external ip argument
+kubectl expose rc/my-nginx --port=80 --external-ip=$(hostname -i)
 
 # See which ip we may ping, by getting services
 kubectl get svc
@@ -271,9 +280,9 @@ kube-config disable-node
 kube-config delete-data
 ```
 
-## Custom alternatives
+## Custom hacking
 
-If you already have set up a lot of devices and already are familiar with one OS, just grab the binaries [here](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.6.2) or pull the images from Docker Hub.
+If you already have set up a lot of devices and already are familiar with one OS, just grab the binaries [here](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.6.2), pull the images from Docker Hub and start to hack your own solution :smile:
 
 ```
 # Get the binaries and put them in /usr/bin
@@ -324,14 +333,22 @@ Two addons is available right now
    - Type this URL in a browser or use `curl`
    - `curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/[namespace]/services/[service-name]`
    - You may build a proxy in front of this with `nginx` that forwards all requests to the apiserver proxy
- - connect via flannel
+ - Connect a computer to the `flannel` network
    - It's possible to start `flannel` and `kube-proxy` on another computer **in the same network** and access all services
    - Run these two commands from a `amd64` machine with docker:
-     - `docker run --net=host -d --privileged -v /dev/net:/dev/net quay.io/coreos/flannel:0.5.4 /opt/bin/flanneld --etcd-endpoints=http://$MASTER_IP:4001`
-     - `docker run --net=host -d --privileged gcr.io/google_containers/hyperkube:v1.1.1 /hyperkube proxy --master=http://$MASTER_IP:8080 --v=2`'
-    - And replace $MASTER_IP with the actual ip of your master pi
-    - The consuming `amd64` computer can access all services
-    - For example: `curl -k https://10.0.0.1`
+     - `docker run --net=host -d --privileged -v /dev/net:/dev/net quay.io/coreos/flannel:0.5.5 /opt/bin/flanneld --etcd-endpoints=http://$MASTER_IP:4001`
+     - `docker run --net=host -d --privileged gcr.io/google_containers/hyperkube:v1.1.2 /hyperkube proxy --master=http://$MASTER_IP:8080 --v=2`'
+   - And replace $MASTER_IP with the actual ip of your master pi
+   - The consuming `amd64` computer can access all services
+   - For example: `curl -k https://10.0.0.1`
+ - Make a `service` with `externalIP`
+   - Via `kubectl`: `kubectl expose rc {some rc} --port={the port this service will listen on} --container-port={the port the container exposes} --external-ip={the host you want to listen on}`  
+   - Example: `kubectl expose rc my-nginx --port=9060 --container-port=80 --external-ip=192.168.200.100`
+   - This will make the service accessible at `192.168.200.100:9060`
+
+#### See node health via `cAdvisor`
+
+Go to a web browser and type: `{IP of you Pi node}:4194` and a nice dashboard will be there and show you some nice real-time stats.
 
 ## Service management
 
@@ -347,12 +364,28 @@ Systemd services:
 
 
 Useful commands for troubleshooting: 
- - `systemctl status (service)`: Get the status
- - `systemctl start (service)`: Start
- - `systemctl stop (service)`: Stop
+ - `systemctl status (service)`: Get the status for a service
+ - `systemctl start (service)`: Start a service
+ - `systemctl stop (service)`: Stop a service
  - `systemctl cat (service)`: See the `.service` files for an unit.
  - `journalctl -xe`: Get the system log
  - `journalctl -xeu (service)`: Get logs for a service
+
+## Configuration
+
+There is a configuration file: `/etc/kubernetes/k8s.conf`, but it has only two options:
+ - `K8S_MASTER_IP`: Points to the master in the cluster. If the node is master, it uses `127.0.0.1` (aka `localhost`). Default: `127.0.0.1`
+ - `FLANNEL_SUBNET`: The subnet `flannel` should use. [More information](https://github.com/coreos/flannel#configuration). Default: `10.1.0.0/16`
+
+You can also customize the master containers´ flags in the file: `/etc/kubernetes/static/master/master.json`. There the configuration for the master components are. [Official file](https://github.com/kubernetes/kubernetes/blob/master/cluster/images/hyperkube/master-multi.json)
+
+You can put more `.json` files in `/etc/kubernetes/static/master` and `/etc/kubernetes/static/worker` if you want; they will come up as static pods.
+
+On Arch Linux, this file will override the default `eth0` settings. If you have a special `eth0` setup (or use some other network), edit this file to fit your use case: `/etc/systemd/network/dns.network`
+
+## Troubleshooting
+
+If your cluster won't start, try `kube-config delete-data`. That will remove all data you store in `/var/lib/kubelet` and `/var/lib/kubernetes`. If you don't want to delete all data, but have to get Kubernetes up and running, you can answer `M`, when running `kube-config delete-data` and it will rename the affected directories like this: `{,old}`.
 
 ## Beta version
 

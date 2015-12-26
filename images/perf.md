@@ -2,6 +2,45 @@
 
 These images are built on a Raspberry Pi 2.
 
+## 0.6.2
+
+  - luxas/raspbian: 331 s
+  - luxas/alpine: 55 s
+  - luxas/go: 1261 s
+
+  - kubernetesonarm/build: 1636 s
+  - kubernetesonarm/flannel: 155 s
+  - kubernetesonarm/etcd: 33 s 
+  - kubernetesonarm/hyperkube: 287 s
+  - kubernetesonarm/pause: 4 s 
+  - kubernetesonarm/exechealthz: 14 s
+  - kubernetesonarm/skydns: 6 s
+  - kubernetesonarm/kube2sky: 11 s
+  - kubernetesonarm/registry: 112 s
+
+
+```bash
+$ ls -lh
+total 173M
+-rwxr-xr-x 1 root root  17M Dec 20 20:34 aggregator
+-rwxr-xr-x 1 root root  11M Dec 20 20:16 etcd
+-rwxr-xr-x 1 root root 9.8M Dec 20 20:16 etcdctl
+-rwxr-xr-x 1 root root 3.6M Dec 20 20:31 exechealthz
+-rwxr-xr-x 1 root root  13M Dec 20 20:17 flanneld
+-rwxr-xr-x 1 root root  45M Dec 20 20:24 hyperkube
+-rwxr-xr-x 1 root root  14M Dec 20 20:26 kube2sky
+-rwxr-xr-x 1 root root  18M Dec 20 20:24 kubectl
+-rwxr-xr-x 1 root root 4.2M Dec 20 20:34 loader
+-rwxr-xr-x 1 root root 222K Dec 20 20:24 pause
+-rwxr-xr-x 1 root root  13M Dec 20 20:29 registry
+-rwxr-xr-x 1 root root  17M Dec 20 20:31 service_loadbalancer
+-rwxr-xr-x 1 root root  11M Dec 20 20:28 skydns
+-rwxr-xr-x 1 root root  719 Dec 20 20:39 version.sh
+```
+
+To build `hyperkube` and `kubectl`: ~6 mins
+
+Total time: 3905 s, 65 min 5 sec
 
 ## 0.6.0
 
