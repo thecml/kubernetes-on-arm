@@ -45,4 +45,12 @@ os_upgrade(){
 	else
 		echo "Don't know which package manager you are using. Refresh your OS yourself."
 	fi
+
+	# If the dhclient config file exists, edit it
+	if [[ -f /etc/dhcp/dhclient.conf ]]; then
+		cat >> /etc/dhcp/dhclient.conf <<EOF 
+prepend domain-search "default.svc.cluster.local","svc.cluster.local","cluster.local";
+prepend domain-name-servers 10.0.0.10;
+EOF
+	fi
 }
