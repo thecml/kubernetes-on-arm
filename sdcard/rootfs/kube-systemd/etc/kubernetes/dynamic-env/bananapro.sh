@@ -3,6 +3,7 @@ post_install(){
 
 	# Customized commands just for banana pro
 	# No commands for now
+	echo "Banana Pro setup completed"
 }
 
 # This code will never be called. It's just kept for reference
