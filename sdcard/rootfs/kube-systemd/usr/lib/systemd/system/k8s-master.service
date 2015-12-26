@@ -6,7 +6,7 @@ After=docker.service
 ExecStartPre=-/usr/bin/docker kill k8s-master
 ExecStartPre=-/usr/bin/docker rm k8s-master
 ExecStartPre=-/usr/bin/mkdir -p /etc/kubernetes/static/master
-ExecStart=/usr/bin/docker run 															\
+ExecStart=/usr/bin/sh -c "exec docker run 												\
 					--name=k8s-master 													\
 					--net=host 															\
 					-v /etc/kubernetes/static/master:/etc/kubernetes/manifests-multi	\
@@ -28,7 +28,9 @@ ExecStart=/usr/bin/docker run 															\
 						--v=2 															\
 						--address=0.0.0.0 												\
 						--enable-server 												\
-						--config=/etc/kubernetes/manifests-multi
+						--hostname-override=$(networkctl status | grep Address | awk '{print $2}') 	\
+						--config=/etc/kubernetes/manifests-multi"
+
 ExecStop=/usr/bin/docker stop k8s-master
 Restart=on-failure
 RestartSec=5
