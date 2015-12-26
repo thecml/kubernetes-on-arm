@@ -34,6 +34,24 @@ os_install(){
 			echo "WARNING: brctl is required for Kubernetes to function. Install it if you want Kubernetes to function properly."
 		fi
 	fi
+
+	# If the dhclient config file exists, edit it
+	if [[ -f /etc/dhcp/dhclient.conf ]]; then
+		cat >> /etc/dhcp/dhclient.conf <<EOF 
+prepend domain-search "default.svc.cluster.local","svc.cluster.local","cluster.local";
+prepend domain-name-servers 10.0.0.10;
+EOF
+	else
+		# Notify the user
+		cat <<EOF
+WARNING: You have to include these statements in your /etc/resolv.conf file if you want Kubernetes DNS to work on the host machine, not only in pods
+/etc/resolv.conf
+--------------------
+nameserver 10.0.0.10
+search default.svc.cluster.local svc.cluster.local cluster.local
+--------------------
+EOF
+	fi
 }
 
 
@@ -44,13 +62,5 @@ os_upgrade(){
 		apt-get update -y && apt-get upgrade -y
 	else
 		echo "Don't know which package manager you are using. Refresh your OS yourself."
-	fi
-
-	# If the dhclient config file exists, edit it
-	if [[ -f /etc/dhcp/dhclient.conf ]]; then
-		cat >> /etc/dhcp/dhclient.conf <<EOF 
-prepend domain-search "default.svc.cluster.local","svc.cluster.local","cluster.local";
-prepend domain-name-servers 10.0.0.10;
-EOF
 	fi
 }
