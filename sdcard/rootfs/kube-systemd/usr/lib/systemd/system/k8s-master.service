@@ -28,7 +28,7 @@ ExecStart=/usr/bin/sh -c "exec docker run 												\
 						--v=2 															\
 						--address=0.0.0.0 												\
 						--enable-server 												\
-						--hostname-override=$(networkctl status | grep Address | awk '{print $2}') 	\
+						--hostname-override=$(ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1) 	\
 						--config=/etc/kubernetes/manifests-multi"
 
 ExecStop=/usr/bin/docker stop k8s-master

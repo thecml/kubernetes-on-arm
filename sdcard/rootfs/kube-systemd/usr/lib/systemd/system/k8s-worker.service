@@ -28,7 +28,7 @@ ExecStart=/usr/bin/sh -c "exec docker run 												\
 						--v=2 															\
 						--address=127.0.0.1												\
 						--enable-server 												\
-						--hostname-override=$(networkctl status | grep Address | awk '{print $2}') \
+						--hostname-override=$(ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1) \
 						--config=/etc/kubernetes/manifests"
 
 ExecStartPost=/usr/bin/docker run -d 													\
