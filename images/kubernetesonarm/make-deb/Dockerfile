@@ -1,15 +1,17 @@
 FROM luxas/raspbian
 
 ENV PACKAGE_NAME=kubernetes-on-arm		\
-	PACKAGE_REVISION=-1					\
+	PACKAGE_REVISION=-2					\
 	PACKAGE_ARCH=armhf					\
-	PACKAGE_GIT_TAG=v0.6.2
-# package git tag may also be "master"
-
-COPY makedeb.sh /
+	PACKAGE_GIT_COMMIT=v0.6.2
+# PACKAGE_GIT_COMMIT may be a branch like master or dev, a commit hash or a tag
 
 # Install packages and download the repo
 RUN apt-get update && apt-get install -y git fakeroot	&& \
-	git clone -b $PACKAGE_GIT_TAG https://github.com/luxas/kubernetes-on-arm
+	git clone https://github.com/luxas/kubernetes-on-arm && \
+	cd kubernetes-on-arm && \
+	git checkout $PACKAGE_GIT_COMMIT
+
+COPY makedeb.sh /
 
 RUN /makedeb.sh

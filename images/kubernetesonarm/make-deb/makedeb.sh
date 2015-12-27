@@ -5,8 +5,8 @@
 cd /kubernetes-on-arm
 
 # Export paths required for the dynamic-rootfs script
-export PROJROOT=$(pwd)	
-export ROOT=$(mktemp -d /tmp/make-deb.XXXX)	
+export PROJROOT=$(pwd)
+export ROOT=$(mktemp -d /tmp/make-deb.XXXX)
 
 # Copy kube-systemd source to /tmp
 cp -r $PROJROOT/sdcard/rootfs/kube-systemd/* $ROOT 
@@ -20,6 +20,12 @@ rootfs
 # That file is temporary, do not include env information in the .deb file
 rm $ROOT/dynamic-rootfs.sh
 rm $ROOT/etc/kubernetes/dynamic-env/env.conf
+
+# Fix that the kubernetes-on-arm folder shouldn't be there
+# TODO: make this better in the future
+cp -r $ROOT/etc/kubernetes/source/kubernetes-on-arm/* $ROOT/etc/kubernetes/source
+rm -r $ROOT/etc/kubernetes/source/kubernetes-on-arm
+
 
 ### PART 2: MAKE DEB
 # Inspired by: https://github.com/hypriot/rpi-docker-builder/blob/master/builder.sh
@@ -55,4 +61,4 @@ fakeroot dpkg -b $ROOT /build-deb/
 # Output info
 echo "Package size (uncompressed): $filesize kByte"		
 echo "The package is here:"	
-ls -l /$PACKAGE_NAME*
+ls -l /build-deb/*.deb*
