@@ -5,8 +5,8 @@ After=docker.service
 [Service]
 ExecStartPre=-/usr/bin/docker kill k8s-worker k8s-worker-proxy
 ExecStartPre=-/usr/bin/docker rm k8s-worker k8s-worker-proxy
-ExecStartPre=-/usr/bin/mkdir -p /etc/kubernetes/static/worker
-ExecStart=/bin/sh -c "exec docker run 												\
+ExecStartPre=-/bin/sh -c "mkdir -p /etc/kubernetes/static/worker"
+ExecStart=/bin/sh -c "exec docker run 													\
 					--name=k8s-worker 													\
 					--net=host 															\
 					-v /etc/kubernetes/static/worker:/etc/kubernetes/manifests			\
