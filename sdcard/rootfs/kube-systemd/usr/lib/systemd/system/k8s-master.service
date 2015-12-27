@@ -6,7 +6,7 @@ After=docker.service
 ExecStartPre=-/usr/bin/docker kill k8s-master
 ExecStartPre=-/usr/bin/docker rm k8s-master
 ExecStartPre=-/usr/bin/mkdir -p /etc/kubernetes/static/master
-ExecStart=/usr/bin/sh -c "exec docker run 												\
+ExecStart=/bin/sh -c "exec docker run 												\
 					--name=k8s-master 													\
 					--net=host 															\
 					-v /etc/kubernetes/static/master:/etc/kubernetes/manifests-multi	\
