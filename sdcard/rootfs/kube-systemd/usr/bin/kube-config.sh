@@ -297,7 +297,7 @@ is-active(){
 }
 
 checkformaster(){
-	if [[ $(curl -m 5 -sSIk http://$1:8080 | head -1) == *"OK"* ]]; then
+	if [[ $(curl -m 5 -sSLIk http://$1:8080 2>&1 | head -1) == *"OK"* ]]; then
 		echo "OK"
 	fi
 }
@@ -383,13 +383,13 @@ start-worker(){
 	# Check if we have a connection
 	if [[ $(checkformaster $IP) != "OK" ]]; then
 		cat <<EOF
-Kubernetes Master IP is required.
-Value right now: $IP
+The Kubernetes master was not found.
 Exiting...
 
 Command:
 kube-config enable-worker [master-ip]
 EOF
+		exit
 	fi
 
 	echo "Checks so all images are present"
