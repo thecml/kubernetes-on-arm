@@ -1,6 +1,6 @@
-### README for Arch Linux ARM with Kubernetes enabled
+### Readme for Kubernetes on ARM
 
-v0.6.0
+v0.6.2
 
 More docs will be included in future releases
 
@@ -16,7 +16,7 @@ More docs will be included in future releases
      - master/
        - master.json - This file is important. This is the definition of the master´s Kubernetes components, which run as a static pod
      - worker/
-       - empty dir...
+       - Here and in master/ you may put `.json` files and they will run as static pods
    - source/
      - This project´s source. All `kubernetes-on-arm` code copied when the `rootfs` was packaged.
    - binaries/
