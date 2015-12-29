@@ -1,9 +1,0 @@
-[Unit]
-Description=Measure the time for k8s to come up from reboot
-Wants=system-docker.service
-
-[Service]
-ExecStart=/bin/bash -c "C=1; while [[ \"$(curl -m 5 -sSIk https://10.0.0.1 | head -1)\" !=  *\"OK\"* ]]; do sleep 10; ((C++)); echo \"$((C*10)) seconds\" > /etc/k8s-startup-time.log; done"
-
-[Install]
-WantedBy=multi-user.target
