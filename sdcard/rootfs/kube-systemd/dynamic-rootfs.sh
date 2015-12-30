@@ -13,6 +13,7 @@ rootfs(){
 	ln -s ../../etc/kubernetes/source/scripts/run-test.sh $ROOT/usr/bin/run-test
 
 	# Copy current source
+	# TODO: test if this mkdir could be removed
 	mkdir -p $K8S_DIR/source
 	cp -r $PROJROOT $K8S_DIR/source
 

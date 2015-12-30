@@ -1,6 +1,6 @@
 # This command is run by kube-config when doing "kube-config install"
 post_install(){
 
-	# Customized commands just for cubietruck
+	# Install the cubietruck uboot package
 	pacman -S uboot-cubietruck --noconfirm
 }

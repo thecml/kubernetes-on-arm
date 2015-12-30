@@ -1,26 +1,37 @@
-# Args: "$@" == the minimum packages to install, e.g. docker, git
 os_install(){
 
-	# Update the system and use pacman to install all the packages
-	# The two commands may be combined, but I leave it as is for now.
+	# Upgrade the system packages
 	os_upgrade
 	
 	# Here docker have to be installed
-	# Download docker daemon
-	curl -sSL $STATIC_DOCKER_DOWNLOAD > /usr/bin/docker
-	chmod +x /usr/bin/docker
+	# Download docker daemon if docker doesn't exist
+	if [[ ! -f $(which docker 2>&1) ]]; then
+		curl -sSL $STATIC_DOCKER_DOWNLOAD > /usr/bin/docker
+		chmod +x /usr/bin/docker
 
-	# Add the docker group, so the daemon starts
-	groupadd docker
+		# Enable the service files
+		mv /usr/lib/systemd/system/docker.service{.backup,}
+		mv /usr/lib/systemd/system/docker.socket{.backup,}
 
-	# Enable the service files
-	mv /usr/lib/systemd/system/docker.service{.backup,}
-	mv /usr/lib/systemd/system/docker.socket{.backup,}
+	# If docker is installed at another place than default, symlink
+	elif [[ $(which docker) != "/usr/bin/docker" ]]; then
+		
+		ln -s $(which docker) /usr/bin/docker
+	fi
 
+	# If the docker group doesn't exist, make it
+	if [[ -z $(grep docker /etc/group) ]]; then
+		# Add the docker group, so the daemon starts
+		groupadd docker
+	fi
+	
+	# Ensure systemctl has the latest files in memory
 	systemctl daemon-reload
 
 	# If the raspi-config command exists, expand filesystem automatically
 	if [[ -f $(which raspi-config 2>&1) ]]; then
+
+		echo "Expanding the rootfs with raspi-config..."
 		raspi-config --expand-rootfs
 	fi
 
@@ -37,6 +48,8 @@ os_install(){
 
 	# If the dhclient config file exists, edit it
 	if [[ -f /etc/dhcp/dhclient.conf ]]; then
+
+		echo "dhclient package found. Configuring it..."
 		cat >> /etc/dhcp/dhclient.conf <<EOF 
 prepend domain-search "default.svc.cluster.local","svc.cluster.local","cluster.local";
 prepend domain-name-servers 10.0.0.10;
@@ -61,6 +74,6 @@ os_upgrade(){
 		echo "Updating your system"
 		apt-get update -y && apt-get upgrade -y
 	else
-		echo "Don't know which package manager you are using. Refresh your OS yourself."
+		echo "Don't know which package manager you are using. Upgrade the packages yourself..."
 	fi
 }
