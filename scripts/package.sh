@@ -25,6 +25,9 @@ main() {
 
 	cp /etc/kubernetes/binaries/kubectl $OUT
 
+	# Make the .deb file from master
+	scripts/mkdeb.sh $OUT master 1
+
 	echo "BUILD_DATE=$(date +%d%m%y_%H%M)" >> $OUT/meta.sh
 
 	if [[ -f /etc/kubernetes/SDCard_metadata.conf ]]; then

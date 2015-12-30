@@ -1,23 +1,44 @@
 #!/bin/bash
 
+# Require two args
+if [[ $# < 2 ]]; then
+	cat <<EOF
+Create a .deb file of https://github.com/luxas/kubernetes-on-arm
+
+Arguments: 
+1: A commit, tag or branch in the repo
+2: The package revision. Just a number like 2
+EOF
+	exit
+fi
+
+PACKAGE_GIT_COMMIT=$1
+PACKAGE_REVISION=$2
+
+
 ### PART 1: GATHER FILES
 
 cd /kubernetes-on-arm
+
+# First, pull the latest code and use that
+git pull origin
+git checkout $PACKAGE_GIT_COMMIT
 
 # Export paths required for the dynamic-rootfs script
 export PROJROOT=$(pwd)
 export ROOT=$(mktemp -d /tmp/make-deb.XXXX)
 
 # Copy kube-systemd source to /tmp
-cp -r $PROJROOT/sdcard/rootfs/kube-systemd/* $ROOT 
+cp -r $PROJROOT/sdcard/rootfs/kube-systemd/* $ROOT
 
-source $ROOT/dynamic-rootfs.sh	
+# Source our pre-packaging script
+source $ROOT/dynamic-rootfs.sh
 cd sdcard
 
 # Invoke the function that customizes the kube-systemd with symlinks and stuff
 rootfs
 
-# That file is temporary, do not include env information in the .deb file
+# That file is temporary and do not include env information in the .deb file
 rm $ROOT/dynamic-rootfs.sh
 rm $ROOT/etc/kubernetes/dynamic-env/env.conf
 
@@ -31,34 +52,28 @@ rm -r $ROOT/etc/kubernetes/source/kubernetes-on-arm
 # Inspired by: https://github.com/hypriot/rpi-docker-builder/blob/master/builder.sh
 
 # Get uncompressed size and get the $VERSION variable
-filesize=`du -sk $ROOT | cut -f1`
+PACKAGE_SIZE=`du -sk $ROOT | cut -f1`
+
+# Fetch the $VERSION variable
 source $PROJROOT/version
 
 # Make control file
-mkdir $ROOT/DEBIAN
-cat > $ROOT/DEBIAN/control <<EOF
-Package: $PACKAGE_NAME
-Version: $VERSION$PACKAGE_REVISION
-Architecture: $PACKAGE_ARCH
-Maintainer: Lucas Kaldstrom <lucas.kaldstrom@hotmail.co.uk>
-Installed-Size: $filesize
-Recommends: ca-certificates, cgroupfs-mount, git, systemd, iptables | cgroup-lite, xz-utils
-Section: admin
-Priority: optional
-Homepage: https://github.com/luxas/kubernetes-on-arm
-Description: Kubernetes for ARM devices
-EOF
+mkdir -p $ROOT/DEBIAN
+mv /debian-control-file $ROOT/DEBIAN/control
+
+# Replace the dynamic variables
+sed -e "s/FILESIZE/$PACKAGE_SIZE/g;s/VERSION/$VERSION/g;s/REVISION/$PACKAGE_REVISION/g;" -i $ROOT/DEBIAN/control
 
 # Generate MD5 checksums
-(cd $ROOT; find . -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums) && \
+(cd $ROOT; find . -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums)
 
 # Make target dir
 mkdir /build-deb
 
 # The package process
-fakeroot dpkg -b $ROOT /build-deb/
+fakeroot dpkg -b $ROOT /build-deb
 
 # Output info
-echo "Package size (uncompressed): $filesize kByte"		
-echo "The package is here:"	
+echo "Package size (uncompressed): $PACKAGE_SIZE kByte"
+echo "The package is here:"
 ls -l /build-deb/*.deb*
