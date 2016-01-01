@@ -5,4 +5,4 @@ COPY etcd etcdctl /usr/bin/
 
 RUN mkdir /var/lib/etcd
 
-CMD ["/usr/bin/etcd", "--addr=127.0.0.1:4001", "--bind-addr=0.0.0.0:4001", "--data-dir=/var/etcd/data"]
+CMD ["/usr/bin/etcd", "--listen-client-urls=http://127.0.0.1:4001", "--advertise-client-urls=http://127.0.0.1:4001", "--data-dir=/var/etcd/data"]
