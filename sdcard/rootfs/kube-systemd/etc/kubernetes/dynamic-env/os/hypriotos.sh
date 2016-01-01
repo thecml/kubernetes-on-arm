@@ -1,4 +1,3 @@
-# Args: "$@" == the minimum packages to install, e.g. docker, git
 os_install(){
 
 	# Update the system and use pacman to install all the packages
@@ -6,10 +5,13 @@ os_install(){
 	os_upgrade
 	
 	# Since docker and git is installed by default, we have nothing more to do here
+
+	# TODO: Check if HypriotOS has brctl by default
 }
 
 
 os_upgrade(){
+	echo "Upgrading packages..."
 	apt-get update -y && apt-get upgrade -y
 }
 

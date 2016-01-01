@@ -4,13 +4,16 @@ os_install(){
 	# Update the system and use pacman to install all the packages
 	pacman -Syu --noconfirm
 
+	# If we should install docker as usual
 	if [[ -z $STATICALLY_DOCKER ]]; then
 
+		# If we're on ARMv6 use the normal docker from pacman
 		if [[ $MACHINE == "rpi" ]]; then
+
+			# Install docker and git
 			pacman -S docker git --noconfirm --needed
 		else
-			# for armv7
-			# Install this manually, docker v1.7.1
+			# Install docker v1.7.1 manually
 			pacman -S bridge-utils iproute2 device-mapper sqlite git --noconfirm --needed
 			curl -sSL https://s3.amazonaws.com/docker-armv7/docker-1:1.7.1-2-armv7h.pkg.tar.xz > /var/cache/pacman/pkg/docker-1:1.7.1-2-armv7h.pkg.tar.xz
 			pacman -U  /var/cache/pacman/pkg/docker-1:1.7.1-2-armv7h.pkg.tar.xz --noconfirm
