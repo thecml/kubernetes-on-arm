@@ -8,7 +8,7 @@ os_install(){
 	if [[ -z $STATICALLY_DOCKER ]]; then
 
 		# If we're on ARMv6 use the normal docker from pacman
-		if [[ $MACHINE == "rpi" ]]; then
+		if [[ $BOARD == "rpi" ]]; then
 
 			# Install docker and git
 			pacman -S docker git --noconfirm --needed
@@ -41,7 +41,7 @@ os_install(){
 
 os_upgrade(){
 
-	if [[ $MACHINE == "rpi" ]]; then
+	if [[ $BOARD == "rpi" ]]; then
 		pacman -Syu --noconfirm
 	else
 		echo "Won't upgrade your system. It would result in a corrupt docker download from pacman."

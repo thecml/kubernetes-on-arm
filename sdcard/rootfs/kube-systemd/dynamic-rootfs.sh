@@ -34,7 +34,7 @@ rootfs(){
 	# Inform the newly created SD Cards' scripts about which files to use.
 	cat > $K8S_DIR/dynamic-env/env.conf <<EOF
 OS=$OSNAME
-MACHINE=$MACHINENAME
+BOARD=$MACHINENAME
 EOF
 
 	# Remember the time we built this SD Card

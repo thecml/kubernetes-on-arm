@@ -84,23 +84,34 @@ install(){
 	# Source the commands, e.g. os_install, os_upgrade, os_post_install, post_install
 	if [[ -f $KUBERNETES_DIR/dynamic-env/env.conf ]]; then
 		source $KUBERNETES_DIR/dynamic-env/env.conf
-	elif [[ -z $MACHINE || -z $OS || $MACHINE == "" || $OS == "" ]]; then
-		read -p "Which board is this running on? Options: [rpi, rpi-2, cubietruck, parallella, bananapro]. " MACHINE
-		read -p "Which OS do you have? Options: [archlinux, hypriotos, systemd]. " OS
-
-		# Set systemd as a default
-		OS=${OS:-"systemd"}
-
-		# Write the info to the file
-		cat > $KUBERNETES_DIR/dynamic-env/env.conf <<EOF
-OS=$OS
-MACHINE=$MACHINE
-EOF
 	fi
 
+	# If some of the options are unset, ask the user
+	# This makes it possible to export OS and BOARD before running this command (requires that no env.conf is present)
+	if [[ -z $BOARD || -z $OS ]]; then
+		read -p "Which board is this running on? Options: [$(ls -l $KUBERNETES_DIR/dynamic-env/board | grep ".sh" | awk '{print $9}'| cut -d. -f1 | sed ':a;N;s/\n/, /;ta')]. " BOARD
+		read -p "Which OS do you have? Options: [$(ls -l $KUBERNETES_DIR/dynamic-env/os | grep ".sh" | awk '{print $9}'| cut -d. -f1 | sed ':a;N;s/\n/, /;ta')]. " OS
+	fi
+
+	# If some of the options doesn't exist, exit
+	if [[ ! -f $KUBERNETES_DIR/dynamic-env/board/$BOARD.sh ]]; then
+		echo "Invalid board: $BOARD. That value does not exist. Exiting..."
+		exit
+	fi
+	if [[ ! -f $KUBERNETES_DIR/dynamic-env/os/$OS.sh ]]; then
+		echo "Invalid os: $OS. That value does not exist. Exiting..."
+		exit
+	fi
+
+	# OK, both BOARD and OS are valid. Write the info to the file (even if it was the same as before)
+	cat > $KUBERNETES_DIR/dynamic-env/env.conf <<EOF
+OS=$OS
+BOARD=$BOARD
+EOF
+
 	# Source the files
-	source $KUBERNETES_DIR/dynamic-env/$MACHINE.sh
-	source $KUBERNETES_DIR/dynamic-env/$OS.sh
+	source $KUBERNETES_DIR/dynamic-env/board/$BOARD.sh
+	source $KUBERNETES_DIR/dynamic-env/os/$OS.sh
 
 	# If we have a external command file, use it
 	if [[ $(type -t os_install) == "function" ]]; then
@@ -112,14 +123,13 @@ EOF
 		exit
 	fi
 
-	
 	# Enable the docker and system-docker service
 	systemctl enable system-docker docker
 
 	echo "Downloading prebuilt binaries. It is possible to build them manually later."
 
 	# Download latest binaries, now we have them in $PATH
-	mkdir -p $KUBERNETES_DIR/source/images/kubernetesonarm/_bin/latest
+	mkdir -p $PROJECT_SOURCE/images/kubernetesonarm/_bin/latest
 	curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/binaries.tar.gz | tar -xz -C $KUBERNETES_DIR/binaries
 
 	# Set hostname
@@ -152,12 +162,12 @@ EOF
 		swap
 	fi
 
-	if [[  $(type -t post_install) == "function" ]]; then
+	if [[ $(type -t board_post_install) == "function" ]]; then
 		echo "Doing some custom work specific to this board"
-		post_install
+		board_post_install
 	fi
 
-	if [[  $(type -t os_post_install) == "function" ]]; then
+	if [[ $(type -t os_post_install) == "function" ]]; then
 		echo "Doing some custom work specific to this OS"
 		os_post_install
 	fi
@@ -180,8 +190,9 @@ EOF
 upgrade(){
 	echo "Upgrading the system"
 
+	# Source the os file and use that upgrade method
 	source $KUBERNETES_DIR/dynamic-env/env.conf
-	source $KUBERNETES_DIR/dynamic-env/$OS.sh
+	source $KUBERNETES_DIR/dynamic-env/os/$OS.sh
 	if [[ $(type -t os_upgrade) == "function" ]]; then
 		os_upgrade
 	fi
@@ -547,7 +558,8 @@ version(){
     docker ps 2> /dev/null 1> /dev/null
     if [ "$?" == "0" ]; then
 
-    	echo "docker version: v$(docker --version | awk '{print $3}' | sed -e 's/,$//')"
+    	DOCKER_VERSION=$(docker --version | awk '{print $3}' | sed -e 's/,$//')
+    	echo "docker version: v$DOCKER_VERSION"
 
     	# if kubectl exists, output k8s server version. If there is no server, output client Version
     	if [[ -f $(which kubectl 2>&1) ]]; then
@@ -558,7 +570,13 @@ version(){
     			echo
     			echo "CPU Time (minutes):"
     			echo "kubelet: $(getcputime kubelet)"
-    			echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
+
+    			# docker 1.7.1 doesn't have docker ps --format. 1.8.0 and newer does
+    			# and older versions than 1.7.1 isn't supported
+    			if [[ $DOCKER_VERSION != "1.7.1" ]]; then
+    				echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
+    			fi
+
 
     			if [[ $(get-node-type) == "master" ]]; then
     				echo "apiserver: $(getcputime apiserver)"
