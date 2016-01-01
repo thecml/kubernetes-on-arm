@@ -6,7 +6,10 @@ os_install(){
 	
 	# Since docker and git is installed by default, we have nothing more to do here
 
-	# TODO: Check if HypriotOS has brctl by default
+	# If brctl isn't installed, install it
+	if [[ ! -f $(which brctl 2>&1) ]]; then
+		apt-get install bridge-utils -y
+	fi
 }
 
 
