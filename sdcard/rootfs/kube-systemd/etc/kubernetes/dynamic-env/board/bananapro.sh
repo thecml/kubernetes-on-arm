@@ -1,5 +1,5 @@
 # This command is run by kube-config when doing "kube-config install"
-post_install(){
+board_post_install(){
 
 	# Customized commands just for banana pro
 	# No commands for now
