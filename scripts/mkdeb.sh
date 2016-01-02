@@ -34,13 +34,13 @@ CID=$(docker run -it kubernetesonarm/make-deb $1 $2)
 OUTDIR=$(parse-path-or-disc $1)
 
 # Copy out the whole folder that includes the .deb
-docker cp $CID:/build-deb .
+docker cp $CID:/build .
 
-# Copy the .deb package to the output
-cp build-deb/*.deb $OUTDIR
+# Copy the .deb and .tar.gz package to the output directory
+cp build/* $OUTDIR
 
 # And remove the intermediate directory and container
-rm -r build-deb
+rm -r build
 docker rm $CID
 
 # Last, clean up the directory

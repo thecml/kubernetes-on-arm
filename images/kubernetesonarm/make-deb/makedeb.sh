@@ -14,7 +14,7 @@ fi
 
 PACKAGE_GIT_COMMIT=$1
 PACKAGE_REVISION=$2
-
+OUT_DIR=${OUT_DIR:-"/build"}
 
 ### PART 1: GATHER FILES
 
@@ -68,12 +68,13 @@ sed -e "s/FILESIZE/$PACKAGE_SIZE/g;s/VERSION/$VERSION/g;s/REVISION/$PACKAGE_REVI
 (cd $ROOT; find . -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums)
 
 # Make target dir
-mkdir /build-deb
+mkdir -p $OUT_DIR
 
 # The package process
-fakeroot dpkg -b $ROOT /build-deb
+fakeroot dpkg -b $ROOT $OUT_DIR
+tar -czf $OUT_DIR/kubernetes-on-arm_${VERSION}-${PACKAGE_REVISION}_armhf.tar.gz $ROOT
 
 # Output info
-echo "Package size (uncompressed): $PACKAGE_SIZE kByte"
-echo "The package is here:"
-ls -l /build-deb/*.deb*
+echo ".deb package size (uncompressed): $PACKAGE_SIZE kByte"
+echo "The packages are here:"
+ls -l $OUT_DIR/*
