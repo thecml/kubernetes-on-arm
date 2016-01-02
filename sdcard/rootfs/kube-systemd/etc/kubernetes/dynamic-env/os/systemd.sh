@@ -46,24 +46,24 @@ os_install(){
 		fi
 	fi
 
-	# If the dhclient config file exists, edit it
-	if [[ -f /etc/dhcp/dhclient.conf ]]; then
-
-		echo "dhclient package found. Configuring it..."
-		cat >> /etc/dhcp/dhclient.conf <<EOF 
-prepend domain-search "default.svc.cluster.local","svc.cluster.local","cluster.local";
-prepend domain-name-servers 10.0.0.10;
-EOF
-	else
-		# Notify the user
+	# If the dhclient config doesn't exist, notify the user
+	if [[ ! -f /etc/dhcp/dhclient.conf ]]; then
 		cat <<EOF
 WARNING: You have to include these statements in your /etc/resolv.conf file if you want Kubernetes DNS to work on the host machine, not only in pods
 /etc/resolv.conf
 --------------------
-nameserver 10.0.0.10
-search default.svc.cluster.local svc.cluster.local cluster.local
+nameserver $DNS_IP
+search default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN
 --------------------
 EOF
+	fi
+
+	# If apt-get is there, use it
+	if [[ -f $(which apt-get 2>&1) && -f $(which git 2>&1) ]]; then
+		echo "Installing git..."
+		apt-get install -y git
+	else
+		echo "WARNING: It's recommended to have git installed. Please install it via your package manager."
 	fi
 }
 
@@ -76,4 +76,25 @@ os_upgrade(){
 	else
 		echo "Don't know which package manager you are using. Upgrade the packages yourself..."
 	fi
+}
+
+os_addon_dns(){
+
+	# Only edit the DNS config if the file exists
+	if [[ -f /etc/dhcp/dhclient.conf ]]; then
+
+		# Write the DNS options to the file
+		updatefile /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
+		updatefile /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers $DNS_IP;"
+
+		# If we are using /etc/init.d/networking, restart it
+		if [[ $(systemctl is-active networking) == "active" ]]; then
+			systemctl restart networking
+		elif [[ $(systemctl is-active systemd-networkd) == "active" ]]; then
+			systemctl restart systemd-networkd
+		else
+			echo "WARNING: You have to restart your networking daemon for DNS changes to take effect and flush changes to /etc/resolv.conf"
+		fi
+	fi
+
 }

@@ -22,11 +22,13 @@ os_post_install(){
 	# Reflect the new hostname in /boot/occidentalis
 	newhostname=$(hostnamectl | grep hostname | awk '{print $3}')
 	sed -i "/hostname=/c\hostname=$newhostname" /boot/occidentalis.txt
+}
 
+os_addon_dns(){
 	# Write the DNS options to the file
-	cat >> /etc/dhcp/dhclient.conf <<EOF 
-prepend domain-search "default.svc.cluster.local","svc.cluster.local","cluster.local";
-prepend domain-name-servers 10.0.0.10;
-EOF
+	updatefile /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
+	updatefile /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers $DNS_IP;"
 
+	# Flush changes
+	systemctl restart networking
 }

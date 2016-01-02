@@ -3,6 +3,7 @@ Description=The Worker Components for Kubernetes
 After=docker.service
 
 [Service]
+EnvironmentFile=/etc/kubernetes/k8s.conf
 ExecStartPre=-/usr/bin/docker kill k8s-worker k8s-worker-proxy
 ExecStartPre=-/usr/bin/docker rm k8s-worker k8s-worker-proxy
 ExecStartPre=-/bin/sh -c "mkdir -p /etc/kubernetes/static/worker"
@@ -23,8 +24,8 @@ ExecStart=/bin/sh -c "exec docker run 											\
 						--containerized 												\
 						--pod_infra_container_image=kubernetesonarm/pause				\
 						--api-servers=http://${K8S_MASTER_IP}:8080 						\
-						--cluster-dns=10.0.0.10 										\
-						--cluster-domain=cluster.local 									\
+						--cluster-dns=${DNS_IP} 										\
+						--cluster-domain=${DNS_DOMAIN} 									\
 						--v=2 															\
 						--address=0.0.0.0  												\
 						--enable-server 												\
@@ -39,7 +40,6 @@ ExecStartPost=/usr/bin/docker run -d 													\
 							--master=http://${K8S_MASTER_IP}:8080 						\
 							--v=2
 ExecStop=/usr/bin/docker stop k8s-worker k8s-worker-proxy
-EnvironmentFile=/etc/kubernetes/k8s.conf
 Restart=on-failure
 RestartSec=5
 

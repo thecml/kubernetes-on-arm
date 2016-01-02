@@ -3,6 +3,7 @@ Description=The Master Components for Kubernetes
 After=docker.service
 
 [Service]
+EnvironmentFile=/etc/kubernetes/k8s.conf
 ExecStartPre=-/usr/bin/docker kill k8s-master
 ExecStartPre=-/usr/bin/docker rm k8s-master
 ExecStartPre=-/bin/sh -c "mkdir -p /etc/kubernetes/static/master"
@@ -23,8 +24,8 @@ ExecStart=/bin/sh -c "exec docker run 												\
 						--containerized 												\
 						--pod_infra_container_image=kubernetesonarm/pause				\
 						--api-servers=http://localhost:8080 							\
-						--cluster-dns=10.0.0.10 										\
-						--cluster-domain=cluster.local 									\
+						--cluster-dns=${DNS_IP} 										\
+						--cluster-domain=${DNS_DOMAIN} 									\
 						--v=2 															\
 						--address=0.0.0.0 												\
 						--enable-server 												\

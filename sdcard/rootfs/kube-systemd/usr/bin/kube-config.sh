@@ -29,10 +29,12 @@ if [[ ! -f $KUBERNETES_CONFIG ]]; then
 	cat > $KUBERNETES_CONFIG <<EOF
 K8S_MASTER_IP=127.0.0.1
 FLANNEL_SUBNET=10.1.0.0/16
+DNS_DOMAIN=cluster.local
+DNS_IP=10.0.0.10
 EOF
 fi
 
-# Source the config
+# Always source the config
 source $KUBERNETES_CONFIG
 
 usage(){
@@ -44,7 +46,7 @@ With this utility, you can setup Kubernetes on ARM!
 Usage: 
 	kube-config install - Installs docker and makes your board ready for kubernetes
 	kube-config upgrade - Upgrade current operating system packages to latest version.
-		- WARNING: Do not upgrade if you are a Arch Linux ARMv7 user!! docker 1.9.1 has an odd bug
+		- WARNING: Do not upgrade if you are a Arch Linux ARMv7 user!! docker 1.9.1 from pacman has an odd bug
 
 	kube-config build-images - Build the Kubernetes images locally
 	kube-config build-addons - Build the Kubernetes addon images locally
@@ -81,7 +83,7 @@ fi
 
 install(){
 
-	# Source the commands, e.g. os_install, os_upgrade, os_post_install, post_install
+	# Source the commands, e.g. os_install, os_upgrade, os_post_install, board_post_install
 	if [[ -f $KUBERNETES_DIR/dynamic-env/env.conf ]]; then
 		source $KUBERNETES_DIR/dynamic-env/env.conf
 	fi
@@ -316,10 +318,16 @@ checkformaster(){
 # Update variable in k8s.conf
 # Example: updateconfig K8S_MASTER_IP [new value]
 updateconfig(){
-	if [[ -z $(cat $KUBERNETES_CONFIG | grep $1) ]]; then
-		echo "$1=$2" >> $KUBERNETES_CONFIG
+	updateline $KUBERNETES_CONFIG $1 "$1=$2"
+}
+
+# Example: updatefile path_to_file value_to_search_for replace_that_line_with_this_content
+# 
+updateline(){
+	if [[ -z $(cat $1 | grep $2) ]]; then
+		echo "$3" >> $1
 	else
-		sed -i "/$1/c\\$1=$2" $KUBERNETES_CONFIG
+		sed -i "/$2/c\\$3" $1
 	fi
 }
 
@@ -462,10 +470,27 @@ start-addon(){
 				kubectl create -f $ADDONS_DIR/kube-system.yaml
 			fi
 
-			# Invoke an optional addon function, if there is one
-			for FILE in $ADDONS_DIR/$1/*.yaml; do
-				kubectl create -f $FILE
-			done
+			# Source the os file and use that upgrade method
+			source $KUBERNETES_DIR/dynamic-env/env.conf
+			source $KUBERNETES_DIR/dynamic-env/os/$OS.sh
+			if [[ $(type -t os_addon_$1) == "function" ]]; then
+
+				# Call the os customization handler first
+				os_addon_$1
+			fi
+
+			# TODO: Maybe fix this better in the future
+			if [[ $1 == "dns" ]]; then
+
+				# Replace the variables before passing to kubectl
+				sed -e "s@DNS_DOMAIN@$DNS_DOMAIN@" $ADDONS_DIR/$1/dns-rc.yaml | kubectl create -f -
+				sed -e "s@DNS_IP@$DNS_IP@" $ADDONS_DIR/$1/dns-svc.yaml | kubectl create -f -
+			else
+				# Loop files in the addon directory and create with kubectl
+				for FILE in $ADDONS_DIR/$1/*.yaml; do
+					kubectl create -f $FILE
+				done
+			fi
 
 			echo "Started addon: $1"
 		else

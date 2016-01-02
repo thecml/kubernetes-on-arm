@@ -53,3 +53,11 @@ os_post_install(){
 	# When on Arch Linux, we've just installed docker, so reboot before use.
 	systemctl stop system-docker docker
 }
+
+os_addon_dns(){
+	# Write the DNS options to the file
+	updatefile /etc/systemd/network/dns.network "Domains" "Domains=default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN"
+	updatefile /etc/systemd/network/dns.network "DNS" "DNS=$DNS_IP;"
+
+	systemctl restart systemd-networkd
+}
