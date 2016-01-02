@@ -1,8 +1,12 @@
-
-K8S_DIR="$ROOT/etc/kubernetes"
-SDCARD_METADATA_FILE=$K8S_DIR/SDCard_metadata.conf
-
+# Configures a kube-systemd filesystem
+#
+# Globals required: 
+# ROOT: Path to kube-systemd filesystem
+# PROJROOT: Path to kubernetes-on-arm
 rootfs(){
+
+	K8S_DIR="$ROOT/etc/kubernetes"
+	SDCARD_METADATA_FILE=$K8S_DIR/SDCard_metadata.conf
 
 	# Allow ssh connections by root to this machine
 	if [[ -f $ROOT/etc/ssh/sshd_config ]]; then
@@ -14,7 +18,7 @@ rootfs(){
 
 	# Copy current source
 	# TODO: test if this mkdir could be removed
-	mkdir -p $K8S_DIR/source
+	# mkdir -p $K8S_DIR/source
 	cp -r $PROJROOT $K8S_DIR/source
 
 	# Remove the .sh
@@ -40,11 +44,16 @@ EOF
 	# Remember the time we built this SD Card
 	echo -e "SDCARD_BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $SDCARD_METADATA_FILE
 
+	# Try to fetch latest commit from git
 	COMMIT=$(git log --oneline 2>&1 | head -1 | awk '{print $1}')
 	if [[ $COMMIT != "bash:"* && $COMMIT != "fatal:"* ]]; then
 		echo "K8S_ON_ARM_COMMIT=$COMMIT" >> $SDCARD_METADATA_FILE
 	fi
 
-	source ../version
+	# Get version relative to $PROJROOT
+	source $PROJROOT/version
 	echo "K8S_ON_ARM_VERSION=$VERSION" >> $SDCARD_METADATA_FILE
+
+	# Remove the copy of this script
+	rm $ROOT/dynamic-rootfs.sh
 }

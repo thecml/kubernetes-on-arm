@@ -189,16 +189,13 @@ if [[ -d rootfs/$ROOTFSNAME ]]; then
 	cp -r rootfs/$ROOTFSNAME/* $ROOT
 
 	# If we've a dynamic rootfs, invoke it
-	if [[ -f $ROOT/dynamic-rootfs.sh ]]; then
+	if [[ -f rootfs/$ROOTFSNAME/dynamic-rootfs.sh ]]; then
 		
 		# Source the dynamic rootfs script
-		source $ROOT/dynamic-rootfs.sh
+		source rootfs/$ROOTFSNAME/dynamic-rootfs.sh
 
 		# And invoke the function
 		rootfs
-
-		# Remove the intermediate file
-		rm $ROOT/dynamic-rootfs.sh
 	fi
 fi
 

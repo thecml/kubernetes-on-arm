@@ -39,13 +39,12 @@ cd sdcard
 rootfs
 
 # That file is temporary and do not include env information in the .deb file
-rm $ROOT/dynamic-rootfs.sh
 rm $ROOT/etc/kubernetes/dynamic-env/env.conf
 
 # Fix that the kubernetes-on-arm folder shouldn't be there
 # TODO: make this better in the future
-cp -r $ROOT/etc/kubernetes/source/kubernetes-on-arm/* $ROOT/etc/kubernetes/source
-rm -r $ROOT/etc/kubernetes/source/kubernetes-on-arm
+# cp -r $ROOT/etc/kubernetes/source/kubernetes-on-arm/* $ROOT/etc/kubernetes/source
+# rm -r $ROOT/etc/kubernetes/source/kubernetes-on-arm
 
 
 ### PART 2: MAKE DEB
