@@ -10,6 +10,6 @@ RUN apt-install build-essential \
 	mv Raspberry* bench
 
 COPY onstart.sh /
-COPY main.cpp /perf
+COPY main.cpp /perf/
 
 CMD ["/onstart.sh"]
