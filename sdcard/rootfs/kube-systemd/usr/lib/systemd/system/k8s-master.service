@@ -7,29 +7,29 @@ EnvironmentFile=/etc/kubernetes/k8s.conf
 ExecStartPre=-/usr/bin/docker kill k8s-master
 ExecStartPre=-/usr/bin/docker rm k8s-master
 ExecStartPre=-/bin/sh -c "mkdir -p /etc/kubernetes/static/master"
-ExecStart=/bin/sh -c "exec docker run 												\
-					--name=k8s-master 													\
-					--net=host 															\
-					-v /etc/kubernetes/static/master:/etc/kubernetes/manifests-multi	\
-					-v /:/rootfs:ro 													\
-					-v /sys:/sys:ro 													\
-					-v /dev:/dev 														\
-					-v /var/lib/docker/:/var/lib/docker:rw 								\
-					-v /var/lib/kubelet:/var/lib/kubelet:rw 							\
-					-v /var/run:/var/run:rw 											\
-					--privileged 														\
-					--pid=host 															\
-					kubernetesonarm/hyperkube /hyperkube kubelet 						\
-						--allow-privileged=true 										\
-						--containerized 												\
-						--pod_infra_container_image=kubernetesonarm/pause				\
-						--api-servers=http://localhost:8080 							\
-						--cluster-dns=${DNS_IP} 										\
-						--cluster-domain=${DNS_DOMAIN} 									\
-						--v=2 															\
-						--address=0.0.0.0 												\
-						--enable-server 												\
-						--hostname-override=$(ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1) 	\
+ExecStart=/bin/sh -c "exec docker run \
+					--name=k8s-master \
+					--net=host \
+					-v /etc/kubernetes/static/master:/etc/kubernetes/manifests-multi \
+					-v /:/rootfs:ro \
+					-v /sys:/sys:ro \
+					-v /dev:/dev \
+					-v /var/lib/docker/:/var/lib/docker:rw \
+					-v /var/lib/kubelet:/var/lib/kubelet:rw \
+					-v /var/run:/var/run:rw \
+					--privileged \
+					--pid=host \
+					kubernetesonarm/hyperkube /hyperkube kubelet \
+						--allow-privileged \
+						--containerized \
+						--pod_infra_container_image=kubernetesonarm/pause \
+						--api-servers=http://localhost:8080 \
+						--cluster-dns=${DNS_IP} \
+						--cluster-domain=${DNS_DOMAIN} \
+						--v=2 \
+						--address=0.0.0.0 \
+						--enable-server \
+						--hostname-override=$(ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1) \
 						--config=/etc/kubernetes/manifests-multi"
 
 ExecStop=/usr/bin/docker stop k8s-master

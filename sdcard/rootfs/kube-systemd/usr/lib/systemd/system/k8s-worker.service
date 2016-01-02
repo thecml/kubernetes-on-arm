@@ -7,37 +7,38 @@ EnvironmentFile=/etc/kubernetes/k8s.conf
 ExecStartPre=-/usr/bin/docker kill k8s-worker k8s-worker-proxy
 ExecStartPre=-/usr/bin/docker rm k8s-worker k8s-worker-proxy
 ExecStartPre=-/bin/sh -c "mkdir -p /etc/kubernetes/static/worker"
-ExecStart=/bin/sh -c "exec docker run 											\
-					--name=k8s-worker 													\
-					--net=host 															\
-					-v /etc/kubernetes/static/worker:/etc/kubernetes/manifests			\
-					-v /:/rootfs:ro 													\
-					-v /sys:/sys:ro 													\
-					-v /dev:/dev 														\
-					-v /var/lib/docker/:/var/lib/docker:rw 								\
-					-v /var/lib/kubelet:/var/lib/kubelet:rw 							\
-					-v /var/run:/var/run:rw 											\
-					--privileged=true										\
-					--pid=host 															\
-					kubernetesonarm/hyperkube /hyperkube kubelet 						\
-						--allow-privileged=true 										\
-						--containerized 												\
-						--pod_infra_container_image=kubernetesonarm/pause				\
-						--api-servers=http://${K8S_MASTER_IP}:8080 						\
-						--cluster-dns=${DNS_IP} 										\
-						--cluster-domain=${DNS_DOMAIN} 									\
-						--v=2 															\
-						--address=0.0.0.0  												\
-						--enable-server 												\
+ExecStart=/bin/sh -c "exec docker run \
+					--name=k8s-worker \
+					--net=host \
+					-v /etc/kubernetes/static/worker:/etc/kubernetes/manifests \
+					-v /:/rootfs:ro \
+					-v /sys:/sys:ro \
+					-v /dev:/dev \
+					-v /var/lib/docker/:/var/lib/docker:rw \
+					-v /var/lib/kubelet:/var/lib/kubelet:rw \
+					-v /var/run:/var/run:rw \
+					--privileged \
+					--pid=host \
+					kubernetesonarm/hyperkube /hyperkube kubelet \
+						--allow-privileged \
+						--containerized \
+						--pod_infra_container_image=kubernetesonarm/pause \
+						--api-servers=http://${K8S_MASTER_IP}:8080 \
+						--cluster-dns=${DNS_IP} \
+						--cluster-domain=${DNS_DOMAIN} \
+						--v=2 \
+						--address=0.0.0.0 \
+						--enable-server \
 						--hostname-override=$(ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1) \
 						--config=/etc/kubernetes/manifests"
 
-ExecStartPost=/usr/bin/docker run -d 													\
-						--name=k8s-worker-proxy 										\
-						--net=host 														\
-						--privileged=true									\
-						kubernetesonarm/hyperkube /hyperkube proxy 						\
-							--master=http://${K8S_MASTER_IP}:8080 						\
+ExecStartPost=/usr/bin/docker run -d \
+						--name=k8s-worker-proxy \
+						--net=host \
+						--privileged \
+						kubernetesonarm/hyperkube /hyperkube proxy \
+							--master=http://${K8S_MASTER_IP}:8080 \
+							--proxy-mode=iptables \
 							--v=2
 ExecStop=/usr/bin/docker stop k8s-worker k8s-worker-proxy
 Restart=on-failure
