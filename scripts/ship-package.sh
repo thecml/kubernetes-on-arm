@@ -36,5 +36,9 @@ Examples:
 PACKAGE=0 scripts/ship-package.sh /dev/sda2
 PACKAGE=1 scripts/ship-package.sh /dev/sda [/dev/sda1 automatically chosen]
 scripts/ship-package.sh /etc/k8s-artifacts
+
+Other variables:
+PACKAGE_BRANCH: The ref that git should checkout when building the package. Defaults to master
+PACKAGE_REVISION: The revision of the package. Defaults to 1
 EOF
 fi

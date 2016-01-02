@@ -13,7 +13,7 @@ scripts/mkdeb.sh [output] [git_ref] [revision]
 
 Arguments:
 output: May be a disc or partition or absolute path
-git_ref: A commit, tag or branch in the repo
+git_ref: A commit, tag or branch in the repo. Usage in this script: git checkout $git_ref
 revision: The package revision. Just a number like 2
 
 Examples:

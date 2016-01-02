@@ -4,6 +4,8 @@ main() {
 	cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
 	OUT=$(pwd)/release/latest
+	PACKAGE_BRANCH=${PACKAGE_BRANCH:-"master"}
+	PACKAGE_REVISION=${PACKAGE_BRANCH:-1}
 
 	source scripts/common.sh
 
@@ -25,8 +27,8 @@ main() {
 
 	cp /etc/kubernetes/binaries/kubectl $OUT
 
-	# Make the .deb file from master
-	scripts/mkdeb.sh $OUT master 1
+	# Make the .deb file from master as the default option
+	scripts/mkdeb.sh $OUT $PACKAGE_BRANCH $PACKAGE_REVISION
 
 	echo "BUILD_DATE=$(date +%d%m%y_%H%M)" >> $OUT/meta.sh
 
