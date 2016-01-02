@@ -27,7 +27,7 @@ if [[ $# == 1 ]]; then
     cleanup-path-or-disc
 else
 	cat <<EOF
-Packages Kubernetes images, binaries and kubectl to a target
+Packages Kubernetes images, binaries, the .deb file and kubectl to a target
 
 Usage:
 PACKAGE=(1=default|0) scripts/ship-package.sh [disc or partition or absolute path]

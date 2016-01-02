@@ -4,6 +4,8 @@ These images are built on a Raspberry Pi 2.
 
 ## 0.6.2
 
+74 files changed, 1615 insertions(+), 611 deletions(-)
+
   - luxas/raspbian: 331 s
   - luxas/alpine: 55 s
   - luxas/go: 1261 s
