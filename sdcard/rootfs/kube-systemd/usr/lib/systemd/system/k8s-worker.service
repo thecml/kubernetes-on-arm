@@ -6,11 +6,11 @@ After=docker.service
 EnvironmentFile=/etc/kubernetes/k8s.conf
 ExecStartPre=-/usr/bin/docker kill k8s-worker k8s-worker-proxy
 ExecStartPre=-/usr/bin/docker rm k8s-worker k8s-worker-proxy
-ExecStartPre=-/bin/sh -c "mkdir -p /etc/kubernetes/static/worker"
+ExecStartPre=-/bin/sh -c "mkdir -p /etc/kubernetes/static-pods/worker"
 ExecStart=/bin/sh -c "exec docker run \
 					--name=k8s-worker \
 					--net=host \
-					-v /etc/kubernetes/static/worker:/etc/kubernetes/manifests \
+					-v /etc/kubernetes/static-pods/worker:/etc/kubernetes/manifests \
 					-v /:/rootfs:ro \
 					-v /sys:/sys:ro \
 					-v /dev:/dev \
