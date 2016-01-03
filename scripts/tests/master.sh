@@ -1,5 +1,14 @@
 #!/bin/bash
 
+########## GLOBALS ###########
+
+OUTPUT_DETAILS=${OUTPUT_DETAILS:-1}
+
+
+
+########## COLORS ############
+
+
 declare -r RED="\033[0;31m"
 declare -r GREEN="\033[0;32m"
 declare -r YELLOW="\033[0;33m"
@@ -14,6 +23,16 @@ function echo_red {
 
 function echo_yellow {
   echo -e "${YELLOW}$1"; tput sgr0
+}
+
+# Example: updatefile path_to_file value_to_search_for replace_that_line_with_this_content
+# 
+updateline(){
+	if [[ -z $(cat $1 | grep $2) ]]; then
+		echo "$3" >> $1
+	else
+		sed -i "/$2/c\\$3" $1
+	fi
 }
 
 
@@ -89,8 +108,6 @@ if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
 	curl -sSL my-nginx
 fi
 
-
-
 if [[ $(kubectl exec -it alpine-sleep -- curl -sSL my-nginx.default.svc.cluster.local) == "<p>WELCOME TO NGINX</p>" ]]; then
 	echo_green "nginx dns in a pod test passed"
 	DNS_POD_WORKING=1
@@ -100,6 +117,35 @@ if [[ $(curl -sSLk https://10.0.0.1/api/v1/proxy/namespaces/default/services/my-
 	echo_green "nginx master proxy test passed"
 	curl -sSLk https://10.0.0.1/api/v1/proxy/namespaces/default/services/my-nginx
 	APISERVER_PROXY=1
+fi
+
+DNS_HOST_CHANGE_WORKING=0
+DNS_HOST_CHANGE_SEARCH_WORKING=0
+kube-config disable-addon dns
+
+sleep 5
+
+updateline /etc/kubernetes/k8s.conf "DNS_DOMAIN" "DNS_DOMAIN=kubernetesonarm.com"
+updateline /etc/kubernetes/k8s.conf "DNS_IP" "DNS_IP=10.0.0.110"
+
+kube-config enable-addon dns
+
+DNS_AGAIN_SECS=0
+while [[ $(kubectl --namespace=kube-system get po | grep "kube-dns" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((DNS_AGAIN_SECS++)); done
+echo_yellow "Seconds before dns came up the second time: $DNS_AGAIN_SECS"
+
+sleep 10
+
+if [[ $(curl -sSL my-nginx.default.svc.kubernetesonarm.com) == "<p>WELCOME TO NGINX</p>" ]]; then
+	echo_green "dns on host after k8s.conf change test passed"
+	DNS_HOST_CHANGE_WORKING=1
+	curl -sSL my-nginx.default.svc.kubernetesonarm.com
+fi
+
+if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
+	echo_green "dns shorthand names on host after k8s.conf change test passed"
+	DNS_HOST_CHANGE_SEARCH_WORKING=1
+	curl -sSL my-nginx
 fi
 
 
@@ -131,12 +177,13 @@ cat $(mount | grep /var/lib/kubelet | awk '{print $3}' | head -1)/ca.crt
 echo
 
 
+if [[ $OUTPUT_DETAILS == 1 ]]; then
 
-kubectl get rc,po,svc,ep,secrets,serviceaccounts,ev,hpa,ds --all-namespaces
-kubectl get no,ns,cs
-docker images
-docker ps
-
+	kubectl get rc,po,svc,ep,secrets,serviceaccounts,ev,hpa,ds --all-namespaces
+	kubectl get no,ns,cs
+	docker images
+	docker ps
+fi
 
 
 echo_yellow "Summary:"
@@ -160,6 +207,16 @@ if [[ $DNS_HOST_SEARCH_WORKING == 1 ]]; then
 	echo_green "DNS on host with shorthand search commands is working"
 else
 	echo_red "DNS on host with shorthand search commands isn't working"
+fi
+if [[ $DNS_HOST_CHANGE_WORKING == 1 ]]; then
+	echo_green "DNS on host after k8s.conf change is working"
+else
+	echo_red "DNS on host after k8s.conf change isn't working"
+fi
+if [[ $DNS_HOST_CHANGE_SEARCH_WORKING == 1 ]]; then
+	echo_green "DNS on host with shorthand search commands after k8s.conf change is working"
+else
+	echo_red "DNS on host with shorthand search commands after k8s.conf change isn't working"
 fi
 if [[ $DNS_POD_WORKING == 1 ]]; then
 	echo_green "DNS in pods host is working"
