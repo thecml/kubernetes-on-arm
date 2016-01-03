@@ -2,8 +2,6 @@
 
 v0.6.3
 
-More docs will be included in future releases
-
 /etc/
  - kubernetes/
    - dropins/
@@ -15,7 +13,7 @@ More docs will be included in future releases
        - Here are customization scripts for the OSes supported
      - board/
        - Here are customization scripts for the boards supported
-   - static/
+   - static-pods/
      - master/
        - master.json - This file is important. This is the definition of the master´s Kubernetes components, which run as a static pod
      - worker/
@@ -27,25 +25,23 @@ More docs will be included in future releases
      - Here are the Kubernetes binaries stored.
    - addons/
      - Symlink to `source/addons`
-   - k8s.conf - Configuration file
+   - k8s.conf - Configuration file for this project
  - profile.d/
    - binaries-in-PATH.sh - Adds `/etc/kubernetes/binaries` to $PATH
    - system-docker.sh - Adds the `system-docker` alias
  - systemd/
    - network/
-     - dns.network - A `.network` file for Arch Linux, enables DHCP for `eth0` and sets the `search` command to `/etc/resolv.conf`
-   - resolved.conf.d/
-     - dns.conf - Sets the `nameserver` command for `/etc/resolv.conf` for Arch Linux
+     - dns.network - A `.network` file for Arch Linux, enables DHCP for `eth0`, sets the `search` and `nameserver` commands to `/etc/resolv.conf`
 /usr/
  - bin/
    - kube-config - The heavy-lifting script. May install everything required for Kubernetes, start and stop it and much more.
  - lib/systemd/system
-   - etcd.service
-   - flannel.service
-   - k8s-master.service
-   - k8s-worker.service
-   - system-docker.service
-   - system-docker.socket
+   - system-docker.socket - The `/var/run/system-docker.sock` socket. Required by `system-docker`
+   - system-docker.service - A bootstrap `docker daemon`, used for running `etcd` and `flannel`
+   - etcd.service - `etcd` is used as data store. Uses `/var/lib/kubernetes/etcd` as storage dir.
+   - flannel.service - `flannel` is the provider of the overlay network.
+   - k8s-master.service - Runs `kubelet` and `kube-proxy` in a container and also starts the master containers.
+   - k8s-worker.service - Runs `kubelet` and `kube-proxy` in a container
 /var/lib
  - kubernetes/
    - certs/
