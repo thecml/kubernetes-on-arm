@@ -21,8 +21,8 @@ OUT_DIR=${OUT_DIR:-"/build"}
 cd /kubernetes-on-arm
 
 # First, pull the latest code and use that
-git pull origin
-git checkout $PACKAGE_GIT_COMMIT
+git fetch --all
+git checkout origin/$PACKAGE_GIT_COMMIT
 
 # Export paths required for the dynamic-rootfs script
 export PROJROOT=$(pwd)
@@ -40,6 +40,7 @@ rootfs
 
 # That file is temporary and do not include env information in the .deb file
 rm $ROOT/etc/kubernetes/dynamic-env/env.conf
+rm -r $ROOT/etc/kubernetes/source/.git
 
 # Fix that the kubernetes-on-arm folder shouldn't be there
 # TODO: make this better in the future
@@ -71,7 +72,7 @@ mkdir -p $OUT_DIR
 
 # The package process
 fakeroot dpkg -b $ROOT $OUT_DIR
-tar -czf $OUT_DIR/kubernetes-on-arm_${VERSION}-${PACKAGE_REVISION}_armhf.tar.gz $ROOT
+(cd $ROOT; tar -czf $OUT_DIR/kubernetes-on-arm_${VERSION}-${PACKAGE_REVISION}_armhf.tar.gz .)
 
 # Output info
 echo ".deb package size (uncompressed): $PACKAGE_SIZE kByte"

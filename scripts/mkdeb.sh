@@ -28,7 +28,10 @@ fi
 kube-config build kubernetesonarm/make-deb
 
 # Run the container
-CID=$(docker run -it kubernetesonarm/make-deb $1 $2)
+CID=$(docker run -d kubernetesonarm/make-deb $2 $3)
+
+# Wait for the package process
+docker wait $CID
 
 # Get the directory we should put the file in
 OUTDIR=$(parse-path-or-disc $1)
