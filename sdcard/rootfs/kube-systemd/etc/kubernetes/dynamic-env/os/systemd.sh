@@ -31,8 +31,9 @@ os_install(){
 	# If the raspi-config command exists, expand filesystem automatically
 	if [[ -f $(which raspi-config 2>&1) ]]; then
 
-		echo "Expanding the rootfs with raspi-config..."
-		raspi-config --expand-rootfs
+		RASPICONFIG_EXPAND_LOG=$(mktemp /tmp/kube-config-raspi-config-expand-rootfs.XXXXX)
+		echo "Expanding the rootfs with raspi-config... Log file: $RASPICONFIG_EXPAND_LOG"
+		raspi-config --expand-rootfs 1>$RASPICONFIG_EXPAND_LOG 2>$RASPICONFIG_EXPAND_LOG
 	fi
 
 	# If brctl isn't installed, notify the user
@@ -58,12 +59,17 @@ search default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN
 EOF
 	fi
 
-	# If apt-get is there, use it
-	if [[ -f $(which apt-get 2>&1) && -f $(which git 2>&1) ]]; then
-		echo "Installing git..."
-		apt-get install -y git
-	else
-		echo "WARNING: It's recommended to have git installed. Please install it via your package manager."
+	# Is git installed? If not, try to install it
+	if [[ ! -f $(which git 2>&1) ]]; then
+
+		# If apt-get is there, use it and install git
+		if [[ -f $(which apt-get 2>&1) ]]; then
+
+			echo "Installing git..."
+			apt-get install -y git
+		else
+			echo "WARNING: It's recommended to have git installed. Please install it via your package manager."
+		fi
 	fi
 }
 
@@ -84,8 +90,8 @@ os_addon_dns(){
 	if [[ -f /etc/dhcp/dhclient.conf ]]; then
 
 		# Write the DNS options to the file
-		updatefile /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
-		updatefile /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers $DNS_IP;"
+		updateline /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
+		updateline /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers $DNS_IP;"
 
 		# If we are using /etc/init.d/networking, restart it
 		if [[ $(systemctl is-active networking) == "active" ]]; then

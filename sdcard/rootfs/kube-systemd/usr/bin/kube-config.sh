@@ -321,7 +321,7 @@ updateconfig(){
 	updateline $KUBERNETES_CONFIG $1 "$1=$2"
 }
 
-# Example: updatefile path_to_file value_to_search_for replace_that_line_with_this_content
+# Example: updateline path_to_file value_to_search_for replace_that_line_with_this_content
 # 
 updateline(){
 	if [[ -z $(cat $1 | grep $2) ]]; then

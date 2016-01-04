@@ -56,8 +56,8 @@ os_post_install(){
 
 os_addon_dns(){
 	# Write the DNS options to the file
-	updatefile /etc/systemd/network/dns.network "Domains" "Domains=default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN"
-	updatefile /etc/systemd/network/dns.network "DNS" "DNS=$DNS_IP;"
+	updateline /etc/systemd/network/dns.network "Domains" "Domains=default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN"
+	updateline /etc/systemd/network/dns.network "DNS" "DNS=$DNS_IP;"
 
 	systemctl restart systemd-networkd
 }
