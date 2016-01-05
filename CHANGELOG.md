@@ -1,5 +1,15 @@
 ## Changelog
 
+ - v0.6.3
+   - Fix bugs and make the `.deb` file stable
+   - Add a `.tar.gz` deployment for platforms that doesn't have `dpkg`
+   - Document the /etc/kubernetes/README.md better
+   - Refactor and remove unnecessary things
+   - Break out the DNS options `cluster.local` and `10.0.0.10` to `/etc/kubernetes/k8s.conf`
+   - Fixed so the master is able to collect logs from nodes @kyletravis
+   - Better DNS management on Arch Linux
+   - Use a shell for looking up paths to execlutables needed in `.service` files
+   - Easier to use on `systemd`, most of the packages is automatically installed
  - v0.6.2
    - Support for Banana Pro
    - `.deb` package deployment

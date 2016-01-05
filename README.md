@@ -44,6 +44,9 @@ cd kubernetes-on-arm
 # See which letter your newly inserted SD Card has:
 sudo fdisk -l
 
+# Another great command
+lsblk
+
 # Get some help text about supported options
 sdcard/write.sh
 
@@ -71,6 +74,7 @@ Arch Linux users:
 HypriotOS users:
  - The user/password is: **pi/raspberry** or **root/hypriot**
  - Remember to prepend all commands with `sudo` if you are the `pi` user
+   - Sometimes, it's even required to prepend commands with `sudo env PATH=$PATH ...`
 
 Yes, I know. Root enabled via ssh isn´t that good.
 But the task to enhance ssh security is left as an exercise to the user.  
@@ -83,18 +87,18 @@ kube-config install
 # Then it will download prebuilt Kubernetes binaries
 # Later, if you build kubernetesonarm/build, then all binaries will be replaced with that version
 
+# It will ask for which hostname you want. Defaults to kubepi.
+
 # The script will ask you for timezone. Defaults to Europe/Helsinki
 # Run "timedatectl list-timezones" before to check for values
 
 # It will ask you if it should create a 1 GB swapfile.
 # If you are gonna build Kubernetes on your own machine, you have to create this
 
-# It will ask for which hostname you want. Defaults to kubepi.
-
 # Last question is whether you want to reboot
 # You must do this now, otherwise docker will behave very strange and fail
 
-# I've built docker v1.8.2 statically, if you want to use that binary instead of pacman's prepend the command with STATICALLY_DOCKER=1 like the other variables. This is experimental.
+# I've built docker v1.8.2 statically, if you want to use that binary instead of pacman's prepend the command with STATICALLY_DOCKER=1 like the other variables. When running on systemd and docker isn't installed, it will automatically use this docker binary
 
 # If you want to run this script non-interactively, do this:
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
@@ -104,9 +108,9 @@ kube-config install
 ## Setup Kubernetes
 
 If you want to change something in the source, edit files in `/etc/kubernetes/source/images` and run `kube-config build-images` before you do this
-These script are important in the setup process. 
+These scripts are important in the setup process. 
 They spin up all required services in the right order.  
-If you skipped the build process, this may take ~10min, depending on your internet connection.
+If you skipped the build process, this may take ~5min, depending on your internet connection.
 
 ```bash
 # To enable the master service, run
@@ -116,22 +120,23 @@ kube-config enable-master
 kube-config enable-worker [master-ip]
 ```
 
-## `.deb` deployment
+## Package deployment
 If you have already made a SD Card and your device is up and running, what can you do instead?
 For that, I've made a `.deb` package, so you could install it easily
+There is also a `.tar.gz` package for platforms that don't have `dpkg`
 
 If you already have set up your Pi with latest Raspbian OS for example, follow this guide.
-
+#### Install the `.deb` package
 ```bash
 # The OS have to be systemd based, e. g. HypriotOS, Debian Jessie, Arch Linux ARM, Ubuntu 15.04
 
 # Download the latest package
-curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.2/kube-systemd.deb > kube-systemd.deb
+curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.3/kube-systemd.deb > kube-systemd.deb
 # or
-wget https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.2/kube-systemd.deb
+wget https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.3/kube-systemd.deb
 
 # Requires dpkg, which is preinstalled in at least all Debian/Ubuntu OSes
-dpkg -i kube-systemd.deb
+sudo dpkg -i kube-systemd.deb
 
 # Setup the enviroinment
 # It will ask which board it's running on and which OS
@@ -253,7 +258,7 @@ docker push registry.kube-system:5000/my-name/my-image
 docker pull registry.kube-system:5000/my-name/my-image
 
 # The registry address may be written longer if search isn't specified.
-# registry.kube-system.svc.cluster.local -> registry.kube-system
+# registry.kube-system.svc.cluster.local == registry.kube-system
 
 # The master also proxies the services so that they are accessible from outside
 # The -L flag is there because curl has to follow redirects
@@ -263,7 +268,7 @@ curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/default/services/my-ngin
 # Generic apiserver proxy URL
 # curl -L http://[master-ip]:8080/api/v1/proxy/namespaces/[namespace]/services/[service-name]
 
-# Check for open ports
+# See which ports are open
 netstat -nlp
 
 # See cluster info
@@ -300,7 +305,7 @@ docker pull kubernetesonarm/hyperkube
 docker pull kubernetesonarm/flannel
 docker pull kubernetesonarm/pause
 ```
-Then check the service files here for the right commands to use: https://github.com/luxas/kubernetes-on-arm/tree/v0.6.2/sdcard/rootfs/kube-systemd/usr/lib/systemd/system
+Then check the service files here for the right commands to use: https://github.com/luxas/kubernetes-on-arm/tree/master/sdcard/rootfs/kube-systemd/usr/lib/systemd/system
 
 #### However, only use this method if you know what you are doing and want to customize just for your need
 #### Otherwise, use the SD Card method or deb package for an easy installation
@@ -315,8 +320,8 @@ Two addons is available right now
    - Example: `my-awesome-webserver.default.svc.cluster.local` or just `my-awesome-webserver` may resolve to ip `10.0.0.154`
    - Those DNS names is available both in containers and on the node itself (kube-config automatically adds the info to `/etc/resolv.conf`)
    - If you want to access the Kubernetes API easily, `curl -k https://kubernetes` or `curl -k https://10.0.0.1` if you remember numbers better (`-k` stands for insecure as apiserver has no signed certs by default)
-   - The DNS server itself has allocated ip `10.0.0.10`
-   - The DNS domain is `cluster.local`
+   - The DNS server itself has allocated ip `10.0.0.10` by default
+   - The DNS domain is `cluster.local` by default
  - Central image registry
    - A registry for storing cluster images if e.g. the cluster has no internet connection for a while
    - Or for cluster-specific images that one not want to publish on Docker Hub
@@ -328,6 +333,8 @@ Two addons is available right now
 
 ## Access your cluster
 
+Here is some ways to make your outside devices reach the services running in the cluster.
+
  - `apiserver` proxy:
    - This is enabled by default by apiserver
    - Type this URL in a browser or use `curl`
@@ -337,8 +344,8 @@ Two addons is available right now
    - It's possible to start `flannel` and `kube-proxy` on another computer **in the same network** and access all services
    - Run these two commands from a `amd64` machine with docker:
      - `docker run --net=host -d --privileged -v /dev/net:/dev/net quay.io/coreos/flannel:0.5.5 /opt/bin/flanneld --etcd-endpoints=http://$MASTER_IP:4001`
-     - `docker run --net=host -d --privileged gcr.io/google_containers/hyperkube:v1.1.2 /hyperkube proxy --master=http://$MASTER_IP:8080 --v=2`'
-   - And replace $MASTER_IP with the actual ip of your master pi
+     - `docker run --net=host -d --privileged gcr.io/google_containers/hyperkube:v1.1.3 /hyperkube proxy --master=http://$MASTER_IP:8080 --v=2`'
+   - Replace $MASTER_IP with the actual ip of your master node
    - The consuming `amd64` computer can access all services
    - For example: `curl -k https://10.0.0.1`
  - Make a `service` with `externalIP`
@@ -349,6 +356,24 @@ Two addons is available right now
 #### See node health via `cAdvisor`
 
 Go to a web browser and type: `{IP of you Pi node}:4194` and a nice dashboard will be there and show you some nice real-time stats.
+
+## Configuration
+
+There is a configuration file: `/etc/kubernetes/k8s.conf`, where you can customize some things:
+ - `K8S_MASTER_IP`: Points to the master in the cluster. If the node is master, it uses `127.0.0.1` (aka `localhost`). Default: `127.0.0.1`
+ - `FLANNEL_SUBNET`: The subnet `flannel` should use. [More information](https://github.com/coreos/flannel#configuration). Default: `10.1.0.0/16`
+ - `DNS_IP`: The IP the DNS addon will allocate. Defaults to: `10.0.0.10`. Do not change this unless you have a good reason.
+ - `DNS_DOMAIN`: The domain for DNS names. Defaults to: `cluster.local`. If you for example changes this to `abc`, your DNS names will look like this: `my-nginx.default.svc.abc`.
+
+You can also customize the master containers´ flags in the file: `/etc/kubernetes/static/master/master.json`. There the configuration for the master components are. [Official file](https://github.com/kubernetes/kubernetes/blob/master/cluster/images/hyperkube/master-multi.json)
+
+You may also put more `.json` files in `/etc/kubernetes/static/master` and `/etc/kubernetes/static/worker` if you want; they will come up as static pods.
+
+On Arch Linux, this file will override the default `eth0` settings. If you have a special `eth0` setup (or use some other network), edit this file to fit your use case: `/etc/systemd/network/dns.network`
+
+## Cross-compiling
+
+For this project, I compile the binaries on ARM hosts. But I've also made a script that can cross-compile if you want to compile it faster. Check it out: https://github.com/luxas/kubernetes-on-arm/blob/master/scripts/build-k8s-on-amd64/Dockerfile
 
 ## Service management
 
@@ -371,21 +396,9 @@ Useful commands for troubleshooting:
  - `journalctl -xe`: Get the system log
  - `journalctl -xeu (service)`: Get logs for a service
 
-## Configuration
-
-There is a configuration file: `/etc/kubernetes/k8s.conf`, but it has only two options:
- - `K8S_MASTER_IP`: Points to the master in the cluster. If the node is master, it uses `127.0.0.1` (aka `localhost`). Default: `127.0.0.1`
- - `FLANNEL_SUBNET`: The subnet `flannel` should use. [More information](https://github.com/coreos/flannel#configuration). Default: `10.1.0.0/16`
-
-You can also customize the master containers´ flags in the file: `/etc/kubernetes/static/master/master.json`. There the configuration for the master components are. [Official file](https://github.com/kubernetes/kubernetes/blob/master/cluster/images/hyperkube/master-multi.json)
-
-You can put more `.json` files in `/etc/kubernetes/static/master` and `/etc/kubernetes/static/worker` if you want; they will come up as static pods.
-
-On Arch Linux, this file will override the default `eth0` settings. If you have a special `eth0` setup (or use some other network), edit this file to fit your use case: `/etc/systemd/network/dns.network`
-
 ## Troubleshooting
 
-If your cluster won't start, try `kube-config delete-data`. That will remove all data you store in `/var/lib/kubelet` and `/var/lib/kubernetes`. If you don't want to delete all data, but have to get Kubernetes up and running, you can answer `M`, when running `kube-config delete-data` and it will rename the affected directories like this: `{,old}`.
+If your cluster won't start, try `kube-config delete-data`. That will remove all data you store in `/var/lib/kubelet` and `/var/lib/kubernetes`. If you don't want to delete all data, but have to get Kubernetes up and running, you can answer `M`, when running `kube-config delete-data` and it will rename `/var/lib/kubernetes` and `/var/lib/kubelet` to `/var/lib/kubernetesold` and `/var/lib/kubeletold` so you may restore them later.
 
 ## Beta version
 
