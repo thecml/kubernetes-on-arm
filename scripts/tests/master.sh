@@ -25,7 +25,7 @@ function echo_yellow {
   echo -e "${YELLOW}$1"; tput sgr0
 }
 
-# Example: updatefile path_to_file value_to_search_for replace_that_line_with_this_content
+# Example: updateline path_to_file value_to_search_for replace_that_line_with_this_content
 # 
 updateline(){
 	if [[ -z $(cat $1 | grep $2) ]]; then
@@ -47,7 +47,7 @@ kube-config info
 time kube-config enable-master
 
 APISERVER_SECS=0
-while [[ $(curl -m 1 -sSIk https://10.0.0.1 | head -1 2>&1) != *"OK"* ]]; do sleep 1; ((APISERVER_SECS++)); done
+while [[ $(curl -m 1 -sSILk https://10.0.0.1 | head -1 2>&1) != *"OK"* ]]; do sleep 1; ((APISERVER_SECS++)); done
 #while [[ -z $(docker ps | grep "apiserver") ]]; do sleep 1; ((SECS++)); done
 
 echo_yellow "Seconds before apiserver came up: $APISERVER_SECS"
