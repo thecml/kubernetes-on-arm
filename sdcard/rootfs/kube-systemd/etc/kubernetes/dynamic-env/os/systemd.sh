@@ -48,7 +48,7 @@ os_install(){
 	fi
 
 	# If the dhclient config doesn't exist, notify the user
-	if [[ ! -f /etc/dhcp/dhclient.conf ]]; then
+	if [[ ! -f /etc/dhcp/dhclient.conf && ! -f /etc/resolvconf.conf ]]; then
 		cat <<EOF
 WARNING: You have to include these statements in your /etc/resolv.conf file if you want Kubernetes DNS to work on the host machine, not only in pods
 /etc/resolv.conf
@@ -103,4 +103,14 @@ os_addon_dns(){
 		fi
 	fi
 
+	# Only edit the DNS config if the file exists
+	if [[ -f /etc/resolvconf.conf ]]; then
+
+		# Write the DNS options to the file
+		updateline /etc/resolvconf.conf "search_domains" "search_domains=\"default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN\""
+		updateline /etc/resolvconf.conf "name_servers" "name_servers=$DNS_IP;"
+
+		# Update resolv.conf 
+		resolvconf -u
+	fi
 }
