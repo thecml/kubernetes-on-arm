@@ -28,7 +28,7 @@ function echo_yellow {
 # Example: updateline path_to_file value_to_search_for replace_that_line_with_this_content
 # 
 updateline(){
-	if [[ -z $(cat $1 | grep $2) ]]; then
+	if [[ -z $(cat $1 | grep "$2") ]]; then
 		echo "$3" >> $1
 	else
 		sed -i "/$2/c\\$3" $1
@@ -44,6 +44,11 @@ fi
 
 kube-config info
 
+# Change dns settings before starting kubelet
+updateline /etc/kubernetes/k8s.conf "DNS_DOMAIN" "DNS_DOMAIN=kubernetesonarm.com"
+updateline /etc/kubernetes/k8s.conf "DNS_IP" "DNS_IP=10.0.0.110"
+
+# Start Kubernetes
 time kube-config enable-master
 
 APISERVER_SECS=0
@@ -90,16 +95,16 @@ DNS_SECS=0
 while [[ $(kubectl --namespace=kube-system get po | grep "kube-dns" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((DNS_SECS++)); done
 echo_yellow "Seconds before dns came up: $DNS_SECS"
 
-sleep 10
+sleep 15
 DNS_HOST_WORKING=0
 DNS_HOST_SEARCH_WORKING=0
 DNS_POD_WORKING=0
 APISERVER_PROXY=0
 
-if [[ $(curl -sSL my-nginx.default.svc.cluster.local) == "<p>WELCOME TO NGINX</p>" ]]; then
+if [[ $(curl -sSL my-nginx.default.svc.kubernetesonarm.com) == "<p>WELCOME TO NGINX</p>" ]]; then
 	echo_green "dns on host test passed"
 	DNS_HOST_WORKING=1
-	curl -sSL my-nginx.default.svc.cluster.local
+	curl -sSL my-nginx.default.svc.kubernetesonarm.com
 fi
 
 if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
@@ -108,7 +113,9 @@ if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
 	curl -sSL my-nginx
 fi
 
-if [[ $(kubectl exec -it alpine-sleep -- curl -sSL my-nginx.default.svc.cluster.local) == "<p>WELCOME TO NGINX</p>" ]]; then
+POD_RESPONSE=$(kubectl exec -it alpine-sleep -- curl -sSL my-nginx.default.svc.kubernetesonarm.com)
+
+if [[ $POD_RESPONSE == "<p>WELCOME TO NGINX</p>" ]]; then
 	echo_green "nginx dns in a pod test passed"
 	DNS_POD_WORKING=1
 fi
@@ -119,46 +126,16 @@ if [[ $(curl -sSLk https://10.0.0.1/api/v1/proxy/namespaces/default/services/my-
 	APISERVER_PROXY=1
 fi
 
-DNS_HOST_CHANGE_WORKING=0
-DNS_HOST_CHANGE_SEARCH_WORKING=0
-kube-config disable-addon dns
-
-sleep 5
-
-updateline /etc/kubernetes/k8s.conf "DNS_DOMAIN" "DNS_DOMAIN=kubernetesonarm.com"
-updateline /etc/kubernetes/k8s.conf "DNS_IP" "DNS_IP=10.0.0.110"
-
-kube-config enable-addon dns
-
-DNS_AGAIN_SECS=0
-while [[ $(kubectl --namespace=kube-system get po | grep "kube-dns" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((DNS_AGAIN_SECS++)); done
-echo_yellow "Seconds before dns came up the second time: $DNS_AGAIN_SECS"
-
-sleep 10
-
-if [[ $(curl -sSL my-nginx.default.svc.kubernetesonarm.com) == "<p>WELCOME TO NGINX</p>" ]]; then
-	echo_green "dns on host after k8s.conf change test passed"
-	DNS_HOST_CHANGE_WORKING=1
-	curl -sSL my-nginx.default.svc.kubernetesonarm.com
-fi
-
-if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
-	echo_green "dns shorthand names on host after k8s.conf change test passed"
-	DNS_HOST_CHANGE_SEARCH_WORKING=1
-	curl -sSL my-nginx
-fi
-
-
 kube-config enable-addon registry
 
 REGISTRY_SECS=0
 while [[ $(kubectl --namespace=kube-system get po | grep "registry" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((REGISTRY_SECS++)); done
 echo_yellow "Seconds before registry came up: $REGISTRY_SECS"
 
-SVCIP=$(kubectl get svc --all-namespaces | grep registry | awk '{print $3}')
+sleep 8
 REGISTRY_UP=0
 
-if [[ $(curl -sSLI $SVCIP:5000 | head -1) == *"OK"* ]]; then
+if [[ $(curl -sSLI 10.0.0.20:5000 | head -1) == *"OK"* ]]; then
 	REGISTRY_UP=1
 	echo_green "registry is up"
 fi
@@ -207,16 +184,6 @@ if [[ $DNS_HOST_SEARCH_WORKING == 1 ]]; then
 	echo_green "DNS on host with shorthand search commands is working"
 else
 	echo_red "DNS on host with shorthand search commands isn't working"
-fi
-if [[ $DNS_HOST_CHANGE_WORKING == 1 ]]; then
-	echo_green "DNS on host after k8s.conf change is working"
-else
-	echo_red "DNS on host after k8s.conf change isn't working"
-fi
-if [[ $DNS_HOST_CHANGE_SEARCH_WORKING == 1 ]]; then
-	echo_green "DNS on host with shorthand search commands after k8s.conf change is working"
-else
-	echo_red "DNS on host with shorthand search commands after k8s.conf change isn't working"
 fi
 if [[ $DNS_POD_WORKING == 1 ]]; then
 	echo_green "DNS in pods host is working"
