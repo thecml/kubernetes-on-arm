@@ -355,7 +355,7 @@ Here is some ways to make your outside devices reach the services running in the
 
 #### See node health via `cAdvisor`
 
-Go to a web browser and type: `{IP of you Pi node}:4194` and a nice dashboard will be there and show you some nice real-time stats.
+Go to a web browser and type: `{IP of your node}:4194` and a nice dashboard will be there and show you some nice real-time stats.
 
 ## Configuration
 
@@ -364,6 +364,8 @@ There is a configuration file: `/etc/kubernetes/k8s.conf`, where you can customi
  - `FLANNEL_SUBNET`: The subnet `flannel` should use. [More information](https://github.com/coreos/flannel#configuration). Default: `10.1.0.0/16`
  - `DNS_IP`: The IP the DNS addon will allocate. Defaults to: `10.0.0.10`. Do not change this unless you have a good reason.
  - `DNS_DOMAIN`: The domain for DNS names. Defaults to: `cluster.local`. If you for example changes this to `abc`, your DNS names will look like this: `my-nginx.default.svc.abc`.
+
+**Note:** You must change the values in `k8s.conf` before starting Kubernetes. Otherwise they won't have effect, just be able to harm your setup.
 
 You can also customize the master containers´ flags in the file: `/etc/kubernetes/static/master/master.json`. There the configuration for the master components are. [Official file](https://github.com/kubernetes/kubernetes/blob/master/cluster/images/hyperkube/master-multi.json)
 
@@ -374,6 +376,15 @@ On Arch Linux, this file will override the default `eth0` settings. If you have 
 ## Cross-compiling
 
 For this project, I compile the binaries on ARM hosts. But I've also made a script that can cross-compile if you want to compile it faster. Check it out: https://github.com/luxas/kubernetes-on-arm/blob/master/scripts/build-k8s-on-amd64/Dockerfile
+
+## Running tests
+
+Right now there are one test:
+ - `run-test master` will simply do what the `Use Kubernetes` section does. It setups a master, runs `nginx`, starts the DNS, registry and sleep addons.
+
+Logs can be found at: `/etc/kubernetes/source/scripts/logs`
+The tests can be found at: `/etc/kubernetes/source/scripts/tests`
+The test might fail, although the thing it's testing is in fact working. Report an issue in that case.
 
 ## Service management
 
@@ -399,6 +410,12 @@ Useful commands for troubleshooting:
 ## Troubleshooting
 
 If your cluster won't start, try `kube-config delete-data`. That will remove all data you store in `/var/lib/kubelet` and `/var/lib/kubernetes`. If you don't want to delete all data, but have to get Kubernetes up and running, you can answer `M`, when running `kube-config delete-data` and it will rename `/var/lib/kubernetes` and `/var/lib/kubelet` to `/var/lib/kubernetesold` and `/var/lib/kubeletold` so you may restore them later.
+
+## Contributing
+
+I would be really glad to review you Pull Request! One thing would be good to remember though. I develop on the `dev` branch, so it would be great if you target that one instead of `master`
+
+Thanks!
 
 ## Beta version
 
