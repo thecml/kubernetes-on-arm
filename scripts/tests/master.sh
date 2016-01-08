@@ -28,11 +28,11 @@ function echo_yellow {
 # Example: updateline path_to_file value_to_search_for replace_that_line_with_this_content
 # 
 updateline(){
-	if [[ -z $(cat $1 | grep "$2") ]]; then
-		echo "$3" >> $1
-	else
-		sed -i "/$2/c\\$3" $1
-	fi
+if [[ -z $(cat $1 | grep "$2") ]]; then
+	echo -e "\n$3" >> $1
+else
+	sed -i "/$2/c\\$3" $1
+fi
 }
 
 
@@ -113,6 +113,7 @@ if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
 	curl -sSL my-nginx
 fi
 
+# TODO: flaky
 POD_RESPONSE=$(kubectl exec -it alpine-sleep -- curl -sSL my-nginx.default.svc.kubernetesonarm.com)
 
 if [[ $POD_RESPONSE == "<p>WELCOME TO NGINX</p>" ]]; then
