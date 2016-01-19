@@ -10,6 +10,7 @@
       {
         "name": "controller-manager",
         "image": "kubernetesonarm/hyperkube",
+        "imagePullPolicy": "IfNotPresent",
         "command": [
             "/hyperkube",
             "controller-manager",
@@ -26,6 +27,7 @@
       {
         "name": "apiserver",
         "image": "kubernetesonarm/hyperkube",
+        "imagePullPolicy": "IfNotPresent",
         "command": [
             "/hyperkube",
             "apiserver",
@@ -45,6 +47,7 @@
       {
         "name": "scheduler",
         "image": "kubernetesonarm/hyperkube",
+        "imagePullPolicy": "IfNotPresent",
         "command": [
             "/hyperkube",
             "scheduler",
@@ -55,6 +58,7 @@
       {
         "name": "kube-proxy",
         "image": "kubernetesonarm/hyperkube",
+        "imagePullPolicy": "IfNotPresent",
         "command": [
             "/hyperkube",
             "proxy",
