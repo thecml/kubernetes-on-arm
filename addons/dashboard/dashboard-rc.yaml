@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: kubernetes-dashboard
-        image: kubernetesonarm/dashboard:alpha
+        image: kubernetesonarm/dashboard:alpha.1
         imagePullPolicy: Always
         ports:
         - containerPort: 9090
