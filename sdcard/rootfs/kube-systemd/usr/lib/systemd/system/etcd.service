@@ -12,7 +12,7 @@ ExecStart=/usr/bin/docker -H unix:///var/run/system-docker.sock run \
 					--name=k8s-etcd \
 					-v /var/lib/kubernetes/etcd:/var/etcd/data \
 					kubernetesonarm/etcd
-ExecStartPost=/bin/sh -c "sleep 5;docker -H unix:///var/run/system-docker.sock run \
+ExecStartPost=/bin/sh -c "sleep 8;docker -H unix:///var/run/system-docker.sock run \
 					--rm \
 					--net=host \
 					kubernetesonarm/etcd \
