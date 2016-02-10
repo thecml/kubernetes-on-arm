@@ -9,6 +9,7 @@ ADDONS_DIR=$KUBERNETES_DIR/addons
 KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
 PROJECT_SOURCE=$KUBERNETES_DIR/source
 K8S_PREFIX="kubernetesonarm"
+GCR_PREFIX="gcr.io/google_containers"
 
 DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d/"
 
@@ -16,7 +17,9 @@ DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d/"
 REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry")
+# TODO: add $K8S_PREFIX/loadbalancer $GCR_PREFIX/kubernetes-dashboard-arm:v0.1.0
 
+# TODO: use Rancher docker?
 STATIC_DOCKER_DOWNLOAD="https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.0/docker-1.8.2"
 
 DEFAULT_TIMEZONE="Europe/Helsinki"
@@ -457,9 +460,9 @@ EOF
 start-addon(){
 	if [[ $(is-active) == 1 ]]; then
 
-		if [[ -d $ADDONS_DIR/$1 ]]; then
+		if [[ -f $ADDONS_DIR/${1}.yaml ]]; then
 
-			# The addon images are required
+			# The addon images are required for this operation
 			require-images ${REQUIRED_ADDON_IMAGES[@]}
 
 			# The kube-system namespace is required
@@ -483,13 +486,9 @@ start-addon(){
 			if [[ $1 == "dns" ]]; then
 
 				# Replace the variables before passing to kubectl
-				sed -e "s@DNS_DOMAIN@$DNS_DOMAIN@" $ADDONS_DIR/$1/dns-rc.yaml | kubectl create -f -
-				sed -e "s@DNS_IP@$DNS_IP@" $ADDONS_DIR/$1/dns-svc.yaml | kubectl create -f -
+				sed -e "s@DNS_DOMAIN@${DNS_DOMAIN}@;s@DNS_IP@${DNS_IP}@" $ADDONS_DIR/${1}.yaml | kubectl create -f -
 			else
-				# Loop files in the addon directory and create with kubectl
-				for FILE in $ADDONS_DIR/$1/*.yaml; do
-					kubectl create -f $FILE
-				done
+				kubectl create -f $ADDONS_DIR/${1}.yaml
 			fi
 
 			echo "Started addon: $1"
@@ -505,11 +504,9 @@ start-addon(){
 stop-addon(){
 	if [[ $(is-active) == 1 ]]; then
 
-		if [[ -d $ADDONS_DIR/$1 ]]; then
-			# Stop all services
-			for FILE in $ADDONS_DIR/$1/*.yaml; do
-				kubectl delete -f $FILE
-			done
+		if [[ -d $ADDONS_DIR/${1} ]]; then
+
+			kubectl delete -f $ADDONS_DIR/${1}.yaml
 
 			echo "Stopped addon: $1"
 		else
