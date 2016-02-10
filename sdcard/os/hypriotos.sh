@@ -30,6 +30,9 @@ cleanup(){
 
 generaldownload(){
 
+	# Install unzip if not present
+	require unzip unzip
+
 	mkdir -p /etc/tmp
 	# We can't write this .img file to /tmp because /tmp has a limit of 462MB for the files there
 	DLDIR=$(mktemp -d /etc/tmp/downloadhypriot.XXXXXXXX)

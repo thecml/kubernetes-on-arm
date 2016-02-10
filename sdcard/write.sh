@@ -15,7 +15,7 @@ require()
 			pacman -S $PACKAGE --noconfirm
 			
 		elif [[ -e $(which apt-get 2>&1) ]]; then # Is apt-get present?
-			apt-get install -y $PACKAGE
+			apt-get update && apt-get install -y $PACKAGE
 		else
 			echo "The required package $PACKAGE with the binary $BINARY isn't present now. Install it."
 			exit 1
