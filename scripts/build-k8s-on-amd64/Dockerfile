@@ -1,4 +1,4 @@
-FROM golang:1.5.2
+FROM golang:1.5.3
 
 MAINTAINER Lucas Käldström <lucas.kaldstrom@hotmail.co.uk>
 
@@ -19,10 +19,10 @@ ENV GOARM=6	\
 	FLANNEL_DIR="$GOPATH/src/github.com/coreos/flannel"	\
 	REGISTRY_DIR="$GOPATH/src/github.com/docker/distribution" \
 	OUT_DIR="/output" \
-	ETCD_VERSION=v2.2.2	\
+	ETCD_VERSION=v2.2.5	\
 	FLANNEL_VERSION=v0.5.5 \
-	K8S_VERSION=v1.1.3 \
-	REGISTRY_VERSION=v2.2.1 \
+	K8S_VERSION=v1.1.7 \
+	REGISTRY_VERSION=v2.3.0 \
 	KUBE_STATIC_OVERRIDES="kubectl" \
 	KUBE_BUILD_PLATFORMS=linux/arm 								
 
