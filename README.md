@@ -290,6 +290,7 @@ Instructions [here](docs/build-images.md)
 ## Addons
 
 To enable/disable addons is very easy: `kube-config enable-addon [addon-name]` and `kube-config disable-addon [addon-name]`
+[README for the addons](addons/README.md)
 
 Three addons are available for the moment:
  - Kubernetes DNS:
@@ -311,9 +312,10 @@ Three addons are available for the moment:
    - The Kubernetes Dashboard project [is here](https://github.com/kubernetes/dashboard)
    - Replaces `kube-ui`
    - Access the dashboard on: `http://[master-ip]:8080/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard`
- - The service loadbalancer:
+ - The Service Loadbalancer:
    - Experimental in this release.
    - Documentation [here](https://github.com/kubernetes/contrib/tree/master/service-loadbalancer)
+   - You have to label at least one node `role=loadbalancer`, like this `kubectl label no [node_ip] role=loadbalancer`
    - More info will come later
 
 ## Access your cluster
@@ -362,7 +364,7 @@ On Arch Linux, this file will override the default `eth0` settings. If you have 
 
 ## Cross-compiling
 
-For this project, I compile the binaries on ARM hosts. But I've also made a script that can cross-compile if you want to compile it faster. Check it out: https://github.com/luxas/kubernetes-on-arm/blob/master/scripts/build-k8s-on-amd64/Dockerfile
+For this project, I compile the binaries on ARM hosts. But I've also made a script that can cross-compile if you want to compile it faster. [Check it out](scripts/build-k8s-on-amd64/Dockerfile)
 
 ## Running tests
 
