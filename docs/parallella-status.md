@@ -7,7 +7,7 @@ It is possible to write a sd card for it, but it's a painfully slow system.
 Notify me if there is newer versions of these. This is the current configuration.
 Kernel: 3.14
 Docker storage driver: devicemapper
-Systemd: 226 -> `docker -d --exec-opt native.cgroupdriver=cgroupfs`
+Systemd: 226 -> `docker daemon --exec-opt native.cgroupdriver=cgroupfs`
 
 Docker building and running is so exceptionally slow that I can't understand it.
 Example: the pause image.
