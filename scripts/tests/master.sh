@@ -113,6 +113,8 @@ if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
 	curl -sSL my-nginx
 fi
 
+sleep 5
+
 # TODO: flaky
 POD_RESPONSE=$(kubectl exec -it alpine-sleep -- curl -sSL my-nginx.default.svc.kubernetesonarm.com)
 
