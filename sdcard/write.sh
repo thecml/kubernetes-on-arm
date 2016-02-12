@@ -50,7 +50,6 @@ Explanation:
 			- parallella - Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel (only with archlinux)
 			- cubietruck - Cubietruck (only with archlinux)
 			- bananapro - Banana Pro (only with archlinux)
-			- odroid-c1 - Odroid C1 (experimental, only with hypriotos)
 	os - The operating system which should be downloaded and installed.
 		- Currently supported:
 			- archlinux - Arch Linux ARM

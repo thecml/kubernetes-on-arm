@@ -24,7 +24,6 @@ Supported OSes/boards:
 - Hypriot OS **(hypriotos)**
   - Raspberry Pi 1 A, A+, B, B+, armv6 **(rpi)**
   - Raspberry Pi 2 Model B, armv7 **(rpi-2)**
-  - Odroid C1 and C1+, armv7 **odroid-c1** *(Experimental)*
 
 ```bash
 # Go to our home folder, if you want

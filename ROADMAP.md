@@ -6,7 +6,6 @@ Just some notes about what I probably will include in this project
  - Add an experimental loadbalancer
  - Upgrade to and support docker-1.10.0 only
  - Kubernetes Dashboard UI added as an addon
- - Experimental support for Odroid C1 on HypriotOS
  - Do not depend on pacman, use a self-built docker-1.10 binary instead
  - Revert to userspace proxying, since iptables proxying had some bugs in it
 
@@ -18,7 +17,7 @@ Just some notes about what I probably will include in this project
  - Investigate what happens if the master is up for one or two days => scalability tests
  - Change to `nsenter` instead of `--containerized` when it's stable
  - Fix tests that could be flaky
- - Maybe add support for Odroid XU4, Pine64, Nvidia ShieldTV
+ - Maybe add support for Odroid C1, Odroid XU4, Pine64, Nvidia ShieldTV. The problem is old kernels.
  - Add a stable `.tar.gz` deployment besides the `.deb` deployment
  - Maybe build `flannel` statically to minimize image size
  - Use `vxlan` as the backend for the `flannel` overlay network
