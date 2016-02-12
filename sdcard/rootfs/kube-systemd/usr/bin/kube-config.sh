@@ -16,11 +16,10 @@ DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d/"
 # The images that are required
 REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
-REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry")
-# TODO: add $K8S_PREFIX/loadbalancer $GCR_PREFIX/kubernetes-dashboard-arm:v0.1.0
+BUILD_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry $K8S_PREFIX/loadbalancer")
+REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry $K8S_PREFIX/loadbalancer $GCR_PREFIX/kubernetes-dashboard-arm:v0.1.0")
 
-# TODO: use Rancher docker?
-STATIC_DOCKER_DOWNLOAD="https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.0/docker-1.8.2"
+STATIC_DOCKER_DOWNLOAD="https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.3/docker-1.10.0"
 
 DEFAULT_TIMEZONE="Europe/Helsinki"
 DEFAULT_HOSTNAME="kubepi"
@@ -49,7 +48,6 @@ With this utility, you can setup Kubernetes on ARM!
 Usage: 
 	kube-config install - Installs docker and makes your board ready for kubernetes
 	kube-config upgrade - Upgrade current operating system packages to latest version.
-		- WARNING: Do not upgrade if you are a Arch Linux ARMv7 user!! docker 1.9.1 from pacman has an odd bug
 
 	kube-config build-images - Build the Kubernetes images locally
 	kube-config build-addons - Build the Kubernetes addon images locally
@@ -59,15 +57,18 @@ Usage:
 	kube-config enable-master - Enable the master services and then kubernetes is ready to use
 		- FYI, etcd data will be stored in the /var/lib/kubernetes/etcd directory. Backup that directory if you have important data.
 	kube-config enable-worker [master-ip] - Enable the worker services and then kubernetes has a new node
-	kube-config enable-addon [addon] - Enable an addon
+	kube-config enable-addon [addon] ...[addon_n] - Enable one or more addons
 		- Currently defined addons
 				- dns: Makes all services accessible via DNS
 				- registry: Makes a central docker registry
 				- sleep: A debug addon. Starts two containers: luxas/alpine and luxas/raspbian.
+				- loadbalancer: A loadbalancer that exposes services to the outside world. Experimental.
+				- dashboard: A general-purpose Web UI for Kubernetes
+
 
 	kube-config disable-node - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong or you just want to stop Kubernetes
 	kube-config disable - Synonym to disable-node
-	kube-config disable-addon [addon] - Disable an addon, not the whole cluster
+	kube-config disable-addon [addon] ...[addon_n] - Disable one or more addons
 	
 	kube-config delete-data - Clean the /var/lib/kubernetes and /var/lib/kubelet directories, where all master data is stored
 
@@ -75,7 +76,7 @@ Usage:
 	kube-config help - Display this help
 EOF
 }
-#				- loadbalancer: A loadbalancer that exposes services to the outside world. Coming soon...
+#
 
 # Root is required
 if [ "$EUID" -ne 0 ]; then
@@ -377,7 +378,7 @@ start-master(){
 	systemctl start flannel
 
 	# Wait for etcd and flannel
-	sleep 5
+	sleep 8
 	# TODO: wait for flannel file
 
 	# Create a symlink to the dropin location, so docker will use flannel. Also starts docker
@@ -465,41 +466,43 @@ EOF
 start-addon(){
 	if [[ $(is-active) == 1 ]]; then
 
-		if [[ -f $ADDONS_DIR/${1}.yaml ]]; then
+		# The addon images are required for this operation
+		require-images ${REQUIRED_ADDON_IMAGES[@]}
 
-			# The addon images are required for this operation
-			require-images ${REQUIRED_ADDON_IMAGES[@]}
+		# The kube-system namespace is required
+		NAMESPACE=`eval "kubectl get namespaces | grep kube-system | cat"`
 
-			# The kube-system namespace is required
-			NAMESPACE=`eval "kubectl get namespaces | grep kube-system | cat"`
-
-			# Create kube-system if necessary
-			if [[ ! "$NAMESPACE" ]]; then
-				kubectl create -f $ADDONS_DIR/kube-system.yaml
-			fi
-
-			# Source the os file and use that upgrade method
-			source $KUBERNETES_DIR/dynamic-env/env.conf
-			source $KUBERNETES_DIR/dynamic-env/os/$OS.sh
-			if [[ $(type -t os_addon_$1) == "function" ]]; then
-
-				# Call the os customization handler first
-				os_addon_$1
-			fi
-
-			# TODO: Maybe fix this better in the future
-			if [[ $1 == "dns" ]]; then
-
-				# Replace the variables before passing to kubectl
-				sed -e "s@DNS_DOMAIN@${DNS_DOMAIN}@;s@DNS_IP@${DNS_IP}@" $ADDONS_DIR/${1}.yaml | kubectl create -f -
-			else
-				kubectl create -f $ADDONS_DIR/${1}.yaml
-			fi
-
-			echo "Started addon: $1"
-		else
-			echo "This addon doesn't exist: $1"
+		# Create kube-system if necessary
+		if [[ ! "$NAMESPACE" ]]; then
+			kubectl create -f $ADDONS_DIR/kube-system.yaml
 		fi
+
+		# Source the os file and use that upgrade method
+		source $KUBERNETES_DIR/dynamic-env/env.conf
+		source $KUBERNETES_DIR/dynamic-env/os/$OS.sh
+
+		for ADDON in $@; do
+			if [[ -f $ADDONS_DIR/${ADDON}.yaml ]]; then
+				if [[ $(type -t os_addon_$ADDON) == "function" ]]; then
+
+					# Call the os customization handler first
+					os_addon_$ADDON
+				fi
+
+				# TODO: Maybe fix this better in the future
+				if [[ $ADDON == "dns" ]]; then
+
+					# Replace the variables before passing to kubectl
+					sed -e "s@DNS_DOMAIN@${DNS_DOMAIN}@;s@DNS_IP@${DNS_IP}@" $ADDONS_DIR/${ADDON}.yaml | kubectl create -f -
+				else
+					kubectl create -f $ADDONS_DIR/${ADDON}.yaml
+				fi
+
+				echo "Started addon: $ADDON"
+			else
+				echo "This addon doesn't exist: $ADDON"
+			fi
+		done
 
 	else
 		echo "Kubernetes is not running!"
@@ -509,14 +512,16 @@ start-addon(){
 stop-addon(){
 	if [[ $(is-active) == 1 ]]; then
 
-		if [[ -d $ADDONS_DIR/${1} ]]; then
+		for ADDON in $@; do
+			if [[ -d $ADDONS_DIR/${ADDON} ]]; then
 
-			kubectl delete -f $ADDONS_DIR/${1}.yaml
+				kubectl delete -f $ADDONS_DIR/${ADDON}.yaml
 
-			echo "Stopped addon: $1"
-		else
-			echo "This addon doesn't exist: $1"
-		fi
+				echo "Stopped addon: $ADDON"
+			else
+				echo "This addon doesn't exist: $ADDON"
+			fi
+		done
 	else
 		echo "Kubernetes is not running!"
 	fi
@@ -640,7 +645,7 @@ case $1 in
         'build-images')
                 $PROJECT_SOURCE/images/build.sh ${REQUIRED_MASTER_IMAGES[@]};;
         'build-addons')
-				$PROJECT_SOURCE/images/build.sh ${REQUIRED_ADDON_IMAGES[@]};;
+				$PROJECT_SOURCE/images/build.sh ${BUILD_ADDON_IMAGES[@]};;
 
 
         'enable-master')
