@@ -47,6 +47,17 @@ os_install(){
 		fi
 	fi
 
+	# If iptables isn't installed, notify the user
+	if [[ ! -f $(which iptables 2>&1) ]]; then
+
+		# Install automatically if apt-get is present
+		if [[ -f $(which apt-get 2>&1) ]]; then
+			apt-get install iptables -y
+		else
+			echo "WARNING: iptables is required for Kubernetes to function. Install it if you want Kubernetes to function properly."
+		fi
+	fi
+
 	# If the dhclient config doesn't exist, notify the user
 	if [[ ! -f /etc/dhcp/dhclient.conf && ! -f /etc/resolvconf.conf ]]; then
 		cat <<EOF
