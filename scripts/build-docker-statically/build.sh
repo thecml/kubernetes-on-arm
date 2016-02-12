@@ -1,11 +1,13 @@
 #!/bin/bash
 
-DOCKERFILEDIR="$( dirname "${BASH_SOURCE[0]}" )"
+cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 DOCKER_BRANCH=${DOCKER_BRANCH:-"v1.10.0"}
 
 # Download docker
 git clone -b $DOCKER_BRANCH --single-branch https://github.com/docker/docker
+
+cd docker
 
 # Patch docker
 #mv vendor/src/github.com/opencontainers/runc/libcontainer/seccomp/jump_{amd64,linux}.go
@@ -18,8 +20,8 @@ git clone -b $DOCKER_BRANCH --single-branch https://github.com/docker/docker
 #curl -sSL https://raw.githubusercontent.com/umiddelb/armhf/ed1d3b1dcd6bd4112b2183c93996a4d4379aed7c/Dockerfile.armv7 > Dockerfile
 
 # Change GOARM and base image. armv7 doesn't run on armv6
-sed -e "s@GOARM 7@GOARM 6@" -i Dockerfile
-sed -e "s@armhf/ubuntu:trusty@resin/rpi-raspbian:jessie@" -i Dockerfile
+sed -e "s@GOARM 7@GOARM 6@" -i Dockerfile.armhf
+sed -e "s@armhf/ubuntu:trusty@resin/rpi-raspbian:jessie@" -i Dockerfile.armhf
 
 # Comment out these lines
 #sed -e "s@s3cmd=@#s3cmd=@" -i Dockerfile
