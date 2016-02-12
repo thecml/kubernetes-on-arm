@@ -27,6 +27,7 @@ cleanup(){
 	esac
 }
 
+HYPRIOTOS_RELEASE="20151115-132854"
 
 generaldownload(){
 
@@ -34,11 +35,13 @@ generaldownload(){
 	require unzip unzip
 
 	mkdir -p /etc/tmp
-	# We can't write this .img file to /tmp because /tmp has a limit of 462MB for the files there
-	DLDIR=$(mktemp -d /etc/tmp/downloadhypriot.XXXXXXXX)
-	curl -sSL http://downloads.hypriot.com/hypriot-rpi-20151115-132854.img.zip > $DLDIR/hypriotos.img.zip
+	# We can't write this .img file to /tmp because /tmp has a limit of 462MB
+	DLDIR=/etc/tmp/downloadhypriot
+	if [[ ! -f $DLDIR/hypriotos-${HYPRIOTOS_RELEASE}.img.zip ]]; then
+		curl -sSL http://downloads.hypriot.com/hypriot-rpi-${HYPRIOTOS_RELEASE}.img.zip > $DLDIR/hypriotos-${HYPRIOTOS_RELEASE}.img.zip
+	fi
 
-	unzip $DLDIR/hypriotos.img.zip -d $DLDIR
+	unzip $DLDIR/hypriotos-${HYPRIOTOS_RELEASE}.img.zip -d $DLDIR
 
 	dd if=$(ls $DLDIR/*.img) of=$SDCARD bs=4M
 
