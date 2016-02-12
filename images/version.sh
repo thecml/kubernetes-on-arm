@@ -5,10 +5,10 @@
 
 ## GITHUB PROJECTS ##
 # These projects are downloaded from "github.com/user/repo/archive/$VERSION.tar.gz"
-K8S_VERSION='v1.1.3'
-ETCD_VERSION='v2.2.2'
+K8S_VERSION='v1.1.7'
+ETCD_VERSION='v2.2.5'
 FLANNEL_VERSION='v0.5.5'
-REGISTRY_VERSION='v2.2.1'
+REGISTRY_VERSION='v2.3.0'
 
 ## OTHER PROJECTS ##
 # For the moment, go1.4.3 is a better choice than go1.5.1
