@@ -368,11 +368,16 @@ start-master(){
 	sleep 5
 
 	# Enable and start our bootstrap services
-	systemctl enable etcd flannel
-	systemctl start etcd flannel
+	systemctl enable etcd
+	systemctl start etcd
+
+	sleep 8
+
+	systemctl enable flannel
+	systemctl start flannel
 
 	# Wait for etcd and flannel
-	sleep 8
+	sleep 5
 	# TODO: wait for flannel file
 
 	# Create a symlink to the dropin location, so docker will use flannel. Also starts docker

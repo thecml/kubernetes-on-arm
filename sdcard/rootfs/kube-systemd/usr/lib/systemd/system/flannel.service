@@ -1,6 +1,5 @@
 [Unit]
 Description=Flannel Overlay Network for Kubernetes
-After=etcd.service
 
 [Service]
 EnvironmentFile=/etc/kubernetes/k8s.conf
