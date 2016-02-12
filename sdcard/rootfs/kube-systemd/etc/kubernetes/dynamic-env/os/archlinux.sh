@@ -1,6 +1,9 @@
 
 os_install(){
 
+	# Catch errors
+	set -e
+
 	# Update the system and use pacman to install all the packages
 	pacman -Syu --noconfirm
 
