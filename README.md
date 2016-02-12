@@ -24,11 +24,7 @@ Supported OSes/boards:
 - Hypriot OS **(hypriotos)**
   - Raspberry Pi 1 A, A+, B, B+, armv6 **(rpi)**
   - Raspberry Pi 2 Model B, armv7 **(rpi-2)**
-
-[Windows downloads](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.6.0)   
-Prebuilt SD Card images for Windows:
- - archlinux/rpi/v0.6.0
- - archlinux/rpi-2/v0.6.0
+  - Odroid C1 and C1+, armv7 **odroid-c1** *(Experimental)*
 
 ```bash
 # Go to our home folder, if you want
@@ -62,6 +58,8 @@ sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-systemd
 # Requires an internet connection
 # This script runs in 3-4 mins
 ```
+
+The README for the `kube-systemd` rootfs [is here](sdcard/rootfs/kube-systemd/etc/kubernetes/README.md)
 
 ## Setup your board from an SD Card
 
@@ -109,8 +107,8 @@ kube-config install
 
 If you want to change something in the source, edit files in `/etc/kubernetes/source/images` and run `kube-config build-images` before you do this
 These scripts are important in the setup process. 
-They spin up all required services in the right order.  
-If you skipped the build process, this may take ~5min, depending on your internet connection.
+They spin up all required services in the right order, and download the images from Github if not present.  
+This may take ~5min, depending on your internet connection.
 
 ```bash
 # To enable the master service, run
@@ -123,7 +121,8 @@ kube-config enable-worker [master-ip]
 ## Package deployment
 If you have already made a SD Card and your device is up and running, what can you do instead?
 For that, I've made a `.deb` package, so you could install it easily
-There is also a `.tar.gz` package for platforms that don't have `dpkg`
+
+The README for the `kube-systemd` rootfs [is here](sdcard/rootfs/kube-systemd/etc/kubernetes/README.md)
 
 If you already have set up your Pi with latest Raspbian OS for example, follow this guide.
 #### Install the `.deb` package
@@ -156,36 +155,10 @@ kube-config enable-worker [master ip]
 kube-config info
 ```
 
-### (Optional) Build the Docker images for ARM
-
-With this script, the required docker images are built, then the Kubernetes binaries and last, the Kubernetes images used when running.
-
-```bash
-
-# Build all required images
-kube-config build-images
-
-# Build all addons
-kube-config build-addons
-
-# These scripts will run approximately 45 min on a Raspberry Pi 2
-# Grab yourself a coffee during the time!
-```
-
-The script will produce these Docker images:    
- - luxas/raspbian: Is a stripped `resin/rpi-raspbian` image.
- - luxas/alpine: Is a Alpine Linux image. Only 8 MB. Based on `mini-containers/base` source.
- - luxas/go: Is a Golang image, which is used for building repositories on ARM.
- - kubernetesonarm/build: This image downloads all source code and builds it for ARM.
-
-These core images are used in the cluster:
- - kubernetesonarm/etcd: `etcd` is the data store for Kubernetes. Used only on master. [Docs](images/kubernetesonarm/etcd/README.md)
- - kubernetesonarm/flannel: `flannel` creates the Kubernetes overlay network. [Docs](images/kubernetesonarm/flannel/README.md)
- - kubernetesonarm/hyperkube: This is the core Kubernetes image. This one powers your Kubernetes cluster. [Docs](images/kubernetesonarm/hyperkube/README.md)
- - kubernetesonarm/pause: `pause` is a image Kubernetes uses internally. [Docs](images/kubernetesonarm/pause/README.md)
-
 
 ## Use Kubernetes (the fun part begins here)
+
+Some notes on running Docker on ARM are [here](docs/docker-on-arm.md)
 
 ```bash
 # See which commands kubectl and kube-config has
@@ -307,12 +280,18 @@ docker pull kubernetesonarm/pause
 ```
 Then check the service files here for the right commands to use: https://github.com/luxas/kubernetes-on-arm/tree/master/sdcard/rootfs/kube-systemd/usr/lib/systemd/system
 
+### Build the images yourself
+
+Instructions [here](docs/build-images.md)
+
 #### However, only use this method if you know what you are doing and want to customize just for your need
 #### Otherwise, use the SD Card method or deb package for an easy installation
 
 ## Addons
 
-Two addons is available right now
+To enable/disable addons is very easy: `kube-config enable-addon [addon-name]` and `kube-config disable-addon [addon-name]`
+
+Three addons are available for the moment:
  - Kubernetes DNS:
    - Every service gets the hostname: `{{my-svc}}.{{my-namespace}}.svc.cluster.local`
    - The default namespace is `default` (surprise), so unless you manually edit something it will land there
@@ -322,14 +301,20 @@ Two addons is available right now
    - If you want to access the Kubernetes API easily, `curl -k https://kubernetes` or `curl -k https://10.0.0.1` if you remember numbers better (`-k` stands for insecure as apiserver has no signed certs by default)
    - The DNS server itself has allocated ip `10.0.0.10` by default
    - The DNS domain is `cluster.local` by default
- - Central image registry
+ - Central image registry:
    - A registry for storing cluster images if e.g. the cluster has no internet connection for a while
    - Or for cluster-specific images that one not want to publish on Docker Hub
    - This service is available at this address: `registry.kube-system` when DNS is enabled
    - Just tag your image: `docker tag my-name/my-image registry.kube-system:5000/my-name/my-image`
    - And push it to the registry: `docker push registry.kube-system:5000/my-name/my-image`
-  
-`kube-ui` was removed, because the Kubernetes team shifted focus to [dashboard](https://github.com/kubernetes/dashboard).
+ - Kubernetes Dashboard:
+   - The Kubernetes Dashboard project [is here](https://github.com/kubernetes/dashboard)
+   - Replaces `kube-ui`
+   - Access the dashboard on: `http://[master-ip]:8080/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard`
+ - The service loadbalancer:
+   - Experimental in this release.
+   - Documentation [here](https://github.com/kubernetes/contrib/tree/master/service-loadbalancer)
+   - More info will come later
 
 ## Access your cluster
 
@@ -352,6 +337,8 @@ Here is some ways to make your outside devices reach the services running in the
    - Via `kubectl`: `kubectl expose rc {some rc} --port={the port this service will listen on} --container-port={the port the container exposes} --external-ip={the host you want to listen on}`  
    - Example: `kubectl expose rc my-nginx --port=9060 --container-port=80 --external-ip=192.168.200.100`
    - This will make the service accessible at `192.168.200.100:9060`
+ - Service `NodePort`
+   - If one sets Service `.spec.type` to `NodePort`, Kubernetes automatically exposes the service on a random port on every node
 
 #### See node health via `cAdvisor`
 
@@ -365,7 +352,7 @@ There is a configuration file: `/etc/kubernetes/k8s.conf`, where you can customi
  - `DNS_IP`: The IP the DNS addon will allocate. Defaults to: `10.0.0.10`. Do not change this unless you have a good reason.
  - `DNS_DOMAIN`: The domain for DNS names. Defaults to: `cluster.local`. If you for example changes this to `abc`, your DNS names will look like this: `my-nginx.default.svc.abc`.
 
-**Note:** You must change the values in `k8s.conf` before starting Kubernetes. Otherwise they won't have effect, just be able to harm your setup.
+**Note:** You must change the values in `k8s.conf` before starting Kubernetes. Otherwise they won't have effect, just be able to harm your setup. And remember that if you change `DNS_IP` and `DNS_DOMAIN` on one node, you'll have to change them on all nodes in the cluster
 
 You can also customize the master containers´ flags in the file: `/etc/kubernetes/static/master/master.json`. There the configuration for the master components are. [Official file](https://github.com/kubernetes/kubernetes/blob/master/cluster/images/hyperkube/master-multi.json)
 
