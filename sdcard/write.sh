@@ -47,16 +47,17 @@ Explanation:
 		- Currently supported:
 			- rpi - Raspberry Pi A, A+, B, B+, ZERO
 			- rpi-2 - Raspberry Pi 2 Model B
-			- parallella - Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel
-			- cubietruck - Cubietruck
-			- bananapro - Banana Pro
+			- parallella - Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel (only with archlinux)
+			- cubietruck - Cubietruck (only with archlinux)
+			- bananapro - Banana Pro (only with archlinux)
+			- odroid-c1 - Odroid C1 (experimental, only with hypriotos)
 	os - The operating system which should be downloaded and installed.
 		- Currently supported:
 			- archlinux - Arch Linux ARM
 			- hypriotos - HypriotOS
 	rootfs - Prepopulated rootfs with scripts and such.
 		- Currently supported: 
-			- kube-systemd - Kubernetes scripts prepopulated (optional)
+			- kube-systemd - Kubernetes scripts prepopulated
 
 Example:
 sdcard/write.sh /dev/sdb rpi-2 archlinux kube-systemd
