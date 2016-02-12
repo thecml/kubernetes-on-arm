@@ -18,7 +18,7 @@
             "--service-account-private-key-file=/var/run/kubernetes/apiserver.key",
             "--root-ca-file=/var/run/kubernetes/apiserver.crt",
             "--min-resync-period=3m",
-            "--v=2",
+            "--v=2"
         ],
         "volumeMounts":[{
           "name": "kubecerts",
