@@ -72,7 +72,7 @@ curl -sSL https://github.com/kubernetes/kubernetes/archive/$K8S_VERSION.tar.gz |
 cd $K8S_DIR
 
 ## Patches for building Kubernetes
-if [[ $K8S_VERSION == "v1.2"* || $K8S_VERSION == "v1.1"* ]]; then
+if [[ $K8S_VERSION == "v1.1"* ]]; then
 	echo "Building a >= v1.1.x branch of kubernetes"
 
 	# libcontainer ARM issue. That file is by default built only on amd64
