@@ -420,7 +420,7 @@ Thanks!
 ## Beta version
 
 This project is under development.  
-I develop things on the [`dev` branch](tree/dev)
+I develop things on the [`dev` branch](../../tree/dev)
 
 [Changelog](CHANGELOG.md)
 
