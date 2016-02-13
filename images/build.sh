@@ -46,7 +46,7 @@ build_dep(){
 
 	    # Read every line and build it
 	    for line in "$(cat ./$IMAGE/deps)"; do 
-	    	build $line; 
+	    	build $line
 	  	done
     fi
 

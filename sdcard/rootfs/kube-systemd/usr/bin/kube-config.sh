@@ -263,13 +263,13 @@ require-images(){
 
 	# Loop every image, check if it exists
 	for IMAGE in "$@"; do
-		if [[ -z $(docker images | grep "$IMAGE") ]]; then
+		if [[ -z $(docker images | grep "$(echo $IMAGE | grep -o "[^:]*" | head -1)") ]]; then
 
 			# If it doesn't exist, try to pull
 			echo "Pulling $IMAGE from Docker Hub"
 			docker pull $IMAGE
 			
-			if [[ -z $(docker images | grep "$IMAGE") ]]; then
+			if [[ -z $(docker images | grep "$(echo $IMAGE | grep -o "[^:]*" | head -1)") ]]; then
 
 				echo "Pull failed. Try to pull this image yourself: $IMAGE"
 				FAIL=1
@@ -635,41 +635,43 @@ fi
 
 # Commands available
 case $1 in
-        'install')
-                install;;
-        'upgrade')
-				upgrade;;
-        'build')
-				shift
-				$PROJECT_SOURCE/images/build.sh $@;;
-        'build-images')
-                $PROJECT_SOURCE/images/build.sh ${REQUIRED_MASTER_IMAGES[@]};;
-        'build-addons')
-				$PROJECT_SOURCE/images/build.sh ${BUILD_ADDON_IMAGES[@]};;
+    'install')
+        install;;
+    'upgrade')
+		upgrade;;
+    'build')
+		shift
+		$PROJECT_SOURCE/images/build.sh $@;;
+    'build-images')
+        $PROJECT_SOURCE/images/build.sh ${REQUIRED_MASTER_IMAGES[@]};;
+    'build-addons')
+		$PROJECT_SOURCE/images/build.sh ${BUILD_ADDON_IMAGES[@]};;
 
 
-        'enable-master')
-                start-master;;
-        'enable-worker')
-                start-worker $2;;
-        'enable-addon')
-				start-addon $2;;
+    'enable-master')
+        start-master;;
+    'enable-worker')
+        start-worker $2;;
+    'enable-addon')
+		shift
+		start-addon $@;;
 
 
-		'disable-node')
-				disable;;
-		'disable')
-				disable;;
-		'disable-addon')
-				stop-addon $2;;
+	'disable-node')
+		disable;;
+	'disable')
+		disable;;
+	'disable-addon')
+		shift
+		stop-addon $@;;
 
 
-       	'delete-data')
-				remove-etcd-datadir;;
-        'info')
-				version;;
-		'help')
-				usage;;
-		*) 
-				usage;;
+   	'delete-data')
+		remove-etcd-datadir;;
+    'info')
+		version;;
+	'help')
+		usage;;
+	*) 
+		usage;;
 esac
