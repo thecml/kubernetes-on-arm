@@ -31,7 +31,7 @@ metadata:
   labels:
     k8s-app: kubernetes-dashboard
     kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: "Dashboard"
+    kubernetes.io/name: "Kubernetes Dashboard"
   name: kubernetes-dashboard
   namespace: kube-system
 spec:

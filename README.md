@@ -95,8 +95,6 @@ kube-config install
 # Last question is whether you want to reboot
 # You must do this now, otherwise docker will behave very strange and fail
 
-# I've built docker v1.8.2 statically, if you want to use that binary instead of pacman's prepend the command with STATICALLY_DOCKER=1 like the other variables. When running on systemd and docker isn't installed, it will automatically use this docker binary
-
 # If you want to run this script non-interactively, do this:
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
 # This script runs in 2-3 mins
@@ -107,7 +105,7 @@ kube-config install
 If you want to change something in the source, edit files in `/etc/kubernetes/source/images` and run `kube-config build-images` before you do this
 These scripts are important in the setup process. 
 They spin up all required services in the right order, and download the images from Github if not present.  
-This may take ~5min, depending on your internet connection.
+This may take ~5-10min, depending on your internet connection.
 
 ```bash
 # To enable the master service, run
@@ -315,6 +313,8 @@ Three addons are available for the moment:
    - Experimental in this release.
    - Documentation [here](https://github.com/kubernetes/contrib/tree/master/service-loadbalancer)
    - You have to label at least one node `role=loadbalancer`, like this `kubectl label no [node_ip] role=loadbalancer`
+   - The loadbalancer will expose http services in the default namespace on `http://[loadbalancer_ip]/[service_name]`. Only `http` services on port 80 are tested in this release. It should be pretty easy to add `https` support though.
+   - You may see `haproxy` stats on `http://[loadbalancer_ip]:1936`
    - More info will come later
 
 ## Access your cluster
@@ -360,6 +360,10 @@ You can also customize the master containers´ flags in the file: `/etc/kubernet
 You may also put more `.json` files in `/etc/kubernetes/static/master` and `/etc/kubernetes/static/worker` if you want; they will come up as static pods.
 
 On Arch Linux, this file will override the default `eth0` settings. If you have a special `eth0` setup (or use some other network), edit this file to fit your use case: `/etc/systemd/network/dns.network`
+
+## Docker versions
+
+With this release, only `docker 1.10.0` and higher is supported.
 
 ## Cross-compiling
 
