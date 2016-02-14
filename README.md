@@ -127,9 +127,9 @@ If you already have set up your Pi with latest Raspbian OS for example, follow t
 # The OS have to be systemd based, e. g. HypriotOS, Debian Jessie, Arch Linux ARM, Ubuntu 15.04
 
 # Download the latest package
-curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.3/kube-systemd.deb > kube-systemd.deb
+curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.5/kube-systemd.deb > kube-systemd.deb
 # or
-wget https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.3/kube-systemd.deb
+wget https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.5/kube-systemd.deb
 
 # Requires dpkg, which is preinstalled in at least all Debian/Ubuntu OSes
 sudo dpkg -i kube-systemd.deb

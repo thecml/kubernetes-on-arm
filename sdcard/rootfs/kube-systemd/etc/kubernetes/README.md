@@ -1,6 +1,6 @@
 ### Readme for Kubernetes on ARM
 
-v0.6.3
+v0.6.5
 
 /etc/
  - kubernetes/
