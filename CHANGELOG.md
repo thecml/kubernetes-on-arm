@@ -1,5 +1,16 @@
 ## Changelog
 
+ - v0.6.5
+   - Add a http loadbalancer. Thanks for the help @larmog
+   - **Upgrade to and support docker-1.10.0 only**
+   - **Kubernetes Dashboard UI added as an addon**
+   - Do not depend on pacman, use a self-built statically linked ARMv6 docker-1.10 binary instead
+   - Revert to userspace proxying, since iptables proxying had some bugs in it
+   - Better documentation
+   - A worker may now reboot and come up again in some minutes
+   - Better UX when writing the hypriot image, caches the downloaded image for faster writes and installs unzip if not present
+   - Bug fixes
+   - Rearranged the addon manifests
  - v0.6.3
    - Fix bugs and make the `.deb` file stable
    - Add an experimental `.tar.gz` deployment for platforms that doesn't have `dpkg`
