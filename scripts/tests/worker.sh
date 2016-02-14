@@ -36,7 +36,7 @@ time kube-config enable-worker $MASTER_IP
 export KUBERNETES_MASTER=http://$MASTER_IP:8080
 
 WORKER_SECS=0
-while [[ $(kubectl get no | grep $(networkctl status | grep Address | awk '{print $2}') | awk '{print $3}') != "Ready" ]]; do sleep 1; ((WORKER_SECS++)); done
+while [[ $(kubectl get no | grep $(ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)) != "Ready" ]]; do sleep 1; ((WORKER_SECS++)); done
 
 echo_yellow "Seconds before this worker came up: $WORKER_SECS"
 
