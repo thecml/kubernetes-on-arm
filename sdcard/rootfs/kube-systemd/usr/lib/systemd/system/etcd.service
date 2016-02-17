@@ -17,7 +17,12 @@ ExecStartPost=/bin/sh -c "sleep 8;docker -H unix:///var/run/system-docker.sock r
 					--net=host \
 					kubernetesonarm/etcd \
 					etcdctl \
-					set /coreos.com/network/config '{ \"Network\": \"${FLANNEL_SUBNET}\" }'"
+					set /coreos.com/network/config '{ \
+						\"Network\": \"${FLANNEL_SUBNET}\", \
+						\"Backend\": { \
+							\"Type\": \"${FLANNEL_BACKEND}\" \
+						} \
+					}'"
 ExecStop=/usr/bin/docker -H unix:///var/run/system-docker.sock stop k8s-etcd
 
 [Install]
