@@ -45,9 +45,9 @@ curl -sSL https://github.com/coreos/flannel/archive/$FLANNEL_VERSION.tar.gz | ta
 cd $FLANNEL_DIR
 
 # Build statically
-sed -e "s@go build -o ${GOBIN}/flanneld ${REPO_PATH}@go build -o ${GOBIN}/flanneld -ldflags \"-extldflags '-static'\" ${REPO_PATH}@" -i build
+sed -e "s@go build -o \${GOBIN}/flanneld \${REPO_PATH}@go build -o \${GOBIN}/flanneld -ldflags \"-extldflags '-static'\" \${REPO_PATH}@" -i build
 
-# And build statically 
+# And build statically
 ./build
 
 # Copy over the binaries
