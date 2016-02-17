@@ -1,6 +1,6 @@
-FROM luxas/raspbian
+FROM luxas/alpine
 
 COPY flanneld /
-RUN apt-install iptables
+RUN apk-install iptables
 
 CMD ["/flanneld"]
