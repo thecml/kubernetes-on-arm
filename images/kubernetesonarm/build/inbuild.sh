@@ -6,28 +6,23 @@ source /version.sh
 # Make it run on a RPi 1 too
 export GOARM=6
 
-# Go can't compile k8s v1.0.x https://github.com/kubernetes/kubernetes/issues/16229
-# Haven't tested this
-if [[ $GO_VERSION == "go1.5.1" && $K8S_VERSION == "v1.0"* ]]; then
-	echo "using go 1.4.x, because of kubernetes#16229"
-	export GOROOT=/goroot1.4
-	export PATH=$(echo $PATH | sed -e "s@/goroot@/goroot1.4@")
-fi
-
 K8S_DIR="$GOPATH/src/k8s.io/kubernetes"
 K8S_CONTRIB="$GOPATH/src/k8s.io/contrib"
+HEAPSTER_DIR="$GOPATH/src/k8s.io/heapster"
 ETCD_DIR="$GOPATH/src/github.com/coreos/etcd"
 FLANNEL_DIR="$GOPATH/src/github.com/coreos/flannel"
 REGISTRY_DIR="$GOPATH/src/github.com/docker/distribution"
+OUTPUT_DIR="/build/bin"
 
 # Make directories
-mkdir -p 	/build/bin 										\
-			$K8S_DIR										\
-			$K8S_CONTRIB									\
-			$GOPATH/src/github.com/GoogleCloudPlatform		\
-			$ETCD_DIR 										\
-			$FLANNEL_DIR 									\
-			$REGISTRY_DIR
+mkdir -p $OUTPUT_DIR \
+		$K8S_DIR \
+		$K8S_CONTRIB \
+		$GOPATH/src/github.com/GoogleCloudPlatform \
+		$ETCD_DIR \
+		$FLANNEL_DIR \
+		$REGISTRY_DIR \
+		$HEAPSTER_DIR
 
 # Symlink /gopath/src/k8s.io/kubernetes and the old /gopath/src/github.com/GoogleCloudPlatform/kubernetes
 ln -s /gopath/src/k8s.io/kubernetes /gopath/src/github.com/GoogleCloudPlatform/kubernetes
@@ -37,22 +32,11 @@ ln -s /gopath/src/k8s.io/kubernetes /gopath/src/github.com/GoogleCloudPlatform/k
 curl -sSL https://github.com/coreos/etcd/archive/$ETCD_VERSION.tar.gz | tar -C $ETCD_DIR -xz --strip-components=1
 cd $ETCD_DIR
 
-# Apply some 32-bit patches
-if [[ $ETCD_VERSION == "v2.0"* || $ETCD_VERSION == "v0"* ]]; then
-	echo "etcd =< v2.0.x needs patches"
-	curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/raft.go.patch > raft.go.patch
-	curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/server.go.patch > server.go.patch
-	curl https://raw.githubusercontent.com/mkaczanowski/docker-archlinux-arm/master/archlinux-etcd/patches/watcher_hub.go.patch > watcher_hub.go.patch
-	patch etcdserver/raft.go < raft.go.patch
-	patch etcdserver/server.go < server.go.patch
-	patch store/watcher_hub.go < watcher_hub.go.patch
-fi
-
 # Build etcd
 ./build
 
 # Copy over the binaries
-cp bin/* /build/bin
+cp bin/* $OUTPUT_DIR
 
 
 ## FLANNEL ##
@@ -60,11 +44,14 @@ cp bin/* /build/bin
 curl -sSL https://github.com/coreos/flannel/archive/$FLANNEL_VERSION.tar.gz | tar -C $FLANNEL_DIR -xz --strip-components=1
 cd $FLANNEL_DIR
 
-# And build dynamically
+# Build statically
+sed -e "s@go build -o ${GOBIN}/flanneld ${REPO_PATH}@go build -o ${GOBIN}/flanneld -ldflags \"-extldflags '-static'\" ${REPO_PATH}@" -i build
+
+# And build statically 
 ./build
 
 # Copy over the binaries
-cp bin/* /build/bin
+cp bin/* $OUTPUT_DIR
 
 ### KUBERNETES ###
 # Download a gzipped archive and extract
@@ -73,7 +60,7 @@ cd $K8S_DIR
 
 ## Patches for building Kubernetes
 if [[ $K8S_VERSION == "v1.1"* ]]; then
-	echo "Building a >= v1.1.x branch of kubernetes"
+	echo "Building a v1.1.x branch of kubernetes. Patching."
 
 	# libcontainer ARM issue. That file is by default built only on amd64
 	mv Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump{_amd64,}.go
@@ -81,12 +68,15 @@ if [[ $K8S_VERSION == "v1.1"* ]]; then
 
 	# Patch the nsenter writer, this is fixed on master: #16969
 	curl -sSL https://raw.githubusercontent.com/kubernetes/kubernetes/8c1d820435670e410f8fd54401906c3d387c2098/pkg/util/io/writer.go > pkg/util/io/writer.go
-else
-	echo "Building an old branch of kubernetes"
-fi
 
-# Build kubectl statically
-export KUBE_STATIC_OVERRIDES="kubectl"
+	# Build kubectl statically
+	export KUBE_STATIC_OVERRIDES="kubectl"
+elif [[ $K8S_VERSION == "v1.2"* ]]; then
+	echo "Building a v1.2.x branch of kubernetes. No patches right now."
+else
+	echo "Building an old branch of kubernetes. Not supported."
+	exit
+fi
 
 # Build only these two kubernetes binaries
 ./hack/build-go.sh \
@@ -94,7 +84,7 @@ export KUBE_STATIC_OVERRIDES="kubectl"
 	cmd/kubectl
 
 # Copy over the binaries
-cp _output/local/bin/linux/arm/* /build/bin
+cp _output/local/bin/linux/arm/* $OUTPUT_DIR
 
 ## PAUSE ##
 cd $K8S_DIR/build/pause
@@ -103,19 +93,22 @@ cd $K8S_DIR/build/pause
 ./prepare.sh
 
 # Copy over the binaries
-cp pause /build/bin
+cp pause $OUTPUT_DIR
 
 ## KUBE2SKY ##
 cd $K8S_DIR/cluster/addons/dns/kube2sky
 
-# Build for arm, fixed on master, #18669
-sed -e "s@GOARCH=amd64@GOARCH=arm@" -i Makefile
+if [[ $K8S_VERSION == "v1.1"* ]]; then
+
+	# Build for arm, fixed on master, #18669
+	sed -e "s@GOARCH=amd64@GOARCH=arm@" -i Makefile
+fi
 
 # Build the binary
 make kube2sky
 
 # Include in build result
-cp kube2sky /build/bin
+cp kube2sky $OUTPUT_DIR
 
 
 ## SKYDNS ##
@@ -124,7 +117,7 @@ cp kube2sky /build/bin
 CGO_ENABLED=0 go get -a -installsuffix cgo --ldflags '-w' github.com/skynetservices/skydns
 
 # And copy over it
-cp /gopath/bin/skydns /build/bin
+cp /gopath/bin/skydns $OUTPUT_DIR
 
 
 ## IMAGE REGISTRY ##
@@ -144,7 +137,7 @@ GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH go build
 # go get github.com/docker/distribution/cmd/registry
 
 # Copy the binary
-cp registry /build/bin
+cp registry $OUTPUT_DIR
 
 
 ## K8S CONTRIB ##
@@ -157,7 +150,7 @@ cd $K8S_CONTRIB/service-loadbalancer
 make server
 
 # Copy the binary
-cp service_loadbalancer /build/bin
+cp service_loadbalancer $OUTPUT_DIR
 
 ## EXECHEALTHZ ##
 cd $K8S_CONTRIB/exec-healthz
@@ -166,19 +159,29 @@ cd $K8S_CONTRIB/exec-healthz
 make server
 
 # Copy over the binary
-cp exechealthz /build/bin
+cp exechealthz $OUTPUT_DIR
+
+## HEAPSTER ##
+curl -sSL https://github.com/kubernetes/heapster/archive/$HEAPSTER_VERSION.tar.gz | tar -C $HEAPSTER_DIR -xz --strip-components=1
+cd $HEAPSTER_DIR
+
+CGO_ENABLED=0 godep go build ./...
+CGO_ENABLED=0 godep go build
+
+cp heapster $OUTPUT_DIR
+
 
 ## SCALE DEMO ##
-cd $K8S_CONTRIB/scale-demo/aggregator
+#cd $K8S_CONTRIB/scale-demo/aggregator
 
-make aggregator
+#make aggregator
 
-cp aggregator /build/bin
+#cp aggregator /build/bin
 
-cd $K8S_CONTRIB/scale-demo/vegeta
+#cd $K8S_CONTRIB/scale-demo/vegeta
 
 # Build the binary
-CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o loader
+#CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o loader
 # make loader
 
-cp loader /build/bin
+#cp loader /build/bin
