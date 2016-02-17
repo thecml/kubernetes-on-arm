@@ -27,6 +27,8 @@ mkdir -p $OUTPUT_DIR \
 # Symlink /gopath/src/k8s.io/kubernetes and the old /gopath/src/github.com/GoogleCloudPlatform/kubernetes
 ln -s /gopath/src/k8s.io/kubernetes /gopath/src/github.com/GoogleCloudPlatform/kubernetes
 
+echo "Environment set up"
+
 ## ETCD ##
 # Download a gzipped archive and extract
 curl -sSL https://github.com/coreos/etcd/archive/$ETCD_VERSION.tar.gz | tar -C $ETCD_DIR -xz --strip-components=1
@@ -37,7 +39,7 @@ cd $ETCD_DIR
 
 # Copy over the binaries
 cp bin/* $OUTPUT_DIR
-
+echo "etcd built"
 
 ## FLANNEL ##
 # Download a gzipped archive and extract
@@ -52,6 +54,7 @@ sed -e "s@go build -o \${GOBIN}/flanneld \${REPO_PATH}@go build -o \${GOBIN}/fla
 
 # Copy over the binaries
 cp bin/* $OUTPUT_DIR
+echo "flannel built"
 
 ### KUBERNETES ###
 # Download a gzipped archive and extract
@@ -85,6 +88,7 @@ fi
 
 # Copy over the binaries
 cp _output/local/bin/linux/arm/* $OUTPUT_DIR
+echo "kubernetes built"
 
 ## PAUSE ##
 cd $K8S_DIR/build/pause
@@ -94,6 +98,7 @@ cd $K8S_DIR/build/pause
 
 # Copy over the binaries
 cp pause $OUTPUT_DIR
+echo "pause built"
 
 ## KUBE2SKY ##
 cd $K8S_DIR/cluster/addons/dns/kube2sky
@@ -109,7 +114,7 @@ make kube2sky
 
 # Include in build result
 cp kube2sky $OUTPUT_DIR
-
+echo "kube2sky built"
 
 ## SKYDNS ##
 # Compile the binary statically, requires mercurial
@@ -118,7 +123,7 @@ CGO_ENABLED=0 go get -a -installsuffix cgo --ldflags '-w' github.com/skynetservi
 
 # And copy over it
 cp /gopath/bin/skydns $OUTPUT_DIR
-
+echo "skydns built"
 
 ## IMAGE REGISTRY ##
 # Download a gzipped archive and extract
@@ -138,7 +143,7 @@ GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH go build
 
 # Copy the binary
 cp registry $OUTPUT_DIR
-
+echo "registry built"
 
 ## K8S CONTRIB ##
 curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar -xz -C $K8S_CONTRIB --strip-components=1
@@ -151,6 +156,7 @@ make server
 
 # Copy the binary
 cp service_loadbalancer $OUTPUT_DIR
+echo "service_loadbalancer built"
 
 ## EXECHEALTHZ ##
 cd $K8S_CONTRIB/exec-healthz
@@ -160,6 +166,7 @@ make server
 
 # Copy over the binary
 cp exechealthz $OUTPUT_DIR
+echo "exechealthz built"
 
 ## HEAPSTER ##
 curl -sSL https://github.com/kubernetes/heapster/archive/$HEAPSTER_VERSION.tar.gz | tar -C $HEAPSTER_DIR -xz --strip-components=1
@@ -169,7 +176,7 @@ CGO_ENABLED=0 godep go build ./...
 CGO_ENABLED=0 godep go build
 
 cp heapster $OUTPUT_DIR
-
+echo "heapster built"
 
 ## SCALE DEMO ##
 #cd $K8S_CONTRIB/scale-demo/aggregator
