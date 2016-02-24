@@ -24,8 +24,8 @@ mkdir -p $OUTPUT_DIR \
 		$REGISTRY_DIR \
 		$HEAPSTER_DIR
 
-# Symlink /gopath/src/k8s.io/kubernetes and the old /gopath/src/github.com/GoogleCloudPlatform/kubernetes
-ln -s /gopath/src/k8s.io/kubernetes /gopath/src/github.com/GoogleCloudPlatform/kubernetes
+# Symlink $GOPATH/src/k8s.io/kubernetes and the old $GOPATH/src/github.com/GoogleCloudPlatform/kubernetes
+ln -s $GOPATH/src/k8s.io/kubernetes $GOPATH/src/github.com/GoogleCloudPlatform/kubernetes
 
 echo "Environment set up"
 
@@ -122,7 +122,7 @@ echo "kube2sky built"
 CGO_ENABLED=0 go get -a -installsuffix cgo --ldflags '-w' github.com/skynetservices/skydns
 
 # And copy over it
-cp /gopath/bin/skydns $OUTPUT_DIR
+cp $GOPATH/bin/skydns $OUTPUT_DIR
 echo "skydns built"
 
 ## IMAGE REGISTRY ##
