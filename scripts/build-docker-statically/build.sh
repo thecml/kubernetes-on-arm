@@ -2,7 +2,7 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-DOCKER_BRANCH=${DOCKER_BRANCH:-"v1.10.1"}
+DOCKER_BRANCH=${DOCKER_BRANCH:-"v1.10.2"}
 
 # Download docker
 git clone https://github.com/docker/docker
