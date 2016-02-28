@@ -74,20 +74,25 @@ if [[ $K8S_VERSION == "v1.1"* ]]; then
 
 	# Build kubectl statically
 	export KUBE_STATIC_OVERRIDES="kubectl"
+
+	# Build only these two kubernetes binaries
+	./hack/build-go.sh \
+		cmd/hyperkube \
+		cmd/kubectl
+
+	# Copy over the binaries
+	cp _output/local/bin/linux/arm/* $OUTPUT_DIR
+
 elif [[ $K8S_VERSION == "v1.2"* ]]; then
-	echo "Building a v1.2.x branch of kubernetes. No patches right now."
+	echo "Building a v1.2.x branch of kubernetes. Downloading official binaries."
+	curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/arm/hyperkube > $OUTPUT_DIR/hyperkube
+	curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/arm/kubectl > $OUTPUT_DIR/kubectl
 else
 	echo "Building an old branch of kubernetes. Not supported."
 	exit
 fi
 
-# Build only these two kubernetes binaries
-./hack/build-go.sh \
-	cmd/hyperkube \
-	cmd/kubectl
 
-# Copy over the binaries
-cp _output/local/bin/linux/arm/* $OUTPUT_DIR
 echo "kubernetes built"
 
 ## PAUSE ##
