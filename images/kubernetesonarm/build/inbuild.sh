@@ -87,6 +87,7 @@ elif [[ $K8S_VERSION == "v1.2"* ]]; then
 	echo "Building a v1.2.x branch of kubernetes. Downloading official binaries."
 	curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/arm/hyperkube > $OUTPUT_DIR/hyperkube
 	curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/arm/kubectl > $OUTPUT_DIR/kubectl
+	chmod +x $OUTPUT_DIR/hyperkube $OUTPUT_DIR/kubectl
 else
 	echo "Building an old branch of kubernetes. Not supported."
 	exit
@@ -177,8 +178,8 @@ echo "exechealthz built"
 curl -sSL https://github.com/kubernetes/heapster/archive/$HEAPSTER_VERSION.tar.gz | tar -C $HEAPSTER_DIR -xz --strip-components=1
 cd $HEAPSTER_DIR
 
-CGO_ENABLED=0 godep go build ./...
-CGO_ENABLED=0 godep go build
+CGO_ENABLED=0 godep go build -a -installsuffix cgo ./... 
+CGO_ENABLED=0 godep go build -a -installsuffix cgo
 
 cp heapster $OUTPUT_DIR
 echo "heapster built"
