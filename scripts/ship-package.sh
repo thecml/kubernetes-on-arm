@@ -11,7 +11,7 @@ if [[ $# == 1 ]]; then
     source scripts/common.sh
 
     # First build binaries/images
-    if [[ $PACKAGE == 1 ]]; then
+    if [[ $BUILD == 1 ]]; then
 
         echo "Building binaries and images..."
         time images/build.sh ${IMAGES[@]}
