@@ -1,20 +1,8 @@
 FROM luxas/raspbian
 
-# Copy version info
-COPY version.sh /
-
-# Make goroot and gopath variables
-ENV GOROOT=/usr/local/go \
-    GOROOT_BOOTSTRAP_PATH=/goroot1.4 \
-	GOPATH=/go \
-	PATH=$PATH:$GOROOT/bin:$GOPATH/bin \
-	GOARM=6
-
 # Install software in one layer
-RUN chmod +x /version.sh \
-    && mkdir -p $GOROOT $GOROOT_BOOTSTRAP_PATH $GOPATH \
-    && apt-install --no-install-recommends \
-        # Download software (securely)
+RUN apt-install --no-install-recommends \
+        # Download software
         curl \
         ca-certificates \
         rsync \
@@ -33,8 +21,22 @@ RUN chmod +x /version.sh \
         # Executable packer
         upx
 
+# Copy version info
+COPY version.sh /
+
+# Make goroot and gopath variables
+ENV GOROOT=/usr/local/go \
+    GOROOT_BOOTSTRAP_PATH=/goroot1.4 \
+    GOPATH=/go \
+    GOARM=6
+
+# Set the PATH based on GOROOT and GOPATH
+ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+
 # Much, much faster to just download instead of compiling from source
-RUN . /version.sh \
+RUN chmod +x /version.sh \
+    && . /version.sh \
+    && mkdir -p $GOROOT $GOROOT_BOOTSTRAP_PATH $GOPATH \
     && curl -sSL https://github.com/hypriot/golang-armbuilds/releases/download/v${GO_VERSION}/go${GO_VERSION}.linux-armv6.tar.gz | tar -xzC $GOROOT --strip-components=1 \
     && go get github.com/tools/godep
 
