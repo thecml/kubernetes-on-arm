@@ -11,7 +11,7 @@ K8S_CONTRIB="$GOPATH/src/k8s.io/contrib"
 HEAPSTER_DIR="$GOPATH/src/k8s.io/heapster"
 ETCD_DIR="$GOPATH/src/github.com/coreos/etcd"
 FLANNEL_DIR="$GOPATH/src/github.com/coreos/flannel"
-REGISTRY_DIR="$GOPATH/src/github.com/docker/distribution"
+INFLUXDB_DIR="$GOPATH/src/github.com/influxdata/influxdb"
 OUTPUT_DIR="/build/bin"
 
 # Make directories
@@ -22,7 +22,8 @@ mkdir -p $OUTPUT_DIR \
 		$ETCD_DIR \
 		$FLANNEL_DIR \
 		$REGISTRY_DIR \
-		$HEAPSTER_DIR
+		$HEAPSTER_DIR \
+		$INFLUXDB_DIR
 
 # Symlink $GOPATH/src/k8s.io/kubernetes and the old $GOPATH/src/github.com/GoogleCloudPlatform/kubernetes
 ln -s $GOPATH/src/k8s.io/kubernetes $GOPATH/src/github.com/GoogleCloudPlatform/kubernetes
@@ -183,6 +184,29 @@ CGO_ENABLED=0 godep go build -a -installsuffix cgo
 
 cp heapster $OUTPUT_DIR
 echo "heapster built"
+
+
+## INFLUXDB ##
+
+curl -sSL https://github.com/influxdata/influxdb/archive/$INFLUXDB_VERSION.tar.gz | tar -C $INFLUXDB_DIR -xz --strip-components=1
+cd $INFLUXDB_DIR
+
+go get github.com/sparrc/gdm
+
+gdm restore -v
+
+CGO_ENABLED=0 go build -a --installsuffix cgo --ldflags="-s" -o influxd ./cmd/influxd
+
+cp influxd $OUTPUT_DIR
+echo "influxdb built"
+
+## GRAFANA ##
+
+# go get github.com/grafana/grafana
+# cd $GOPATH/src/github.com/grafana/grafana
+# go run build.go setup
+# godep restore
+# go run build.go build
 
 ## SCALE DEMO ##
 #cd $K8S_CONTRIB/scale-demo/aggregator
