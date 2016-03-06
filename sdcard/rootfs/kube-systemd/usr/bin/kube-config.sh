@@ -6,8 +6,10 @@ set -e
 
 KUBERNETES_DIR=/etc/kubernetes
 ADDONS_DIR=$KUBERNETES_DIR/addons
+BINARIES_DIR=$KUBERNETES_DIR/binaries
 KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
 PROJECT_SOURCE=$KUBERNETES_DIR/source
+KUBECTL=$BINARIES_DIR/kubectl
 K8S_PREFIX="kubernetesonarm"
 GCR_PREFIX="gcr.io/google_containers"
 
@@ -470,11 +472,11 @@ start-addon(){
 		require-images ${REQUIRED_ADDON_IMAGES[@]}
 
 		# The kube-system namespace is required
-		NAMESPACE=`eval "kubectl get namespaces | grep kube-system | cat"`
+		NAMESPACE=`eval "${KUBECTL} get namespaces | grep kube-system | cat"`
 
 		# Create kube-system if necessary
 		if [[ ! "$NAMESPACE" ]]; then
-			kubectl create -f $ADDONS_DIR/kube-system.yaml
+			${KUBECTL} create -f $ADDONS_DIR/kube-system.yaml
 		fi
 
 		# Source the os file and use that upgrade method
@@ -493,9 +495,9 @@ start-addon(){
 				if [[ $ADDON == "dns" ]]; then
 
 					# Replace the variables before passing to kubectl
-					sed -e "s@DNS_DOMAIN@${DNS_DOMAIN}@;s@DNS_IP@${DNS_IP}@" $ADDONS_DIR/${ADDON}.yaml | kubectl create -f -
+					sed -e "s@DNS_DOMAIN@${DNS_DOMAIN}@;s@DNS_IP@${DNS_IP}@" $ADDONS_DIR/${ADDON}.yaml | ${KUBECTL} create -f -
 				else
-					kubectl create -f $ADDONS_DIR/${ADDON}.yaml
+					${KUBECTL} create -f $ADDONS_DIR/${ADDON}.yaml
 				fi
 
 				echo "Started addon: $ADDON"
@@ -515,7 +517,7 @@ stop-addon(){
 		for ADDON in $@; do
 			if [[ -d $ADDONS_DIR/${ADDON} ]]; then
 
-				kubectl delete -f $ADDONS_DIR/${ADDON}.yaml
+				${KUBECTL} delete -f $ADDONS_DIR/${ADDON}.yaml
 
 				echo "Stopped addon: $ADDON"
 			else
@@ -594,8 +596,8 @@ version(){
     	echo "docker version: v$DOCKER_VERSION"
 
     	# if kubectl exists, output k8s server version. If there is no server, output client Version
-    	if [[ -f $(which kubectl 2>&1) ]]; then
-    		SERVER_K8S=$(kubectl version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
+    	if [[ -f $(which ${KUBECTL} 2>&1) ]]; then
+    		SERVER_K8S=$(${KUBECTL} version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
 
     		if [[ ! -z $SERVER_K8S ]]; then
     			echo "kubernetes server version: $SERVER_K8S"
@@ -617,7 +619,7 @@ version(){
     				echo "proxy: $(getcputime proxy)"
     			fi
     		else
-    			echo "kubernetes client version: $(kubectl version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
+    			echo "kubernetes client version: $(${KUBECTL} version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
     		fi
     	fi
     fi
