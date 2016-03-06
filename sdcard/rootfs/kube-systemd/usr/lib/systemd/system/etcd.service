@@ -12,7 +12,7 @@ ExecStart=/usr/bin/docker -H unix:///var/run/system-docker.sock run \
 					--name=k8s-etcd \
 					-v /var/lib/kubernetes/etcd:/var/etcd/data \
 					kubernetesonarm/etcd
-ExecStartPost=/bin/sh -c "while [[ $(curl -fs http://localhost:4001/v2/machines 2>&1 1>/dev/null; echo $?) != 0 ]]; do sleep 1; done; && \
+ExecStartPost=/bin/sh -c "while [ $(curl -fs http://localhost:4001/v2/machines 2>&1 1>/dev/null; echo $?) != 0 ]; do sleep 1; done; \
 				docker -H unix:///var/run/system-docker.sock run \
 					--rm \
 					--net=host \
