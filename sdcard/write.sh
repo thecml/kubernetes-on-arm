@@ -8,19 +8,30 @@ require()
 	BINARY=$1
 	PACKAGE=$2
 
-	# If the $BINARY path -e(xists)
+	# If the $BINARY path doesn't exist
 	if [[ ! -e $(which $BINARY 2>&1) ]]; then
 		
 		if [[ -e $(which pacman 2>&1) ]]; then # Is pacman present?
 			pacman -S $PACKAGE --noconfirm
-			
+
+			if [[ $(echo $?) != 0 ]]; then
+				require_exit $BINARY $PACKAGE
+			fi
 		elif [[ -e $(which apt-get 2>&1) ]]; then # Is apt-get present?
 			apt-get update && apt-get install -y $PACKAGE
+
+			if [[ $(echo $?) != 0 ]]; then
+				require_exit $BINARY $PACKAGE
+			fi
 		else
-			echo "The required package $PACKAGE with the binary $BINARY isn't present now. Install it."
-			exit 1
+			require_exit $BINARY $PACKAGE
 		fi
 	fi
+}
+
+require_exit(){
+	echo "The required package $2 with the binary $1 isn't present now. Install it."
+	exit 1
 }
 
 ########################## USAGE ##############################
