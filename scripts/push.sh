@@ -7,6 +7,6 @@ source scripts/common.sh
 docker login
 
 for IMAGE in ${IMAGES[@]}; do
-	
-	time docker push $IMAGE
+    
+    time docker push $IMAGE
 done

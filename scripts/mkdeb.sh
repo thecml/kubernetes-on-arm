@@ -5,7 +5,7 @@ source scripts/common.sh
 
 # Require two args
 if [[ $# < 2 ]]; then
-	cat <<EOF
+    cat <<EOF
 Create a .deb file of https://github.com/luxas/kubernetes-on-arm
 
 Usage:
@@ -21,7 +21,7 @@ scripts/mkdeb.sh /dev/sda master 1 [/dev/sda1 automatically chosen]
 scripts/mkdeb.sh /dev/sda2 dev 2
 scripts/mkdeb.sh /etc/debs v0.6.2 1
 EOF
-	exit
+    exit
 fi
 
 # Build the image

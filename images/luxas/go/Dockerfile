@@ -10,7 +10,7 @@ RUN apt-install --no-install-recommends \
         # Version control
         git \
         mercurial \
-		
+        
         # Build tools
         gcc \
         g++ \
@@ -43,33 +43,33 @@ RUN chmod +x /version.sh \
 
 # Build go1.4.x in the other layer, run this if GO_BOOTSTRAP_VERSION is set
 #RUN . /version.sh \
-#	&& if [ ! -z $GO_BOOTSTRAP_VERSION ]; then \
+#   && if [ ! -z $GO_BOOTSTRAP_VERSION ]; then \
 #
-#	# Download source code
-#	curl -sSL https://golang.org/dl/go$GO_BOOTSTRAP_VERSION.src.tar.gz | tar -xz -C $GOROOT_BOOTSTRAP_PATH --strip-components=1 \
+#   # Download source code
+#   curl -sSL https://golang.org/dl/go$GO_BOOTSTRAP_VERSION.src.tar.gz | tar -xz -C $GOROOT_BOOTSTRAP_PATH --strip-components=1 \
 #
-#	# Build go
-#	&& cd $GOROOT_BOOTSTRAP_PATH/src && ./make.bash; fi
+#   # Build go
+#   && cd $GOROOT_BOOTSTRAP_PATH/src && ./make.bash; fi
 
 # Build the "real" go version
 #RUN . /version.sh \
-#	# Download source code
-#	&& curl -sSL https://golang.org/dl/go$GO_VERSION.src.tar.gz | tar -xz -C $GOROOT --strip-components=1 \
+#   # Download source code
+#   && curl -sSL https://golang.org/dl/go$GO_VERSION.src.tar.gz | tar -xz -C $GOROOT --strip-components=1 \
 #
-#	# Build go
-#	&& cd $GOROOT/src && GOROOT_BOOTSTRAP=$GOROOT_BOOTSTRAP_PATH ./make.bash \
+#   # Build go
+#   && cd $GOROOT/src && GOROOT_BOOTSTRAP=$GOROOT_BOOTSTRAP_PATH ./make.bash \
 #
-#	# Install godep, which is required in many projects
-#	&& go get github.com/tools/godep 
+#   # Install godep, which is required in many projects
+#   && go get github.com/tools/godep 
 
 
-# 													HACK													#
+#                                                   HACK                                                    #
 # Instead of:
 # cd /goroot1.4/src && ./make.bash
 #
 # One may do this:
-# cd /goroot1.4/src && ./make.bash --dist-tool						&& \
-# /goroot1.4/pkg/tool/linux_arm/dist bootstrap -v 					&& \
+# cd /goroot1.4/src && ./make.bash --dist-tool                      && \
+# /goroot1.4/pkg/tool/linux_arm/dist bootstrap -v                   && \
 # cp /goroot1.4/pkg/tool/linux_arm/go_bootstrap /goroot1.4/bin/go
 #
 # This will not build the whole go1.4, but instead build cmd/dist and the go_bootstrap tool, which is renamed to go

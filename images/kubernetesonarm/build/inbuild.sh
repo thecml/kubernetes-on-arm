@@ -17,14 +17,14 @@ OUTPUT_DIR="/build/bin"
 
 # Make directories
 mkdir -p $OUTPUT_DIR \
-		$K8S_DIR \
-		$K8S_CONTRIB \
-		$GOPATH/src/github.com/GoogleCloudPlatform \
-		$ETCD_DIR \
-		$FLANNEL_DIR \
-		$REGISTRY_DIR \
-		$HEAPSTER_DIR \
-		$INFLUXDB_DIR
+        $K8S_DIR \
+        $K8S_CONTRIB \
+        $GOPATH/src/github.com/GoogleCloudPlatform \
+        $ETCD_DIR \
+        $FLANNEL_DIR \
+        $REGISTRY_DIR \
+        $HEAPSTER_DIR \
+        $INFLUXDB_DIR
 
 # Symlink $GOPATH/src/k8s.io/kubernetes and the old $GOPATH/src/github.com/GoogleCloudPlatform/kubernetes
 ln -s $GOPATH/src/k8s.io/kubernetes $GOPATH/src/github.com/GoogleCloudPlatform/kubernetes
@@ -65,34 +65,34 @@ cd $K8S_DIR
 
 ## Patches for building Kubernetes
 if [[ $K8S_VERSION == "v1.1"* ]]; then
-	echo "Building a v1.1.x branch of kubernetes. Patching."
+    echo "Building a v1.1.x branch of kubernetes. Patching."
 
-	# libcontainer ARM issue. That file is by default built only on amd64
-	mv Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump{_amd64,}.go
-	sed -e "s@,amd64@@" -i Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump.go
+    # libcontainer ARM issue. That file is by default built only on amd64
+    mv Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump{_amd64,}.go
+    sed -e "s@,amd64@@" -i Godeps/_workspace/src/github.com/docker/libcontainer/seccomp/jump.go
 
-	# Patch the nsenter writer, this is fixed on master: #16969
-	curl -sSL https://raw.githubusercontent.com/kubernetes/kubernetes/8c1d820435670e410f8fd54401906c3d387c2098/pkg/util/io/writer.go > pkg/util/io/writer.go
+    # Patch the nsenter writer, this is fixed on master: #16969
+    curl -sSL https://raw.githubusercontent.com/kubernetes/kubernetes/8c1d820435670e410f8fd54401906c3d387c2098/pkg/util/io/writer.go > pkg/util/io/writer.go
 
-	# Build kubectl statically
-	export KUBE_STATIC_OVERRIDES="kubectl"
+    # Build kubectl statically
+    export KUBE_STATIC_OVERRIDES="kubectl"
 
-	# Build only these two kubernetes binaries
-	./hack/build-go.sh \
-		cmd/hyperkube \
-		cmd/kubectl
+    # Build only these two kubernetes binaries
+    ./hack/build-go.sh \
+        cmd/hyperkube \
+        cmd/kubectl
 
-	# Copy over the binaries
-	cp _output/local/bin/linux/arm/* $OUTPUT_DIR
+    # Copy over the binaries
+    cp _output/local/bin/linux/arm/* $OUTPUT_DIR
 
 elif [[ $K8S_VERSION == "v1.2"* ]]; then
-	echo "Building a v1.2.x branch of kubernetes. Downloading official binaries."
-	curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/arm/hyperkube > $OUTPUT_DIR/hyperkube
-	curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/arm/kubectl > $OUTPUT_DIR/kubectl
-	chmod +x $OUTPUT_DIR/hyperkube $OUTPUT_DIR/kubectl
+    echo "Building a v1.2.x branch of kubernetes. Downloading official binaries."
+    curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/arm/hyperkube > $OUTPUT_DIR/hyperkube
+    curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/arm/kubectl > $OUTPUT_DIR/kubectl
+    chmod +x $OUTPUT_DIR/hyperkube $OUTPUT_DIR/kubectl
 else
-	echo "Building an old branch of kubernetes. Not supported."
-	exit
+    echo "Building an old branch of kubernetes. Not supported."
+    exit
 fi
 
 
@@ -113,8 +113,8 @@ cd $K8S_DIR/cluster/addons/dns/kube2sky
 
 if [[ $K8S_VERSION == "v1.1"* ]]; then
 
-	# Build for arm, fixed on master, #18669
-	sed -e "s@GOARCH=amd64@GOARCH=arm@" -i Makefile
+    # Build for arm, fixed on master, #18669
+    sed -e "s@GOARCH=amd64@GOARCH=arm@" -i Makefile
 fi
 
 # Build the binary

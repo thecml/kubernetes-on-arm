@@ -18,15 +18,15 @@ function echo_yellow {
 
 
 if [[ ! -f $(which kubectl 2>&1) ]]; then
-	echo_red "kubectl not in PATH"
-	echo_red "Failing"
-	exit
+    echo_red "kubectl not in PATH"
+    echo_red "Failing"
+    exit
 fi
 
 if [[ -z $MASTER_IP ]]; then
-	echo_red "Export MASTER_IP in your env"
-	echo_red "Failing"
-	exit
+    echo_red "Export MASTER_IP in your env"
+    echo_red "Failing"
+    exit
 fi
 
 kube-config info

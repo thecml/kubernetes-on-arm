@@ -29,17 +29,17 @@ function echo_yellow {
 # 
 updateline(){
 if [[ -z $(cat $1 | grep "$2") ]]; then
-	echo -e "\n$3" >> $1
+    echo -e "\n$3" >> $1
 else
-	sed -i "/$2/c\\$3" $1
+    sed -i "/$2/c\\$3" $1
 fi
 }
 
 
 if [[ ! -f $(which kubectl 2>&1) ]]; then
-	echo_red "kubectl not in PATH"
-	echo_red "Failing"
-	exit
+    echo_red "kubectl not in PATH"
+    echo_red "Failing"
+    exit
 fi
 
 kube-config info
@@ -76,9 +76,9 @@ SVCIP=$(kubectl get svc | grep my-nginx | awk '{print $2}')
 SERVICE_WORKING=0
 
 if [[ $(curl -sSL $SVCIP) == "<p>WELCOME TO NGINX</p>" ]]; then
-	echo_green "nginx service test passed"
-	SERVICE_WORKING=1
-	curl -sSL $SVCIP
+    echo_green "nginx service test passed"
+    SERVICE_WORKING=1
+    curl -sSL $SVCIP
 fi
 
 kube-config enable-addon sleep
@@ -102,15 +102,15 @@ DNS_POD_WORKING=0
 APISERVER_PROXY=0
 
 if [[ $(curl -sSL my-nginx.default.svc.kubernetesonarm.com) == "<p>WELCOME TO NGINX</p>" ]]; then
-	echo_green "dns on host test passed"
-	DNS_HOST_WORKING=1
-	curl -sSL my-nginx.default.svc.kubernetesonarm.com
+    echo_green "dns on host test passed"
+    DNS_HOST_WORKING=1
+    curl -sSL my-nginx.default.svc.kubernetesonarm.com
 fi
 
 if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
-	echo_green "dns shorthand names on host test passed"
-	DNS_HOST_SEARCH_WORKING=1
-	curl -sSL my-nginx
+    echo_green "dns shorthand names on host test passed"
+    DNS_HOST_SEARCH_WORKING=1
+    curl -sSL my-nginx
 fi
 
 sleep 5
@@ -119,14 +119,14 @@ sleep 5
 #POD_RESPONSE=$(kubectl exec -it alpine-sleep -- curl -sSL my-nginx.default.svc.kubernetesonarm.com)
 
 #if [[ $POD_RESPONSE == "<p>WELCOME TO NGINX</p>" ]]; then
-#	echo_green "nginx dns in a pod test passed"
-#	DNS_POD_WORKING=1
+#   echo_green "nginx dns in a pod test passed"
+#   DNS_POD_WORKING=1
 #fi
 
 if [[ $(curl -sSLk https://10.0.0.1/api/v1/proxy/namespaces/default/services/my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
-	echo_green "nginx master proxy test passed"
-	curl -sSLk https://10.0.0.1/api/v1/proxy/namespaces/default/services/my-nginx
-	APISERVER_PROXY=1
+    echo_green "nginx master proxy test passed"
+    curl -sSLk https://10.0.0.1/api/v1/proxy/namespaces/default/services/my-nginx
+    APISERVER_PROXY=1
 fi
 
 kube-config enable-addon registry
@@ -139,8 +139,8 @@ sleep 8
 REGISTRY_UP=0
 
 if [[ $(curl -sSLI 10.0.0.20:5000 | head -1) == *"OK"* ]]; then
-	REGISTRY_UP=1
-	echo_green "registry is up"
+    REGISTRY_UP=1
+    echo_green "registry is up"
 fi
 
 docker tag -f luxas/nginx-test 10.0.0.20:5000/nginx-two
@@ -159,10 +159,10 @@ echo
 
 if [[ $OUTPUT_DETAILS == 1 ]]; then
 
-	kubectl get rc,po,svc,ep,secrets,serviceaccounts,ev,hpa,ds --all-namespaces
-	kubectl get no,ns,cs
-	docker images
-	docker ps
+    kubectl get rc,po,svc,ep,secrets,serviceaccounts,ev,hpa,ds --all-namespaces
+    kubectl get no,ns,cs
+    docker images
+    docker ps
 fi
 
 
@@ -174,32 +174,32 @@ echo "Seconds before dns came up: $DNS_SECS"
 echo "Seconds before registry came up: $REGISTRY_SECS"
 echo 
 if [[ $SERVICE_WORKING == 1 ]]; then
-	echo_green "Services in Kubernetes are working"
+    echo_green "Services in Kubernetes are working"
 else
-	echo_red "Services in Kubernetes aren't working"
+    echo_red "Services in Kubernetes aren't working"
 fi
 if [[ $DNS_HOST_WORKING == 1 ]]; then
-	echo_green "DNS on host is working"
+    echo_green "DNS on host is working"
 else
-	echo_red "DNS on host isn't working"
+    echo_red "DNS on host isn't working"
 fi
 if [[ $DNS_HOST_SEARCH_WORKING == 1 ]]; then
-	echo_green "DNS on host with shorthand search commands is working"
+    echo_green "DNS on host with shorthand search commands is working"
 else
-	echo_red "DNS on host with shorthand search commands isn't working"
+    echo_red "DNS on host with shorthand search commands isn't working"
 fi
 #if [[ $DNS_POD_WORKING == 1 ]]; then
-#	echo_green "DNS in pods host is working"
+#   echo_green "DNS in pods host is working"
 #else
-#	echo_red "DNS in pods isn't working"
+#   echo_red "DNS in pods isn't working"
 #fi
 if [[ $APISERVER_PROXY == 1 ]]; then
-	echo_green "The apiserver proxy is working"
+    echo_green "The apiserver proxy is working"
 else
-	echo_red "The apiserver proxy isn't working"
+    echo_red "The apiserver proxy isn't working"
 fi
 if [[ $SERVICE_WORKING == 1 ]]; then
-	echo_green "The registry is up and running"
+    echo_green "The registry is up and running"
 else
-	echo_red "The registry isn't up"
+    echo_red "The registry isn't up"
 fi

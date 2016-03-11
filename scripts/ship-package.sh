@@ -20,7 +20,7 @@ if [[ $# == 1 ]]; then
     # Then package binaries
     if [[ $PACKAGE == 1 ]]; then
 
-		echo "Packaging artifacts..."
+        echo "Packaging artifacts..."
         scripts/package.sh
     fi
 
@@ -34,7 +34,7 @@ if [[ $# == 1 ]]; then
 
     cleanup-path-or-disc
 else
-	cat <<EOF
+    cat <<EOF
 Packages Kubernetes images, binaries, the .deb file and kubectl to a target
 
 Usage:
