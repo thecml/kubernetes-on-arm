@@ -5,15 +5,16 @@ Requires=system-docker.socket
 
 [Service]
 Type=notify
+EnvironmentFile=/etc/kubernetes/k8s.conf
 ExecStart=/usr/bin/docker daemon \
-            -H unix:///var/run/system-docker.sock \
-            -s overlay \
-            --exec-opt native.cgroupdriver=cgroupfs \
-            -p /var/run/system-docker.pid \
-            --iptables=false \
-            --ip-masq=false \
-            --bridge=none \
-            --graph=/var/lib/system-docker
+    -H unix:///var/run/system-docker.sock \
+    -s ${DOCKER_STORAGE_DRIVER} \
+    --exec-opt native.cgroupdriver=cgroupfs \
+    -p /var/run/system-docker.pid \
+    --iptables=false \
+    --ip-masq=false \
+    --bridge=none \
+    --graph=/var/lib/system-docker
 MountFlags=slave
 LimitNOFILE=1048576
 LimitNPROC=1048576
