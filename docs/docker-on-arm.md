@@ -46,7 +46,7 @@ One may also do `docker search armhf` or `docker search rpi`
 
 If you just want to start hacking and test it out, this image is handy:
 ```
-docker run -it luxas/raspbian /bin/bash
+docker run -it resin/rpi-raspbian:jessie /bin/bash
 ```
 
 Check which architecture an image has
@@ -80,7 +80,7 @@ RUN apt-get install mysql
 ```
 
 If you're really lucky, the only thing you need to do is change the `FROM` directive to a corresponding ARM alternative. 
- - `debian` and `ubuntu` is often comparable to `luxas/raspbian` or `resin/rpi-raspbian`
+ - `debian` and `ubuntu` is often comparable to `resin/rpi-raspbian`
  - `ubuntu` is represented by `umiddelb/armhf-ubuntu`. I haven't tried it, but it seemed good.
  - `busybox` and `alpine` is comparable to `luxas/alpine`.
 

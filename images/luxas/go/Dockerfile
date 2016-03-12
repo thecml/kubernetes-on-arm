@@ -1,7 +1,7 @@
-FROM luxas/raspbian
+FROM resin/rpi-raspbian:jessie
 
 # Install software in one layer
-RUN apt-install --no-install-recommends \
+RUN apt-get update && apt-get install -y -q --no-install-recommends \
         # Download software
         curl \
         ca-certificates \
@@ -20,6 +20,7 @@ RUN apt-install --no-install-recommends \
 
         # Executable packer
         upx
+        && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Copy version info
 COPY version.sh /

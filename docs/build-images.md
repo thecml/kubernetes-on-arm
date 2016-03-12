@@ -14,8 +14,7 @@ kube-config build-addons
 # Grab yourself a coffee during the time!
 ```
 
-The script will produce these Docker images:    
- - luxas/raspbian: Is a stripped `resin/rpi-raspbian` image.
+The script will produce these Docker images: 
  - luxas/alpine: Is a Alpine Linux image. Only 8 MB. Based on `mini-containers/base` source.
  - luxas/go: Is a Golang image, which is used for building repositories on ARM.
  - kubernetesonarm/build: This image downloads all source code and builds it for ARM.

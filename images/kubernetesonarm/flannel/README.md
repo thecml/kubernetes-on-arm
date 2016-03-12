@@ -3,7 +3,7 @@
 Built for ARM.
 90 MB
 [Build script](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/build/inbuild.sh)
-Base image: [luxas/raspbian](https://hub.docker.com/r/luxas/raspbian)
+Base image: resin/rpi-raspbian
 The [Dockerfile](https://github.com/luxas/kubernetes-on-arm/blob/master/images/kubernetesonarm/flannel/Dockerfile)
 No arguments are needed for it to work.
 

@@ -71,7 +71,7 @@ Usage:
         - Currently defined addons
                 - dns: Makes all services accessible via DNS
                 - registry: Makes a central docker registry
-                - sleep: A debug addon. Starts two containers: luxas/alpine and luxas/raspbian.
+                - sleep: A debug addon. Starts two containers: luxas/alpine and resin/rpi-raspbian.
                 - loadbalancer: A loadbalancer that exposes services to the outside world. Experimental.
                 - dashboard: A general-purpose Web UI for Kubernetes
 

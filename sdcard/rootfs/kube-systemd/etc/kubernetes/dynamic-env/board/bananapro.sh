@@ -11,7 +11,7 @@ get_uboot_bin_file(){
     TMPDIR=$(mktemp -d /tmp/bananapro-uboot.XXXXX)
 
     cat > $TMPDIR/Dockerfile <<EOF
-FROM luxas/raspbian
+FROM resin/rpi-raspbian:jessie
 
 # Run gpg twice, so it works
 RUN gpg --recv-keys 24BFF712 && gpg --recv-keys 24BFF712    && \

@@ -35,7 +35,7 @@ The official `amd64` service-loadbalancer addon is here: https://github.com/kube
 Just two pods for testing
 
 If you want to test out some kubernetes settings like DNS, this addon is very handy.
-Starts up two containers, from luxas/raspbian and luxas/alpine and they both sleep in 1 hour and restarts forever.
+Starts up two containers, resin/rpi-raspbian and luxas/alpine. They both sleep for one hour and then restarts forever.
 
 Example use:
 ```

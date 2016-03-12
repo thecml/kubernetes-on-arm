@@ -20,7 +20,7 @@ metadata:
   namespace: default
 spec:
   containers:
-  - image: luxas/raspbian
+  - image: resin/rpi-raspbian:jessie
     command:
       - sleep
       - "3600"

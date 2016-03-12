@@ -1,8 +1,12 @@
-FROM luxas/raspbian
+FROM resin/rpi-raspbian:jessie
 
 # Install packages and download the repo
-RUN apt-install git fakeroot ca-certificates \
-	&& git clone https://github.com/luxas/kubernetes-on-arm
+RUN apt-get update && apt-get install -y -q \
+        git \
+        fakeroot \
+        ca-certificates \
+        && rm -rf /var/cache/apt/* /var/lib/apt/lists/* \
+        && git clone https://github.com/luxas/kubernetes-on-arm
 
 # Copy the script and the control file
 COPY makedeb.sh debian-control-file /

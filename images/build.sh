@@ -20,9 +20,7 @@ images/build.sh kubernetesonarm/etcd
 ----> will build kubernetesonarm/build
 ----> kubernetesonarm/build depends on luxas/go
 ------> will build luxas/go
-------> luxas/go depends on luxas/raspbian
---------> builds luxas/raspbian
---------> luxas/raspbian depends on resin/rpi-raspbian. Pull from Docker Hub.
+------> luxas/go depends on resin/rpi-raspbian. Pull from Docker Hub.
 
 How does this script know which image another image depends on?
 The script checks the Dockerfile!
