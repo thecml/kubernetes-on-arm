@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage(){
-	cat <<EOF
+    cat <<EOF
 Run a test...
 
 Tests just now:
@@ -12,8 +12,8 @@ EOF
 cd /etc/kubernetes/source/scripts
 
 if [[ $# == 0 ]]; then
-	usage
-	exit
+    usage
+    exit
 fi
 
 mkdir -p logs
