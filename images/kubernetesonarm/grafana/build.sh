@@ -2,4 +2,4 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 cp ../_bin/latest/influxd .
 
-docker build -t kubernetesonarm/influxdb .
+docker build -t kubernetesonarm/grafana .

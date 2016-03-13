@@ -13,6 +13,7 @@ ETCD_DIR="$GOPATH/src/github.com/coreos/etcd"
 FLANNEL_DIR="$GOPATH/src/github.com/coreos/flannel"
 REGISTRY_DIR="$GOPATH/src/github.com/docker/distribution"
 INFLUXDB_DIR="$GOPATH/src/github.com/influxdb/influxdb"
+GRAFANA_DIR="$GOPATH/src/github.com/grafana/grafana"
 OUTPUT_DIR="/build/bin"
 
 # Make directories
