@@ -105,6 +105,7 @@ spec:
         - /heapster
         - --source=kubernetes
         - --sink=influxdb:http://monitoring-influxdb:8086
+        - --metric_resolution=60s
         volumeMounts:
         - name: ssl-certs
           mountPath: /etc/ssl/certs
