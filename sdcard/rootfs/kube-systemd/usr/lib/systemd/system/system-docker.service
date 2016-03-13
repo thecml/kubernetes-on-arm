@@ -7,10 +7,11 @@ Requires=system-docker.socket
 Type=notify
 EnvironmentFile=/etc/kubernetes/k8s.conf
 ExecStart=/usr/bin/docker daemon \
-    -H unix:///var/run/system-docker.sock \
-    -s ${DOCKER_STORAGE_DRIVER} \
+    --host=unix:///var/run/system-docker.sock \
+    --storage-driver=${DOCKER_STORAGE_DRIVER} \
     --exec-opt native.cgroupdriver=cgroupfs \
-    -p /var/run/system-docker.pid \
+    --exec-root=/var/run/system-docker \
+    --pidfile=/var/run/system-docker.pid \
     --iptables=false \
     --ip-masq=false \
     --bridge=none \
