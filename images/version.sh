@@ -8,8 +8,9 @@
 K8S_VERSION='v1.2.0-beta.1'
 ETCD_VERSION='v2.2.5'
 FLANNEL_VERSION='v0.5.5'
-REGISTRY_VERSION='v2.3.0'
+REGISTRY_VERSION='v2.3.1'
 HEAPSTER_VERSION='v1.0.0-beta1'
+INFLUXDB_VERSION='v0.10.3'
 
 ## OTHER PROJECTS ##
 # For the moment, go1.4.3 is a better choice than go1.5.1

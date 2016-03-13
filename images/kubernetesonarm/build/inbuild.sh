@@ -12,7 +12,7 @@ HEAPSTER_DIR="$GOPATH/src/k8s.io/heapster"
 ETCD_DIR="$GOPATH/src/github.com/coreos/etcd"
 FLANNEL_DIR="$GOPATH/src/github.com/coreos/flannel"
 REGISTRY_DIR="$GOPATH/src/github.com/docker/distribution"
-INFLUXDB_DIR="$GOPATH/src/github.com/influxdata/influxdb"
+INFLUXDB_DIR="$GOPATH/src/github.com/influxdb/influxdb"
 OUTPUT_DIR="/build/bin"
 
 # Make directories
@@ -138,7 +138,7 @@ echo "skydns built"
 curl -sSL https://github.com/docker/distribution/archive/$REGISTRY_VERSION.tar.gz | tar -xz -C $REGISTRY_DIR --strip-components=1
 cd $REGISTRY_DIR/cmd/registry
 
-GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH go build
+CGO_ENABLED=0 GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH go build -a --installsuffix cgo
 
 # include rados, oss and gce storage drivers (optional)
 # apt-get install -y librados-dev apache2-utils
@@ -181,7 +181,7 @@ curl -sSL https://github.com/kubernetes/heapster/archive/$HEAPSTER_VERSION.tar.g
 cd $HEAPSTER_DIR
 
 CGO_ENABLED=0 godep go build -a -installsuffix cgo ./... 
-CGO_ENABLED=0 godep go build -a -installsuffix cgo
+CGO_ENABLED=0 godep go build -a -installsuffix cgo -o heapster ./metrics
 
 cp heapster $OUTPUT_DIR
 echo "heapster built"
@@ -193,6 +193,9 @@ curl -sSL https://github.com/influxdata/influxdb/archive/$INFLUXDB_VERSION.tar.g
 cd $INFLUXDB_DIR
 
 go get github.com/sparrc/gdm
+
+# TODO: This Godep file isn't on release 0.10.x. Remove this when we have 0.11+
+curl -sSL https://raw.githubusercontent.com/influxdata/influxdb/master/Godeps > Godeps
 
 gdm restore -v
 

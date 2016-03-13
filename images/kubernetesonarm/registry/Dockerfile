@@ -1,9 +1,4 @@
-FROM resin/rpi-raspbian:jessie
-
-# Install certificates
-RUN apt-get update && apt-get install -y -q \
-        ca-certificates \
-        && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+FROM luxas/alpine
 
 # Copy the binary and the config file
 COPY registry /
