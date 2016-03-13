@@ -17,11 +17,13 @@ spec:
       containers:
       - name: influxdb
         image: kubernetesonarm/influxdb
+        imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /data
           name: influxdb-storage
 #      - name: grafana
 #        image: kubernetesonarm/grafana
+#        imagePullPolicy: IfNotPresent
 #        env:
 #          - name: INFLUXDB_SERVICE_URL
 #            value: http://monitoring-influxdb:8086
@@ -43,8 +45,8 @@ spec:
       volumes:
       - name: influxdb-storage
         emptyDir: {}
-#      - name: grafana-storage
-#        emptyDir: {}
+      - name: grafana-storage
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

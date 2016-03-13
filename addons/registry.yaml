@@ -19,6 +19,7 @@ spec:
       containers:
       - name: registry
         image: kubernetesonarm/registry
+        imagePullPolicy: IfNotPresent
         resources:
           limits:
             cpu: 100m

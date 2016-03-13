@@ -21,6 +21,7 @@ spec:
         role: loadbalancer
       containers:
       - image: kubernetesonarm/loadbalancer
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
             path: /healthz
