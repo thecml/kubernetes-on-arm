@@ -19,35 +19,55 @@ spec:
       containers:
       - name: etcd
         image: kubernetesonarm/etcd
+        imagePullPolicy: IfNotPresent
         resources:
           limits:
             cpu: 100m
             memory: 50Mi
         command:
-        - /usr/bin/etcd
-        - -data-dir
+        - /usr/local/bin/etcd
+        - --data-dir
         - /var/etcd/data
-        - -listen-client-urls
+        - --listen-client-urls
         - http://127.0.0.1:2379,http://127.0.0.1:4001
-        - -advertise-client-urls
+        - --advertise-client-urls
         - http://127.0.0.1:2379,http://127.0.0.1:4001
-        - -initial-cluster-token
+        - --initial-cluster-token
         - skydns-etcd
         volumeMounts:
         - name: etcd-storage
           mountPath: /var/etcd/data
       - name: kube2sky
         image: kubernetesonarm/kube2sky
+        imagePullPolicy: IfNotPresent
         resources:
           limits:
             cpu: 100m
             memory: 50Mi
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8081
+            scheme: HTTP
+          # we poll on pod startup for the Kubernetes master service and
+          # only setup the /readiness HTTP server once that's available.
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
         args:
 #        command = "/kube2sky"
-        - -domain=DNS_DOMAIN
-#        - -kube_master_url=KUBEMASTER
+        - --domain=DNS_DOMAIN
       - name: skydns
         image: kubernetesonarm/skydns
+        imagePullPolicy: IfNotPresent
         resources:
           limits:
             cpu: 100m
@@ -56,6 +76,7 @@ spec:
         # command = "/skydns"
         - -machines=http://localhost:4001
         - -addr=0.0.0.0:53
+        - -ns-rotate=false
         - -domain=DNS_DOMAIN
         ports:
         - containerPort: 53
@@ -64,15 +85,9 @@ spec:
         - containerPort: 53
           name: dns-tcp
           protocol: TCP
-#        livenessProbe:
-#          httpGet:
-#            path: /healthz
-#            port: 8080
-#            scheme: HTTP
-#          initialDelaySeconds: 30
-#          timeoutSeconds: 5
       - name: healthz
         image: kubernetesonarm/exechealthz
+        imagePullPolicy: IfNotPresent
         resources:
           limits:
             cpu: 10m
