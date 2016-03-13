@@ -2,7 +2,6 @@
 
 # Catch errors
 trap 'exit' ERR
-set -e
 
 if [[ $K8S_DEBUG == 1 ]]; then
     set -x
@@ -22,8 +21,8 @@ DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d"
 # The images that are required
 REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
 REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
-BUILD_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry $K8S_PREFIX/loadbalancer")
-REQUIRED_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry $K8S_PREFIX/loadbalancer $GCR_PREFIX/kubernetes-dashboard-arm:v0.1.0")
+BUILD_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry $K8S_PREFIX/loadbalancer $K8S_PREFIX/heapster $K8S_PREFIX/influxdb")
+REQUIRED_ADDON_IMAGES=("${BUILD_ADDON_IMAGES[@]} $GCR_PREFIX/kubernetes-dashboard-arm:v1.0.0")
 
 STATIC_DOCKER_DOWNLOAD="https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.3/docker-1.10.0"
 
@@ -354,7 +353,7 @@ wait_for_system_docker(){
             echo "system-docker failed to start. Exiting..." 2>&1
             exit
         fi
-      sleep 1
+        sleep 1
     done
 }
 
@@ -367,7 +366,7 @@ wait_for_etcd(){
             echo "etcd failed to start. Exiting..." 2>&1
             exit
         fi
-      sleep 1
+        sleep 1
     done
 }
 
@@ -380,7 +379,7 @@ wait_for_flannel(){
             echo "flannel failed to start. Exiting..." 2>&1
             exit
         fi
-    sleep 1
+        sleep 1
     done
 }
 
@@ -393,7 +392,7 @@ wait_for_docker(){
             echo "docker failed to start. Exiting..." 2>&1
             exit
         fi
-      sleep 1
+        sleep 1
     done
 }
 
@@ -529,12 +528,9 @@ start-addon(){
         # The addon images are required for this operation
         require-images ${REQUIRED_ADDON_IMAGES[@]}
 
-        # The kube-system namespace is required
-        NAMESPACE=`eval "${KUBECTL} get namespaces | grep kube-system | cat"`
-
         # Create kube-system if necessary
-        if [[ ! "$NAMESPACE" ]]; then
-            ${KUBECTL} create -f $ADDONS_DIR/kube-system.yaml
+        if [[ -z $(${KUBECTL} get ns | grep kube-system) ]]; then
+            ${KUBECTL} create ns kube-system
         fi
 
         # Source the os file and use that upgrade method
@@ -549,7 +545,6 @@ start-addon(){
                     os_addon_$ADDON
                 fi
 
-                # TODO: Maybe fix this better in the future
                 if [[ $ADDON == "dns" ]]; then
 
                     # Replace the variables before passing to kubectl
