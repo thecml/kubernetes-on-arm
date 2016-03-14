@@ -37,7 +37,7 @@ ExecStartPost=/usr/bin/docker run -d \
         --privileged \
         kubernetesonarm/hyperkube /hyperkube proxy \
             --master=http://${K8S_MASTER_IP}:8080 \
-            --proxy-mode=iptables \
+            --proxy-mode=userspace \
             --resource-container="" \
             --v=2
 ExecStop=/usr/bin/docker stop k8s-worker k8s-worker-proxy
