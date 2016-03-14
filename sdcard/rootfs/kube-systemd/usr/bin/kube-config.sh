@@ -568,7 +568,7 @@ stop-addon(){
     if [[ $(is-active) == 1 ]]; then
 
         for ADDON in $@; do
-            if [[ -d $ADDONS_DIR/${ADDON} ]]; then
+            if [[ -f $ADDONS_DIR/${ADDON}.yaml ]]; then
 
                 ${KUBECTL} delete -f $ADDONS_DIR/${ADDON}.yaml
 
