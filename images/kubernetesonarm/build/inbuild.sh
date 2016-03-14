@@ -207,11 +207,18 @@ echo "influxdb built"
 
 ## GRAFANA ##
 
-# go get github.com/grafana/grafana
-# cd $GOPATH/src/github.com/grafana/grafana
-# go run build.go setup
-# godep restore
-# go run build.go build
+# Note that this does just work with go1.5+, so this is hand-made for v0.7.0
+#curl -sSL https://github.com/grafana/grafana/archive/$GRAFANA_VERSION.tar.gz | tar -C $GRAFANA_DIR -xz --strip-components=1
+#cd $GRAFANA_DIR
+
+#go run build.go setup
+#godep restore
+#go run build.go build
+
+#cp bin/grafana-server $OUTPUT_DIR
+
+curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.5/grafana-server > $OUTPUT_DIR/grafana-server
+chmod +x $OUTPUT_DIR/grafana-server
 
 ## SCALE DEMO ##
 #cd $K8S_CONTRIB/scale-demo/aggregator
