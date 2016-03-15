@@ -200,6 +200,9 @@ curl -sSL https://raw.githubusercontent.com/influxdata/influxdb/master/Godeps > 
 
 gdm restore -v
 
+# InfluxDB requires this
+ln -s $GOPATH/src/github.com/influxdata/usage-client $GOPATH/src/github.com/influxdb/
+
 CGO_ENABLED=0 go build -a --installsuffix cgo --ldflags="-s" -o influxd ./cmd/influxd
 
 cp influxd $OUTPUT_DIR
@@ -219,6 +222,7 @@ echo "influxdb built"
 
 curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.5/grafana-server > $OUTPUT_DIR/grafana-server
 chmod +x $OUTPUT_DIR/grafana-server
+echo "grafana built"
 
 ## SCALE DEMO ##
 #cd $K8S_CONTRIB/scale-demo/aggregator

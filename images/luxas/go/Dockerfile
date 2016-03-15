@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
         libc6-dev \
 
         # Executable packer
-        upx
+        upx \
         && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Copy version info
