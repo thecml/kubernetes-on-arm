@@ -14,15 +14,32 @@ KUBERNETES_CONFIG=$KUBERNETES_DIR/k8s.conf
 PROJECT_SOURCE=$KUBERNETES_DIR/source
 KUBECTL=$BINARIES_DIR/kubectl
 K8S_PREFIX="kubernetesonarm"
-GCR_PREFIX="gcr.io/google_containers"
 
 DOCKER_DROPIN_DIR="/usr/lib/systemd/system/docker.service.d"
 
 # The images that are required
-REQUIRED_MASTER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/etcd $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
-REQUIRED_WORKER_IMAGES=("$K8S_PREFIX/flannel $K8S_PREFIX/hyperkube $K8S_PREFIX/pause")
-BUILD_ADDON_IMAGES=("$K8S_PREFIX/skydns $K8S_PREFIX/kube2sky $K8S_PREFIX/exechealthz $K8S_PREFIX/registry $K8S_PREFIX/loadbalancer $K8S_PREFIX/heapster $K8S_PREFIX/influxdb")
-REQUIRED_ADDON_IMAGES=("${BUILD_ADDON_IMAGES[@]} $GCR_PREFIX/kubernetes-dashboard-arm:v1.0.0")
+WORKER_IMAGES=(
+    "$K8S_PREFIX/flannel"
+    "$K8S_PREFIX/hyperkube"
+    "$K8S_PREFIX/pause"
+)
+
+MASTER_IMAGES=(
+    ${WORKER_IMAGES[@]}
+    "$K8S_PREFIX/etcd"
+)
+
+ALL_IMAGES=(
+    ${MASTER_IMAGES[@]}
+    "$K8S_PREFIX/skydns"
+    "$K8S_PREFIX/kube2sky"
+    "$K8S_PREFIX/exechealthz"
+    "$K8S_PREFIX/registry"
+    "$K8S_PREFIX/loadbalancer"
+    "$K8S_PREFIX/heapster"
+    "$K8S_PREFIX/influxdb"
+    "$K8S_PREFIX/grafana"
+)
 
 STATIC_DOCKER_DOWNLOAD="https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.3/docker-1.10.0"
 
@@ -58,8 +75,7 @@ Usage:
     kube-config install - Installs docker and makes your board ready for kubernetes
     kube-config upgrade - Upgrade current operating system packages to latest version.
 
-    kube-config build-images - Build the Kubernetes images locally
-    kube-config build-addons - Build the Kubernetes addon images locally
+    kube-config build-images - Build all Kubernetes on ARM images locally
     kube-config build [image] - Build an image, which is included in the kubernetes-on-arm repository
         - Check for options in $PROJECT_SOURCE/images
 
@@ -71,8 +87,9 @@ Usage:
                 - dns: Makes all services accessible via DNS
                 - registry: Makes a central docker registry
                 - sleep: A debug addon. Starts two containers: luxas/alpine and resin/rpi-raspbian.
-                - loadbalancer: A loadbalancer that exposes services to the outside world. Experimental.
+                - loadbalancer: A loadbalancer that exposes services to the outside world.
                 - dashboard: A general-purpose Web UI for Kubernetes
+                - heapster: Cluster monitoring for Kubernetes. Has a frontend with graphs how the cluster resources are used.
 
 
     kube-config disable-node - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong or you just want to stop Kubernetes
@@ -234,10 +251,10 @@ swap(){
 
 # This is faster than Docker Hub
 download_imgs(){
+
     # Approx. 10 secs faster than doing this with two commands, now ~160 secs
     echo "Downloading Kubernetes docker images from Github"
     curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | gzip -dc | docker load
-    # v0.5.5 curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/$LATEST_DOWNLOAD_RELEASE/images.tar.gz | tar -xz -O | docker load
 }
 
 ### --------------------------------- HELPERS -----------------------------------
@@ -415,7 +432,7 @@ start-master(){
     fi
 
     # Use our normal check-and-pull process
-    require-images ${REQUIRED_MASTER_IMAGES[@]}
+    require-images ${MASTER_IMAGES[@]}
 
     # Say that our master is on this board
     updateconfig K8S_MASTER_IP 127.0.0.1
@@ -490,7 +507,7 @@ EOF
     fi
 
     # TODO: checks for flannel in main docker, but it may already be in system-docker
-    require-images ${REQUIRED_WORKER_IMAGES[@]}
+    require-images ${WORKER_IMAGES[@]}
 
     echo "Transferring images to system-docker, if necessary"
     # Load the images which is necessary to system-docker
@@ -523,10 +540,8 @@ EOF
 }
 
 start-addon(){
-    if [[ $(is-active) == 1 ]]; then
 
-        # The addon images are required for this operation
-        require-images ${REQUIRED_ADDON_IMAGES[@]}
+    if [[ $(is-active) == 1 ]]; then
 
         # Create kube-system if necessary
         if [[ -z $(${KUBECTL} get ns | grep kube-system) ]]; then
@@ -565,6 +580,7 @@ start-addon(){
 }
 
 stop-addon(){
+
     if [[ $(is-active) == 1 ]]; then
 
         for ADDON in $@; do
@@ -611,8 +627,14 @@ remove-etcd-datadir(){
     esac
 }
 umount-kubelet(){
-    if [[ ! -z $(mount | grep /var/lib/kubelet | awk '{print $3}') ]]; then
-        umount $(mount | grep /var/lib/kubelet | awk '{print $3}')
+    # First, umount /var/lib/kubelet itself
+    if [[ ! -z $(mount | grep "/var/lib/kubelet " | awk '{print $3}') ]]; then
+        umount $(mount | grep "/var/lib/kubelet " | awk '{print $3}')
+    fi
+
+    # Then, umount /var/lib/kubelet/*
+    if [[ ! -z $(mount | grep /var/lib/kubelet/ | awk '{print $3}') ]]; then
+        umount $(mount | grep /var/lib/kubelet/ | awk '{print $3}')
     fi
 }
 
@@ -657,13 +679,7 @@ version(){
                 echo
                 echo "CPU Time (minutes):"
                 echo "kubelet: $(getcputime kubelet)"
-
-                # docker 1.7.1 doesn't have docker ps --format. 1.8.0 and newer does
-                # and older versions than 1.7.1 isn't supported
-                if [[ $DOCKER_VERSION != "1.7.1" ]]; then
-                    echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
-                fi
-
+                echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
 
                 if [[ $(get-node-type) == "master" ]]; then
                     echo "apiserver: $(getcputime apiserver)"
@@ -698,9 +714,7 @@ case $1 in
         shift
         $PROJECT_SOURCE/images/build.sh $@;;
     'build-images')
-        $PROJECT_SOURCE/images/build.sh ${REQUIRED_MASTER_IMAGES[@]};;
-    'build-addons')
-        $PROJECT_SOURCE/images/build.sh ${BUILD_ADDON_IMAGES[@]};;
+        $PROJECT_SOURCE/images/build.sh ${ALL_IMAGES[@]};;
 
 
     'enable-master')
