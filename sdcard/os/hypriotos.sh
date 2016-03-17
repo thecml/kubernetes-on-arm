@@ -81,7 +81,7 @@ generaldownload(){
     sync
 
     # Clear old mounts, if any
-    umount $ROOT_PARTITION
+    umount $ROOT_PARTITION >> $LOGFILE 2>&1
     # Force kernel to reload partitions
     partprobe
 
