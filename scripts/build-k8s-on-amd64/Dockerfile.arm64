@@ -5,15 +5,15 @@ MAINTAINER Lucas Käldström <lucas.kaldstrom@hotmail.co.uk>
 # Enable cgo cross-compilation for armel
 RUN echo "deb http://emdebian.org/tools/debian/ jessie main" > /etc/apt/sources.list.d/crosstools.list \
     && curl -s http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | apt-key add - \
-    && dpkg --add-architecture armel \
+    && dpkg --add-architecture aarch64 \
     && apt-get update \
-    && apt-get install -y build-essential crossbuild-essential-armel rsync upx \
+    && apt-get install -y build-essential crossbuild-essential-aarch64 rsync upx \
     && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Important ENV variables
 ENV GOARM=6 \
-    GOARCH=arm  \
-    CC=arm-linux-gnueabi-gcc \
+    GOARCH=arm64  \
+    CC=aarch64-linux-gnu-gcc \
     K8S_DIR="$GOPATH/src/k8s.io/kubernetes" \
     K8S_CONTRIB="$GOPATH/src/k8s.io/contrib" \
     ETCD_DIR="$GOPATH/src/github.com/coreos/etcd" \
@@ -24,7 +24,7 @@ ENV GOARM=6 \
     FLANNEL_VERSION=v0.5.5 \
     K8S_VERSION=v1.2.0 \
     REGISTRY_VERSION=v2.3.1 \
-    KUBE_BUILD_PLATFORMS="linux/arm"
+    KUBE_BUILD_PLATFORMS="linux/arm64"
 
 # Make directories
 RUN mkdir -p $OUT_DIR \
@@ -52,7 +52,7 @@ RUN curl -sSL https://github.com/coreos/flannel/archive/$FLANNEL_VERSION.tar.gz 
 RUN curl -sSL https://github.com/kubernetes/kubernetes/archive/$K8S_VERSION.tar.gz | tar -C $K8S_DIR -xz --strip-components=1 \
     && cd $K8S_DIR \
     && CGO_ENABLED=1 ./hack/build-go.sh cmd/hyperkube cmd/kubectl \
-    && cp _output/local/bin/linux/arm/* $OUT_DIR
+    && cp _output/local/bin/linux/arm64/* $OUT_DIR
 
 # Build two compilation tools for host arch
 RUN GOARCH=amd64 go get github.com/tools/godep \
@@ -69,7 +69,7 @@ RUN cd $K8S_DIR/cluster/addons/dns/kube2sky \
     && cp kube2sky $OUT_DIR
 
 RUN CGO_ENABLED=0 go get -a -installsuffix cgo --ldflags '-w' github.com/skynetservices/skydns \
-    && cp $GOPATH/bin/linux_arm/skydns $OUT_DIR
+    && cp $GOPATH/bin/linux_arm64/skydns $OUT_DIR
 
 # Build Kubernetes contrib binaries
 RUN curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar -xz -C $K8S_CONTRIB --strip-components=1 \
