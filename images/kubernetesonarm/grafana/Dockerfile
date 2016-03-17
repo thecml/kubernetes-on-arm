@@ -6,6 +6,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# TODO: read grafana version
 RUN dpkg --add-architecture amd64 \
     && curl -sSL https://grafanarel.s3.amazonaws.com/builds/grafana_2.6.0_amd64.deb > /tmp/grafana.deb \
     && dpkg --force-all -i /tmp/grafana.deb \
