@@ -5,11 +5,11 @@
 
 ## GITHUB PROJECTS ##
 # These projects are downloaded from "github.com/user/repo/archive/$VERSION.tar.gz"
-K8S_VERSION='v1.2.0-beta.1'
+K8S_VERSION='v1.2.0'
 ETCD_VERSION='v2.2.5'
 FLANNEL_VERSION='v0.5.5'
 REGISTRY_VERSION='v2.3.1'
-HEAPSTER_VERSION='v1.0.0-beta1'
+HEAPSTER_VERSION='v1.0.0'
 INFLUXDB_VERSION='v0.10.3'
 GRAFANA_VERSION='v2.6.0'
 
@@ -19,7 +19,3 @@ GRAFANA_VERSION='v2.6.0'
 # And there's no big difference in the result
 # TODO: use prebuilt official go1.6
 GO_VERSION='1.4.3'
-
-# Enable go1.5.1 by commenting above and uncommenting here
-# GO_BOOTSTRAP_VERSION='go1.4.3'
-# GO_VERSION='go1.5.2'
