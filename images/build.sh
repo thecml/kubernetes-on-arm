@@ -32,69 +32,68 @@ EOF
 
 # Retrieve an image's dependencies
 build_dep(){
-    IMAGE=$1
+    local IMAGE=$1
 
     # Return if empty or scratch, those images have no deps
-    if [[ $IMAGE == "" || $IMAGE == "scratch" ]]; then
-    	exit
-    fi
+    if [[ $IMAGE != "" && $IMAGE != "scratch" ]]; then
 
-    # Read dependencies from the custom file, they always takes precedence
-    if [[ -f ./$IMAGE/deps ]]; then
+        # Read dependencies from the custom file, they always takes precedence
+        if [[ -f ./$IMAGE/deps ]]; then
 
-	    # Read every line and build it
-	    for line in "$(cat ./$IMAGE/deps)"; do 
-	    	build $line
-	  	done
-    fi
+            # Read every line and build it
+            for line in "$(cat ./$IMAGE/deps)"; do 
+                build $line
+            done
+        fi
 
 
-    # Check if there is an Dockerfile
-    if [[ -f ./$IMAGE/Dockerfile ]]; then
+        # Check if there is an Dockerfile
+        if [[ -f ./$IMAGE/Dockerfile ]]; then
 
-      # Build the image that this image depends on from the Dockerfile
-      build $(cat ./$IMAGE/Dockerfile | grep "FROM " | awk '{print $2}' | grep -o "[^:]*" | grep "/")
+          # Build the image that this image depends on from the Dockerfile
+          build $(cat ./$IMAGE/Dockerfile | grep "FROM " | awk '{print $2}' | cut -d: -f1)
+        fi
     fi
 }
 
 # Builds an image
 build() {
 
-	# Does that image exist?
-    if [[ -z $(docker images | grep "$1" | grep "$VERSION") ]]; then
+    # Does that image exist?
+    if [[ -z $(docker images | grep "$1 " | grep " $VERSION ") ]]; then
 
-    	# First, build all this image's dependencies
+        # First, build all this image's dependencies
         echo "To build: $1"
         build_dep "$1"
 
         # Then, build this image. Only build if the image directory exists, otherwise we assume it´s from Docker Hub
         if [[ -d $1 ]]; then
 
-        	echo "Building: $1"
+            echo "Building: $1"
 
-        	# If the directory hasn't a build.sh file, then a normal docker build is invoked
-        	if [[ ! -f ./$1/build.sh ]]; then
+            # If the directory hasn't a build.sh file, then a normal docker build is invoked
+            if [[ ! -f ./$1/build.sh ]]; then
 
-    			docker build -t $1 $1
-        	else
-		        # Then build the image via the build file
-		        time ./$1/build.sh
-		    fi
+                docker build -t $1 $1
+            else
+                # Then build the image via the build file
+                time ./$1/build.sh
+            fi
 
-		    # Tag the image with current version
-	        docker tag "$1" "$1":$VERSION
-	   	fi
+            # Tag the image with current version
+            docker tag "$1" "$1":$VERSION
+        fi
     else
         echo "Already built: $1"
     fi
 }
 
-# If no args is specifyed, output usage
+# If no args is specified, output usage
 if [[ $# = 0 ]]; then
     usage
 else
-	# Otherwise, build every arg
-	for IMG in "$@"; do
-		build $IMG
-	done
+    # Otherwise, build every arg
+    for IMG in "$@"; do
+        build $IMG
+    done
 fi
