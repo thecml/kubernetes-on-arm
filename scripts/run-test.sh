@@ -5,7 +5,7 @@ usage(){
 Run a test...
 
 Tests just now:
-$(ls -l tests | awk '{print $9}' | grep -o "[^.]*" | grep -v "sh")
+$(ls -l tests | awk '{print $9}' | cut -d. -f1)
 EOF
 }
 

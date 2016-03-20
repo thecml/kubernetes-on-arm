@@ -45,8 +45,10 @@ fi
 kube-config info
 
 # Change dns settings before starting kubelet
-updateline /etc/kubernetes/k8s.conf "DNS_DOMAIN" "DNS_DOMAIN=kubernetesonarm.com"
-updateline /etc/kubernetes/k8s.conf "DNS_IP" "DNS_IP=10.0.0.110"
+TEST_DNS_DOMAIN="cluster.local"
+TEST_DNS_IP="10.0.0.10"
+updateline /etc/kubernetes/k8s.conf "DNS_DOMAIN" "DNS_DOMAIN=${TEST_DNS_DOMAIN}"
+updateline /etc/kubernetes/k8s.conf "DNS_IP" "DNS_IP=${TEST_DNS_IP}"
 
 # Start Kubernetes
 time kube-config enable-master
@@ -61,14 +63,13 @@ docker ps
 
 kube-config info
 
-kubectl run my-nginx --image=luxas/nginx-test --replicas=3
+kubectl run my-nginx --image=luxas/nginx-test --replicas=3 --expose --port=80
 
 NGINX_SECS=0
-while [[ $(kubectl get po | grep "my-nginx" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((NGINX_SECS++)); done
+while [[ $(kubectl get po | grep "my-nginx" | grep "Running" | wc -l) != 3 ]]; do sleep 1; ((NGINX_SECS++)); done
 
 echo_yellow "Seconds before nginx came up: $NGINX_SECS"
 
-kubectl expose rc/my-nginx --port=80
 
 sleep 2
 
@@ -95,16 +96,16 @@ DNS_SECS=0
 while [[ $(kubectl --namespace=kube-system get po | grep "kube-dns" | awk '{print $3}' | head -1) != "Running" ]]; do sleep 1; ((DNS_SECS++)); done
 echo_yellow "Seconds before dns came up: $DNS_SECS"
 
-sleep 15
+sleep 10
 DNS_HOST_WORKING=0
 DNS_HOST_SEARCH_WORKING=0
 DNS_POD_WORKING=0
 APISERVER_PROXY=0
 
-if [[ $(curl -sSL my-nginx.default.svc.kubernetesonarm.com) == "<p>WELCOME TO NGINX</p>" ]]; then
+if [[ $(curl -sSL my-nginx.default.svc.${TEST_DNS_DOMAIN}) == "<p>WELCOME TO NGINX</p>" ]]; then
     echo_green "dns on host test passed"
     DNS_HOST_WORKING=1
-    curl -sSL my-nginx.default.svc.kubernetesonarm.com
+    curl -sSL my-nginx.default.svc.${TEST_DNS_DOMAIN}
 fi
 
 if [[ $(curl -sSL my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
@@ -116,12 +117,11 @@ fi
 sleep 5
 
 # TODO: flaky
-#POD_RESPONSE=$(kubectl exec -it alpine-sleep -- curl -sSL my-nginx.default.svc.kubernetesonarm.com)
 
-#if [[ $POD_RESPONSE == "<p>WELCOME TO NGINX</p>" ]]; then
-#   echo_green "nginx dns in a pod test passed"
-#   DNS_POD_WORKING=1
-#fi
+if [[ $(kubectl exec -it alpine-sleep -- curl -sSL my-nginx.default.svc.${TEST_DNS_DOMAIN}) == "<p>WELCOME TO NGINX</p>" ]]; then
+   echo_green "nginx dns in a pod test passed"
+   DNS_POD_WORKING=1
+fi
 
 if [[ $(curl -sSLk https://10.0.0.1/api/v1/proxy/namespaces/default/services/my-nginx) == "<p>WELCOME TO NGINX</p>" ]]; then
     echo_green "nginx master proxy test passed"
@@ -188,11 +188,11 @@ if [[ $DNS_HOST_SEARCH_WORKING == 1 ]]; then
 else
     echo_red "DNS on host with shorthand search commands isn't working"
 fi
-#if [[ $DNS_POD_WORKING == 1 ]]; then
-#   echo_green "DNS in pods host is working"
-#else
-#   echo_red "DNS in pods isn't working"
-#fi
+if [[ $DNS_POD_WORKING == 1 ]]; then
+   echo_green "DNS in pods host is working"
+else
+   echo_red "DNS in pods isn't working"
+fi
 if [[ $APISERVER_PROXY == 1 ]]; then
     echo_green "The apiserver proxy is working"
 else

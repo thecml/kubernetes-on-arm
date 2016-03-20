@@ -2,8 +2,6 @@
 
 kube-config info
 
-time kube-config build-images
+cd /etc/kubernetes/source
 
-time kube-config build-addons
-
-./package.sh
+BUILD=1 PACKAGE=1 scripts/ship-package.sh $(pwd)/$(cat version)
