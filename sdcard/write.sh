@@ -69,7 +69,7 @@ Explanation:
             - rancheros - RancherOS (only with rpi-2 and rpi-3)
     rootfs - Prepopulated rootfs with scripts and such.
         - Currently supported: 
-            - kube-systemd - Kubernetes scripts prepopulated (only with archlinux and hypriotos)
+            - kube-systemd - Kubernetes scripts prepopulated (not with rancheros)
 
 Example:
 sdcard/write.sh /dev/sdb rpi-2 archlinux kube-systemd
