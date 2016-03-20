@@ -25,7 +25,7 @@ EOF
 fi
 
 # Build the image
-kube-config build kubernetesonarm/make-deb
+images/build.sh kubernetesonarm/make-deb
 
 # Run the container
 CID=$(docker run -d kubernetesonarm/make-deb $2 $3)
@@ -46,5 +46,5 @@ cp build/* $OUTDIR
 rm -r build
 docker rm $CID
 
-# Last, clean up the directory
+# Lastly, clean up the directory
 cleanup-path-or-disc
