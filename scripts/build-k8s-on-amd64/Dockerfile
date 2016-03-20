@@ -28,12 +28,12 @@ ENV GOARM=6 \
 
 # Make directories
 RUN mkdir -p $OUT_DIR \
-            $K8S_DIR \
-            $K8S_CONTRIB \
-            $GOPATH/src/github.com/GoogleCloudPlatform \
-            $ETCD_DIR \
-            $FLANNEL_DIR \
-            $REGISTRY_DIR \
+        $K8S_DIR \
+        $K8S_CONTRIB \
+        $GOPATH/src/github.com/GoogleCloudPlatform \
+        $ETCD_DIR \
+        $FLANNEL_DIR \
+        $REGISTRY_DIR \
     && ln -s $GOPATH/src/k8s.io/kubernetes $GOPATH/src/github.com/GoogleCloudPlatform/kubernetes
 
 # Build etcd
