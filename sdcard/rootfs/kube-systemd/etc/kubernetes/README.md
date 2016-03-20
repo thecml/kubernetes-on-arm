@@ -1,6 +1,6 @@
-### Readme for Kubernetes on ARM
+### Readme for the Kubernetes on ARM root filesystem
 
-v0.6.5
+v0.7.0
 
 /etc/
  - kubernetes/
