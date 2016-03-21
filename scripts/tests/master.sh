@@ -63,10 +63,10 @@ docker ps
 
 kube-config info
 
-kubectl run my-nginx --image=luxas/nginx-test --replicas=3 --expose --port=80
+kubectl run my-nginx --image=luxas/nginx-test --replicas=1 --expose --port=80
 
 NGINX_SECS=0
-while [[ $(kubectl get po | grep "my-nginx" | grep "Running" | wc -l) != 3 ]]; do sleep 1; ((NGINX_SECS++)); done
+while [[ $(kubectl get po | grep "my-nginx" | grep "Running" | wc -l) != 1 ]]; do sleep 1; ((NGINX_SECS++)); done
 
 echo_yellow "Seconds before nginx came up: $NGINX_SECS"
 
