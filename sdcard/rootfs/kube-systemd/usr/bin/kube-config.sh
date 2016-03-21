@@ -48,7 +48,7 @@ DEFAULT_HOSTNAME="kubepi"
 
 TIMEOUT_FOR_SERVICES=20
 
-LATEST_DOWNLOAD_RELEASE="v0.6.2"
+LATEST_DOWNLOAD_RELEASE="v0.7.0"
 
 # If the config doesn't exist, create
 if [[ ! -f $KUBERNETES_CONFIG ]]; then
@@ -151,7 +151,7 @@ EOF
         echo "Installing required packages for this OS"
         os_install
     else
-        echo "OS not supported. Quitting..."
+        echo "OS not supported. Exiting..."
         exit
     fi
 
@@ -184,7 +184,7 @@ EOF
 
     # Has the user explicitely specified it? If not, ask.
     if [[ -z $SWAP ]]; then
-        read -p "Do you want to create an 1GB swapfile (required for compiling)? n is default [y/N] " swapanswer
+        read -p "Do you want to create an 1GB swapfile (required for compiling)? N is default [y/N] " swapanswer
         
         case $swapanswer in
             [yY]*)
