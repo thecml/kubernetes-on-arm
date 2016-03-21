@@ -7,9 +7,6 @@ With this script, the required docker images are built, then the Kubernetes bina
 # Build all required images
 kube-config build-images
 
-# Build all addons
-kube-config build-addons
-
 # These scripts will run approximately 45 min on a Raspberry Pi 2
 # Grab yourself a coffee during the time!
 ```

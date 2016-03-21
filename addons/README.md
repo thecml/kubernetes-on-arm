@@ -30,6 +30,10 @@ The official `amd64` dashboard addon is here: https://github.com/kubernetes/kube
 
 The official `amd64` service-loadbalancer addon is here: https://github.com/kubernetes/contrib/tree/master/service-loadbalancer
 
+### Heapster
+
+The official `amd64` heapster addon is here: https://github.com/kubernetes/heapster/tree/master/deploy/kube-config/influxdb
+
 ### Sleep
 
 Just two pods for testing
