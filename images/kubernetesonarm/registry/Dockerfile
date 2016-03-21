@@ -8,4 +8,4 @@ COPY config.yml /etc/docker/registry/config.yml
 ENTRYPOINT ["/registry"]
 
 # ...with it's config file
-CMD ["serve", "/etc/docker/registry/config.yml"]
+CMD ["/etc/docker/registry/config.yml"]
