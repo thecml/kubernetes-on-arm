@@ -6,13 +6,14 @@ main() {
     OUT=$(pwd)/release/latest
     PACKAGE_BRANCH=${PACKAGE_BRANCH:-"master"}
     PACKAGE_REVISION=${PACKAGE_BRANCH:-1}
+    DEB_PACKAGE=${DEB_PACKAGE:-1}
 
     source scripts/common.sh
 
     if [[ -d $OUT ]]; then
         source $OUT/meta.sh
 
-        mv release/{latest,$BUILD_DATE}
+        mv release/{latest,${BUILD_DATE:-_old}
     fi
 
     mkdir -p $OUT
@@ -27,8 +28,11 @@ main() {
 
     cp images/kubernetesonarm/_bin/latest/kubectl $OUT
 
-    # Make the .deb file from master as the default option
-    scripts/mkdeb.sh $OUT $PACKAGE_BRANCH $PACKAGE_REVISION
+    if [[ $DEB_PACKAGE == 1 ]]; then
+
+        # Make the .deb file from master as the default option
+        scripts/mkdeb.sh $OUT $PACKAGE_BRANCH $PACKAGE_REVISION
+    fi
 
     echo "BUILD_DATE=$(date +%d%m%y_%H%M)" >> $OUT/meta.sh
 
