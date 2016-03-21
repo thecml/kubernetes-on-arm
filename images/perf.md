@@ -2,6 +2,71 @@
 
 These images are built on a Raspberry Pi 2.
 
+## 0.7.0
+  
+  - luxas/go: 1469 s (with resin/rpi-raspbian pull)
+  - luxas/alpine: 54 s
+
+  - kubernetesonarm/build: 2426 s
+  - kubernetesonarm/flannel: 26 s
+  - kubernetesonarm/etcd: 40 s 
+  - kubernetesonarm/hyperkube: 545 s
+  - kubernetesonarm/pause: 2 s 
+  - kubernetesonarm/exechealthz: 5 s
+  - kubernetesonarm/skydns: 5 s
+  - kubernetesonarm/kube2sky: 40 s
+  - kubernetesonarm/registry: 17 s
+  - kubernetesonarm/loadbalancer: 79 s
+  - kubernetesonarm/heapster: 63 s
+  - kubernetesonarm/influxdb: 16 s
+  - kubernetesonarm/influxdb: 630 s
+
+Total time: 5412 s, 90 min 12 sec
+
+```bash
+$ ls -lSh
+total 254M
+-rwxr-xr-x 1 root root  65M Mar 20 01:19 hyperkube
+-rwxr-xr-x 1 root root  33M Mar 20 01:20 kubectl
+-rwxr-xr-x 1 root root  30M Mar 20 01:36 heapster
+-rwxr-xr-x 1 root root  21M Mar 20 01:23 kube2sky
+-rwxr-xr-x 1 root root  21M Mar 20 01:31 service_loadbalancer
+-rwxr-xr-x 1 root root  16M Mar 20 01:40 grafana-server
+-rwxr-xr-x 1 root root  14M Mar 20 01:18 flanneld
+-rwxr-xr-x 1 root root  13M Mar 20 01:27 registry
+-rwxr-xr-x 1 root root  12M Mar 20 01:17 etcd
+-rwxr-xr-x 1 root root  11M Mar 20 01:26 skydns
+-rwxr-xr-x 1 root root  11M Mar 20 01:17 etcdctl
+-rwxr-xr-x 1 root root 9.7M Mar 20 01:39 influxd
+-rwxr-xr-x 1 root root 3.6M Mar 20 01:31 exechealthz
+-rwxr-xr-x 1 root root 242K Mar 20 01:20 pause
+-rwxr-xr-x 1 root root  716 Mar 20 01:53 version.sh
+```
+
+```
+kubernetesonarm/grafana        0.7.0               8ea26f4ef5a3        39 hours ago        162.4 MB
+kubernetesonarm/influxdb       0.7.0               447951a687c6        39 hours ago        18.38 MB
+kubernetesonarm/heapster       0.7.0               1d034674fc0e        39 hours ago        39.51 MB
+kubernetesonarm/loadbalancer   0.7.0               6b262f2fd318        39 hours ago        34.75 MB
+kubernetesonarm/registry       0.7.0               4c9c964f89e9        39 hours ago        21.34 MB
+kubernetesonarm/exechealthz    0.7.0               57f77542ac5c        39 hours ago        11.96 MB
+kubernetesonarm/kube2sky       0.7.0               770cccac4236        39 hours ago        21.33 MB
+kubernetesonarm/skydns         0.7.0               30ea4958f939        39 hours ago        10.69 MB
+kubernetesonarm/pause          0.7.0               05edc969256e        39 hours ago        247.4 kB
+kubernetesonarm/hyperkube      0.7.0               380def049467        39 hours ago        163.2 MB
+kubernetesonarm/flannel        0.7.0               8a35c629399f        39 hours ago        23.55 MB
+kubernetesonarm/etcd           0.7.0               3550c0c4f205        19 hours ago        30.54 MB
+```
+```
+total 223M
+-rw-r--r-- 1 root root  66M Mar 20 22:29 binaries.tar.gz
+-rw-r--r-- 1 root root 125M Mar 20 22:27 images.tar.gz
+-rwxr-xr-x 1 root root  33M Mar 20 22:29 kubectl
+-rw-r--r-- 1 root root 186K Mar 20 22:29 kubernetes-on-arm_0.7.0-dev_armhf.deb
+-rw-r--r-- 1 root root 208K Mar 20 22:29 kubernetes-on-arm_0.7.0-dev_armhf.tar.gz
+-rw-r--r-- 1 root root   62 Mar 20 22:29 meta.sh
+```
+
 ## 0.6.5
 
 55 files changed, 602 insertions(+), 659 deletions(-)
@@ -45,6 +110,16 @@ total 173M
 -rwxr-xr-x 1 root root  17M Dec 20 20:31 service_loadbalancer
 -rwxr-xr-x 1 root root  11M Dec 20 20:28 skydns
 -rwxr-xr-x 1 root root  719 Dec 20 20:39 version.sh
+```
+```
+kubernetesonarm/hyperkube                           0.6.2               62bc7dffdce8        11 weeks ago        147 MB
+kubernetesonarm/registry                            0.6.2               83e77121d939        12 weeks ago        98.14 MB
+kubernetesonarm/exechealthz                         0.6.2               dd87701467f9        12 weeks ago        11.01 MB
+kubernetesonarm/kube2sky                            0.6.2               427888b2d65c        12 weeks ago        14.18 MB
+kubernetesonarm/skydns                              0.6.2               735f6d8a2d29        12 weeks ago        10.5 MB
+kubernetesonarm/pause                               0.6.2               0756cf9bdaf0        12 weeks ago        227.1 kB
+kubernetesonarm/etcd                                0.6.2               24f6dcb901c0        12 weeks ago        29.02 MB
+kubernetesonarm/flannel                             0.6.2               635c3909aa83        12 weeks ago        94.38 MB
 ```
 
 To build `hyperkube` and `kubectl`: ~6 mins
