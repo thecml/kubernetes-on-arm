@@ -12,7 +12,7 @@ RUN echo "deb http://emdebian.org/tools/debian/ jessie main" > /etc/apt/sources.
 
 # Important ENV variables
 ENV GOARM=6 \
-    GOARCH=arm  \
+    GOARCH=arm \
     CC=arm-linux-gnueabi-gcc \
     K8S_DIR="$GOPATH/src/k8s.io/kubernetes" \
     K8S_CONTRIB="$GOPATH/src/k8s.io/contrib" \
