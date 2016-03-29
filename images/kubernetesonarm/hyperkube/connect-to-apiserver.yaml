@@ -1,3 +1,4 @@
+# This is a file that may be used in pods to connect securely to the apiserver
 apiVersion: v1
 clusters:
 - cluster:
@@ -17,6 +18,3 @@ users:
 - name: kube-user
   user:
     token: /var/run/secrets/kubernetes.io/serviceaccount/token
-
-
-# This is a file that may be used in pods to connect securely to the apiserver
