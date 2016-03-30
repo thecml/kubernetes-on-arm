@@ -62,17 +62,3 @@ RUN chmod +x /version.sh \
 #
 #   # Install godep, which is required in many projects
 #   && go get github.com/tools/godep 
-
-
-#                                                   HACK                                                    #
-# Instead of:
-# cd /goroot1.4/src && ./make.bash
-#
-# One may do this:
-# cd /goroot1.4/src && ./make.bash --dist-tool                      && \
-# /goroot1.4/pkg/tool/linux_arm/dist bootstrap -v                   && \
-# cp /goroot1.4/pkg/tool/linux_arm/go_bootstrap /goroot1.4/bin/go
-#
-# This will not build the whole go1.4, but instead build cmd/dist and the go_bootstrap tool, which is renamed to go
-# Not sure if reliable, but it compiles
-#
