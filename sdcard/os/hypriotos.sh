@@ -82,8 +82,13 @@ generaldownload(){
 
     # Clear old mounts, if any
     umount $ROOT_PARTITION >> $LOGFILE 2>&1
-    # Force kernel to reload partitions
-    partprobe
+
+    # Soft dependency on partprobe
+    if [[ -f $(which partprobe 2>&1) ]]; then
+
+        # Force kernel to reload partitions
+        partprobe
+    fi
 
     mount $ROOT_PARTITION $ROOT
     # Will take ~9 mins on a Pi
