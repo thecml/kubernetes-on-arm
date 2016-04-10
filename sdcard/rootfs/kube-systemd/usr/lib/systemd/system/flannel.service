@@ -14,7 +14,8 @@ ExecStart=/usr/bin/docker -H unix:///var/run/system-docker.sock run \
         -v /var/lib/kubernetes/flannel:/run/flannel \
         kubernetesonarm/flannel \
         /flanneld \
-            --etcd-endpoints=http://${K8S_MASTER_IP}:4001
+            --etcd-endpoints=http://${K8S_MASTER_IP}:4001 \
+            --ip-masq=true
 ExecStop=/usr/bin/docker -H unix:///var/run/system-docker.sock stop k8s-flannel
 
 [Install]
