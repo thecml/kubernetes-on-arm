@@ -1,6 +1,6 @@
 
 
-RPI_HYPRIOTOS_RELEASE="hypriot-rpi-20151115-132854"
+RPI_HYPRIOTOS_RELEASE="hypriot-rpi-20160306-192317"
 RPI_DOWNLOAD_LINK=http://downloads.hypriot.com/${RPI_HYPRIOTOS_RELEASE}.img.zip
 
 # Wait until these images are ready with a newer kernel and more free space partitioned
