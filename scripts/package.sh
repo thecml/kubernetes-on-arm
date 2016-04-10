@@ -26,8 +26,6 @@ main() {
     tar -czf $OUT/binaries.tar.gz *
     cd -
 
-    cp images/kubernetesonarm/_bin/latest/kubectl $OUT
-
     if [[ $DEB_PACKAGE == 1 ]]; then
 
         # Make the .deb file from master as the default option
