@@ -36,12 +36,6 @@ checkrootfs(){
         kube-systemd|deb-file)
             exit;;
     esac
-
-    if [[ $ROOTFSNAME == "kube-systemd" && $OSNAME == "rancheros" ]]; then
-    echo "rancheros doesn't support kube-systemd. Exiting..."
-    rm -r $TMPDIR
-    exit 1
-fi
 }
 
 

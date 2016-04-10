@@ -1,6 +1,4 @@
 
-SDCARDSIZE=${SDCARDSIZE:-""}
-
 # First invoked by sdcard/write
 mountpartitions(){
     # Partition the sd card
@@ -55,9 +53,6 @@ checkrootfs(){
 # Format the SD Card with two partitions, boot and root. Boot is $1 MB big.
 # This makes the root partition as big as the sd card minus boot
 generalformat(){
-    if [[ ! -z $SDCARDSIZE ]]; then
-        SDCARDSIZE="+$(($SDCARDSIZE-$1))M"
-    fi
 
     # Here we "press" the keys in order, commanding fdisk to make a partition
     echo "Now $SDCARD is going to be partitioned."
@@ -75,7 +70,7 @@ n
 p
 2
 
-$SDCARDSIZE
+
 w
 EOF
 
@@ -124,9 +119,6 @@ umount_boot_and_root(){
 # Cubietruck guide: http://archlinuxarm.org/platforms/armv7/allwinner/cubietruck
 # All the commands copied from there
 allwinnerformat(){
-    if [[ ! -z $SDCARDSIZE ]]; then
-        SDCARDSIZE="+${SDCARDSIZE}M"
-    fi
 
     fdisk $SDCARD <<EOF
 o
@@ -135,7 +127,7 @@ n
 p
 1
 2048
-$SDCARDSIZE
+
 w
 EOF
 
