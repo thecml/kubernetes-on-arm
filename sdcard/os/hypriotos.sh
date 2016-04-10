@@ -54,7 +54,7 @@ generaldownload(){
 
     # Install unzip and partprobe if not present
     require unzip unzip
-    require partprobe partprobe
+    require partprobe partprobe "false"
 
     # We can't write this .img file to /tmp because /tmp has a limit of 462MB
     DLDIR=/etc/tmp/downloadhypriot

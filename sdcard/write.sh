@@ -2,7 +2,8 @@
 
 ########################## HELPER ##############################
 
-# Install a package 
+# Install a package
+# Usage: require [binary (e.g. fdisk)] [package to install] [hard dependency]
 require()
 {
     BINARY=$1
@@ -15,23 +16,29 @@ require()
             pacman -S $PACKAGE --noconfirm
 
             if [[ $(echo $?) != 0 ]]; then
-                require_exit $BINARY $PACKAGE
+                require_exit $@
             fi
         elif [[ -e $(which apt-get 2>&1) ]]; then # Is apt-get present?
             apt-get update && apt-get install -y $PACKAGE
 
             if [[ $(echo $?) != 0 ]]; then
-                require_exit $BINARY $PACKAGE
+                require_exit $@
             fi
         else
-            require_exit $BINARY $PACKAGE
+            require_exit $@
         fi
     fi
 }
 
 require_exit(){
+    HARD_DEP=${3:-"true"}
+
     echo "The required package $2 with the binary $1 isn't present now. Install it."
-    exit 1
+
+    if [[ ${HARD_DEP} == "true" ]]; then
+        echo "Exiting..."
+        exit 1
+    fi
 }
 
 ########################## USAGE ##############################
