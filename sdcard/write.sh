@@ -59,17 +59,17 @@ Explanation:
             - rpi - Raspberry Pi A, A+, B, B+, ZERO
             - rpi-2 - Raspberry Pi 2 Model B
             - rpi-3 - Raspberry Pi 3 Model B
-            - parallella - Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel (only with archlinux)
-            - cubietruck - Cubietruck (only with archlinux)
-            - bananapro - Banana Pro (only with archlinux)
+            - parallella - Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. It should have a newer kernel
+            - cubietruck - Cubietruck
+            - bananapro - Banana Pro
     os - The operating system which should be downloaded and installed.
         - Currently supported:
-            - archlinux - Arch Linux ARM
-            - hypriotos - HypriotOS
-            - rancheros - RancherOS (only with rpi-2 and rpi-3)
+            - archlinux - Arch Linux ARM (for rpi, rpi-2, rpi-3, parallella, cubietruck and bananapro)
+            - hypriotos - HypriotOS (for rpi, rpi-2 and rpi-3)
+            - rancheros - RancherOS (for rpi-2 and rpi-3)
     rootfs - Prepopulated rootfs with scripts and such.
         - Currently supported: 
-            - kube-systemd - Kubernetes scripts prepopulated (not with rancheros)
+            - kube-systemd - Kubernetes scripts prepopulated (for archlinux and hypriotos)
 
 Example:
 sdcard/write.sh /dev/sdb rpi-2 archlinux kube-systemd
