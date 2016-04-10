@@ -38,7 +38,7 @@ ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 RUN chmod +x /version.sh \
     && . /version.sh \
     && mkdir -p $GOROOT $GOROOT_BOOTSTRAP_PATH $GOPATH \
-    && curl -sSL https://github.com/hypriot/golang-armbuilds/releases/download/v${GO_VERSION}/go${GO_VERSION}.linux-armv6.tar.gz | tar -xzC $GOROOT --strip-components=1 \
+    && curl -sSL https://storage.googleapis.com/golang/go${GO_VERSION}.linux-armv6l.tar.gz | tar -xzC $GOROOT --strip-components=1 \
     && go get github.com/tools/godep
 
 
