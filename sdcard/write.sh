@@ -60,7 +60,7 @@ Optional argument:
 sdcard/write.sh [disc or sd card] [boot] [os] [rootfs]
 
 Explanation:
-    disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see which letter your sd card has.
+    disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' or 'lsblk' to see which letter your SD Card has.
     boot - The type of board you have
         - Currently supported:
             - rpi - Raspberry Pi A, A+, B, B+, ZERO
@@ -74,9 +74,11 @@ Explanation:
             - archlinux - Arch Linux ARM (for rpi, rpi-2, rpi-3, parallella, cubietruck and bananapro)
             - hypriotos - HypriotOS (for rpi, rpi-2 and rpi-3)
             - rancheros - RancherOS (for rpi-2 and rpi-3)
+            - raspbian - Raspbian Lite (for rpi, rpi-2, rpi-3)
     rootfs - Prepopulated rootfs with scripts and such.
         - Currently supported: 
             - kube-systemd - Kubernetes scripts prepopulated (for archlinux and hypriotos)
+            - deb-file - Installs the kube-systemd rootfs from the deb deployment (for hypriotos and raspbian)
 
 Example:
 sdcard/write.sh /dev/sdb rpi-2 archlinux kube-systemd
@@ -169,12 +171,6 @@ if [[ ! -f os/$OSNAME.sh ]]; then
     exit 1
 fi
 
-# Rewrite for compability
-if [[ $ROOTFSNAME == "kube-archlinux" ]]; then
-    echo "DEPRECATED: kube-archlinux is a deprecated name. Use kube-systemd. Continuing with kube-systemd anyway..."
-    ROOTFSNAME="kube-systemd"
-fi
-
 # Ensure the rootfs exists  
 if [[ ! -d rootfs/$ROOTFSNAME ]]; then
     echo "rootfs/$ROOTFSNAME not found. That rootfs doesn't exist. Exiting..."
@@ -182,11 +178,7 @@ if [[ ! -d rootfs/$ROOTFSNAME ]]; then
     exit 1
 fi
 
-if [[ $ROOTFSNAME == "kube-systemd" && $OSNAME == "rancheros" ]]; then
-    echo "rancheros doesn't support kube-systemd. Exiting..."
-    rm -r $TMPDIR
-    exit 1
-fi
+
 
 # Source machine and os
 source os/$OSNAME.sh
@@ -195,6 +187,7 @@ source os/$OSNAME.sh
 # mountpartitions()
 # initos()
 # cleanup()
+# checkrootfs()
 
 # Mount them
 mountpartitions

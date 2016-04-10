@@ -38,6 +38,17 @@ cleanup(){
     esac
 }
 
+checkrootfs(){
+
+    # Arch Linux supports these root filesystems
+    case $ROOTFSNAME in
+        kube-systemd)
+            ;;
+        deb-file|*)
+            exit;;
+    esac
+}
+
 
 ## ------------------------- PARTITION AND DOWNLOAD THE OS --------------------------------
 

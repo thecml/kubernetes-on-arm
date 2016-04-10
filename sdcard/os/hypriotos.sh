@@ -48,6 +48,17 @@ cleanup(){
     esac
 }
 
+checkrootfs(){
+
+    # HypriotOS supports these root filesystems
+    case $ROOTFSNAME in
+        kube-systemd|deb-file)
+            ;;
+        *)
+            exit;;
+    esac
+}
+
 
 # Takes an URL (.img.zip file) to download an the name of the downloaded file. Assumes that the extracted and the downloaded file has the same names except for the extension
 generaldownload(){

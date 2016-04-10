@@ -29,6 +29,21 @@ cleanup(){
     esac
 }
 
+checkrootfs(){
+
+    # RancherOS doesn't support these root filesystems
+    case $ROOTFSNAME in
+        kube-systemd|deb-file)
+            exit;;
+    esac
+
+    if [[ $ROOTFSNAME == "kube-systemd" && $OSNAME == "rancheros" ]]; then
+    echo "rancheros doesn't support kube-systemd. Exiting..."
+    rm -r $TMPDIR
+    exit 1
+fi
+}
+
 
 # Takes an URL (.zip file) to download an the name of the downloaded file. Assumes that the extracted and the downloaded file has the same names except for the extension
 generaldownload(){
