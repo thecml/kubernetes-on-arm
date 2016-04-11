@@ -15,7 +15,8 @@ ExecStart=/usr/bin/docker daemon \
     --iptables=false \
     --ip-masq=false \
     --bridge=none \
-    --graph=/var/lib/system-docker
+    --graph=/var/lib/system-docker \
+    $DOCKER_OPTS
 MountFlags=slave
 LimitNOFILE=1048576
 LimitNPROC=1048576

@@ -4,9 +4,9 @@ mountpartitions(){
     # Partition the sd card
     case $MACHINENAME in
         rpi|rpi-2|rpi-3|parallella)
-            generalformat 100;; # Make 100 MB fat partition for the RPi
-        cubietruck|bananapro)
-            allwinnerformat;;
+            twopartitionformat 100;; # Make 100 MB fat partition for the RPi
+        cubietruck|bananapro|odroid-c2)
+            onepartitionformat;;
         *)
             exit;;
     esac
@@ -15,7 +15,7 @@ mountpartitions(){
 # Invoked by sdcard/write
 initos(){
     case $MACHINENAME in
-        rpi|rpi-2|rpi-3|parallella)
+        rpi|rpi-2|rpi-3|parallella|odroid-c2)
             generaldownload;;
         cubietruck|bananapro)
             allwinnerdownload;;
@@ -31,6 +31,8 @@ cleanup(){
             umount_boot_and_root;;
         cubietruck|bananapro)
             umount_root;;
+        odroid-c2)
+            write_boot_loader_and_umount_root;;
         *)
             exit;;
     esac
@@ -52,7 +54,7 @@ checkrootfs(){
 
 # Format the SD Card with two partitions, boot and root. Boot is $1 MB big.
 # This makes the root partition as big as the sd card minus boot
-generalformat(){
+twopartitionformat(){
 
     # Here we "press" the keys in order, commanding fdisk to make a partition
     echo "Now $SDCARD is going to be partitioned."
@@ -78,7 +80,7 @@ EOF
     require mkfs.vfat dosfstools
 
     # Make boot filesystem
-    mkfs.vfat $PARTITION1 
+    mkfs.vfat $PARTITION1
 
     # Mount partition 1 to boot, for editing
     mount $PARTITION1 $BOOT
@@ -118,7 +120,10 @@ umount_boot_and_root(){
 
 # Cubietruck guide: http://archlinuxarm.org/platforms/armv7/allwinner/cubietruck
 # All the commands copied from there
-allwinnerformat(){
+onepartitionformat(){
+    if [[ ! -z $SDCARDSIZE ]]; then
+        SDCARDSIZE="+${SDCARDSIZE}M"
+    fi
 
     fdisk $SDCARD <<EOF
 o
@@ -157,4 +162,15 @@ allwinnerdownload(){
 
 umount_root(){
     umount $ROOT
+}
+
+write_boot_loader_and_umount_root(){
+    CURRDIR=`pwd`
+    cd $ROOT/boot
+
+    # Flash the bootloader files
+    ./sd_fusing.sh $SDCARD
+    cd $CURRDIR
+
+    umount_root
 }
