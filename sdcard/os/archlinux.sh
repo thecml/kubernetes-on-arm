@@ -121,9 +121,6 @@ umount_boot_and_root(){
 # Cubietruck guide: http://archlinuxarm.org/platforms/armv7/allwinner/cubietruck
 # All the commands copied from there
 onepartitionformat(){
-    if [[ ! -z $SDCARDSIZE ]]; then
-        SDCARDSIZE="+${SDCARDSIZE}M"
-    fi
 
     fdisk $SDCARD <<EOF
 o
