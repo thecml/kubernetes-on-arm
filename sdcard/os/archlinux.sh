@@ -15,7 +15,10 @@ mountpartitions(){
 # Invoked by sdcard/write
 initos(){
     case $MACHINENAME in
-        rpi|rpi-2|rpi-3|parallella|odroid-c2)
+        rpi|rpi-2|rpi-3|parallella)
+            generaldownload
+            move_boot;;
+        odroid-c2)
             generaldownload;;
         cubietruck|bananapro)
             allwinnerdownload;;
@@ -106,7 +109,10 @@ generaldownload(){
     curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-${ARCH_BOARD}-latest.tar.gz | tar -xz -C $ROOT >> $LOGFILE 2>&1
 
     sync
+}
 
+move_boot(){
+    echo "Moving boot files to boot partition"
     # Move /boot to separate partition
     mv $ROOT/boot/* $BOOT
 }
