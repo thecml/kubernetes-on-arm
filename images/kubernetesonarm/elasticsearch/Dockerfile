@@ -1,13 +1,15 @@
 FROM larmog/armhf-alpine-java:jdk-8u73
 
-ENV VERSION 2.2.1
+COPY version.sh /
 
 # Install Elasticsearch.
-RUN apk add --update curl ca-certificates sudo && \
-  curl -sSL https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/$VERSION/elasticsearch-$VERSION.tar.gz | tar -zx && \
-  mv /elasticsearch-$VERSION /elasticsearch && \
-  rm -rf $(find /elasticsearch | egrep "(\.(exe|bat)$|sigar/.*(dll|winnt|x86-linux|solaris|ia64|freebsd|macosx))") && \
-  apk del curl
+RUN chmod +x /version.sh \
+    && . /version.sh \ 
+    && apk add --update curl ca-certificates sudo \
+  	&& curl -sSL https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/${ELASTICSEARCH_VERSION}/elasticsearch-${ELASTICSEARCH_VERSION}.tar.gz | tar -xz \
+  	&& mv /elasticsearch-${ELASTICSEARCH_VERSION} /elasticsearch \
+  	&& rm -rf $(find /elasticsearch | egrep "(\.(exe|bat)$|sigar/.*(dll|winnt|x86-linux|solaris|ia64|freebsd|macosx))") \
+  	&& apk del curl
 
 # Copy configuration
 COPY config/logging.yml /elasticsearch/config
@@ -23,7 +25,5 @@ COPY config/elasticsearch.yml /elasticsearch/config/elasticsearch.yml
 
 # Copy run script
 COPY run.sh /
-
-RUN chmod a+x /run.sh
 
 CMD ["/run.sh"]

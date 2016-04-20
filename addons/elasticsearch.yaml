@@ -64,7 +64,8 @@ spec:
           capabilities:
             add:
               - IPC_LOCK
-        image: kubernetesonarm/elasticsearch:2.2.1
+        image: kubernetesonarm/elasticsearch
+        imagePullPolicy: IfNotPresent
         env:
         - name: KUBERNETES_CA_CERTIFICATE_FILE
           value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -119,7 +120,8 @@ spec:
           capabilities:
             add:
               - IPC_LOCK
-        image: kubernetesonarm/elasticsearch:2.2.1
+        image: kubernetesonarm/elasticsearch
+        imagePullPolicy: IfNotPresent
         env:
         - name: KUBERNETES_CA_CERTIFICATE_FILE
           value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -141,8 +143,7 @@ spec:
         - mountPath: /data
           name: storage
       volumes:
-          - emptyDir:
-              medium: ""
+          - emptyDir: {}
             name: storage
 ---
 apiVersion: v1
@@ -172,7 +173,8 @@ spec:
           capabilities:
             add:
               - IPC_LOCK
-        image: kubernetesonarm/elasticsearch:2.2.1
+        image: kubernetesonarm/elasticsearch
+        imagePullPolicy: IfNotPresent
         env:
         - name: KUBERNETES_CA_CERTIFICATE_FILE
           value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt

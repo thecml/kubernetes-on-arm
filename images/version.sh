@@ -13,8 +13,7 @@ HEAPSTER_VERSION='v1.0.2'
 INFLUXDB_VERSION='v0.12.1'
 GRAFANA_VERSION='v2.6.0'
 
+
 ## OTHER PROJECTS ##
-# For the moment, go1.4.3 is a better choice than go1.5.1
-# Because building with go1.5.1 is 2-4x slower than 1.4.3
-# And there's no big difference in the result
 GO_VERSION='1.6'
+ELASTICSEARCH_VERSION='2.1.1'
