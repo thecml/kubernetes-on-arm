@@ -2,10 +2,11 @@
 
 This has already been merged to Kubernetes mainline in: [#19769](https://github.com/kubernetes/kubernetes/pull/19769)
 
-How to use this `Dockerfile`:
+How to use `build.sh`:
 ```console
-$ cd scripts/build-k8s-on-amd64
-$ docker build -t build-k8s-on-amd64 .
-$ docker run --name=build-k8s-on-amd64 build-k8s-on-amd64 true
-$ docker cp build-k8s-on-amd64:/output .
+$ # All binaries will end up in ./output
+$ # To build binaries:
+$ ./build.sh
+$ # To build binaries for arm64:
+$ ./build.sh arm64
 ```
