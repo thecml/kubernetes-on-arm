@@ -24,7 +24,9 @@ ENV GOARM=6 \
     FLANNEL_VERSION=v0.5.5 \
     K8S_VERSION=v1.2.0 \
     REGISTRY_VERSION=v2.3.1 \
-    KUBE_BUILD_PLATFORMS="linux/arm64"
+    KUBE_BUILD_PLATFORMS="linux/arm64" \
+    INGRESS_CONTROLLER_VERSION=0.61 \
+    CONTRIB_REPO="git@github.com:kubernetes/contrib"
 
 # Make directories
 RUN mkdir -p $OUT_DIR \
@@ -76,7 +78,7 @@ RUN curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar 
     && cp service_loadbalancer $OUT_DIR
 
 RUN cd $K8S_CONTRIB/exec-healthz \
-    && make server \
+    && TAG=1.0 ARCH=arm64 make server \
     && cp exechealthz $OUT_DIR
 
 RUN cd $K8S_CONTRIB/scale-demo/aggregator \
@@ -86,6 +88,10 @@ RUN cd $K8S_CONTRIB/scale-demo/aggregator \
 RUN cd $K8S_CONTRIB/scale-demo/vegeta \
     && CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o loader \
     && cp loader $OUT_DIR
+
+RUN cd $K8S_CONTRIB/ingress/controllers/nginx \
+    && CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags "-w -X main.version=${INGRESS_CONTROLLER_VERSION} -X main.gitRepo=${CONTRIB_REPO}" -o nginx-ingress-controller \
+    && cp nginx-ingress-controller $OUT_DIR
 
 # Build docker registry for the addons
 RUN curl -sSL https://github.com/docker/distribution/archive/$REGISTRY_VERSION.tar.gz | tar -xz -C $REGISTRY_DIR --strip-components=1 \
