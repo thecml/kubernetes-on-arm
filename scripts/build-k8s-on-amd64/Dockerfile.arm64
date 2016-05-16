@@ -1,4 +1,4 @@
-FROM golang:1.6.0
+FROM golang:1.6.2
 
 MAINTAINER Lucas Käldström <lucas.kaldstrom@hotmail.co.uk>
 
@@ -38,63 +38,9 @@ RUN mkdir -p $OUT_DIR \
         $REGISTRY_DIR \
     && ln -s $GOPATH/src/k8s.io/kubernetes $GOPATH/src/github.com/GoogleCloudPlatform/kubernetes
 
-# Build etcd
-RUN curl -sSL https://github.com/coreos/etcd/archive/$ETCD_VERSION.tar.gz | tar -C $ETCD_DIR -xz --strip-components=1 \
-    && cd $ETCD_DIR \
-    && ./build \
-    && cp bin/* $OUT_DIR
-
-# Build flannel
-RUN curl -sSL https://github.com/coreos/flannel/archive/$FLANNEL_VERSION.tar.gz | tar -C $FLANNEL_DIR -xz --strip-components=1 \
-    && cd $FLANNEL_DIR  \
-    && CGO_ENABLED=1 ./build \
-    && cp bin/* $OUT_DIR
-
-# Build kubernetes
-RUN curl -sSL https://github.com/kubernetes/kubernetes/archive/$K8S_VERSION.tar.gz | tar -C $K8S_DIR -xz --strip-components=1 \
-    && cd $K8S_DIR \
-    && CGO_ENABLED=1 ./hack/build-go.sh cmd/hyperkube cmd/kubectl \
-    && cp _output/local/go/bin/linux_arm64/* $OUT_DIR
-
-# Build two compilation tools for host arch
-RUN GOARCH=amd64 go get github.com/tools/godep
-
-# Build the pause image
-RUN cd $K8S_DIR/build/pause \
-    && CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags '-w' ./pause.go \
-    && cp pause $OUT_DIR
-
-RUN cd $K8S_DIR/cluster/addons/dns/kube2sky \
-    && make kube2sky \
-    && cp kube2sky $OUT_DIR
-
-RUN CGO_ENABLED=0 go get -a -installsuffix cgo --ldflags '-w' github.com/skynetservices/skydns \
-    && cp $GOPATH/bin/linux_arm64/skydns $OUT_DIR
+ADD build-k8s.sh /build-k8s.sh
+RUN OUTPUT=_output/local/go/bin/linux_arm64 /build-k8s.sh
 
 # Build Kubernetes contrib binaries
-RUN curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar -xz -C $K8S_CONTRIB --strip-components=1 \
-    && cd $K8S_CONTRIB/service-loadbalancer \
-    && make server \
-    && cp service_loadbalancer $OUT_DIR
-
-RUN cd $K8S_CONTRIB/exec-healthz \
-    && TAG=1.0 ARCH=arm64 make server \
-    && cp exechealthz $OUT_DIR
-
-RUN cd $K8S_CONTRIB/scale-demo/aggregator \
-    && make aggregator \
-    && cp aggregator $OUT_DIR
-
-RUN cd $K8S_CONTRIB/scale-demo/vegeta \
-    && CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o loader \
-    && cp loader $OUT_DIR
-
-RUN cd $K8S_CONTRIB/ingress/controllers/nginx \
-    && CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags "-w -X main.version=${INGRESS_CONTROLLER_VERSION} -X main.gitRepo=${CONTRIB_REPO}" -o nginx-ingress-controller \
-    && cp nginx-ingress-controller $OUT_DIR
-
-# Build docker registry for the addons
-RUN curl -sSL https://github.com/docker/distribution/archive/$REGISTRY_VERSION.tar.gz | tar -xz -C $REGISTRY_DIR --strip-components=1 \
-    && cd $REGISTRY_DIR/cmd/registry \
-    && CGO_ENABLED=0 GOPATH=$REGISTRY_DIR/Godeps/_workspace:$GOPATH go build -a --installsuffix cgo \
-    && cp registry $OUT_DIR
+ADD build-k8s-contrib.sh /build-k8s-contrib.sh
+RUN /build-k8s-contrib.sh
