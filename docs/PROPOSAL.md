@@ -14,6 +14,8 @@ When it's possible to run docker containers on a specific architecture, folks al
 We obviously want Kubernetes to run on as many platforms as possible.
 This is a proposal that explains how we should do to achieve a cross-platform system.
 
+### Motivation
+
 ## Implementation
 
 ## Proposed platforms and history
@@ -30,7 +32,7 @@ The 27th April 2016, Kubernetes `v1.3.0-alpha.3` was released, and became the fi
 Additionally, if there's interest in running Kubernetes on `linux/s390x` too, it won't require many changes to the source now when we've laid the ground already.
 
 There is also work going on with porting Kubernetes to Windows (`windows/amd64`). See [this issue](https://github.com/kubernetes/kubernetes/issues/22623) for more details.
-However, please note that when porting to another OS, many more changes have to be implemented in the code compared to porting to another linux architecture.
+However, please note that when porting to a new OS, many more changes have to be implemented in the code compared to porting to another linux architecture.
 
 ## Background factors
 
@@ -56,15 +58,6 @@ Go 1.6 didn't introduce as many changes as go1.5 did, but here are some of note:
 In Kubernetes 1.2, the only supported go version was `1.4.2`, so `linux/arm` was the only possible extra architecture: [#19769](https://github.com/kubernetes/kubernetes/pull/19769)
 In Kubernetes 1.3, [we upgraded to `go1.6.2`](https://github.com/kubernetes/kubernetes/pull/25051), so now it's possible to build Kubernetes for even more multiple architectures.
 
-#### GOARM
-
-ARM contains three relevant variants: `ARMv5` (soft-float), `ARMv6` (both soft and hard-float) and `ARMv7` (hard-float; the most common one)
-`armel` means that the processor is soft-float, `armhf` is hard-float. The Raspberry Pi 1 is quite special, it's processor is `ARMv6` hard-float.
-`ARMv5` binaries can run on `ARMv6` devices, but not vice versa. The same for `ARMv6` and `ARMv7`.
-GCC packages for ARM come in two flavors: `armel` and `armhf`. Here we encounter a problem: the `armel` gcc package is `ARMv5` and the `armhf` package is `ARMv7` 
-Since we want support for the Raspberry Pi 1, we have to use `armel` for linking the `cgo` code, otherwise it won't work. 
-The performance difference between `ARMv5` and `ARMv7` is so small anyway, so it doesn't matter.
-
 #### `sync/atomic` 32-bit bug
 
 From https://golang.org/pkg/sync/atomic/#pkg-note-BUG:
@@ -89,7 +82,7 @@ In the future, it would be great to work with the Docker team towards automatica
 
 #### Multi-platform Docker images
 
-Here's a good article about how the "manifest list" in the Docker image manifest spec v2 works: https://integratedcode.us/2016/04/22/a-step-towards-multi-platform-docker-images/
+Here's a good article about how the "manifest list" in the Docker image [manifest spec v2](https://github.com/docker/distribution/pull/1068) works: https://integratedcode.us/2016/04/22/a-step-towards-multi-platform-docker-images/
 
 A short summary: A manifest list is a list of Docker images with a single name (e.g. `busybox`), that holds layers for multiple platforms. 
 When the image is pulled by a client (`docker pull busybox`), only layers for the target platforms are downloaded. 
@@ -138,6 +131,8 @@ TODO
 ```
 
 The only thing you have to do is change the `GOARCH` and `GOOS` variables. Here's a list of valid values for [GOARCH/GOOS](https://golang.org/doc/install/source#environment)
+This works for other OSes as well, but dynamic compilation doesn't 
+
 
 ### Dynamic compilation
 
@@ -202,19 +197,75 @@ This is especially useful if we want to include the binary in a container.
 If the binary is statically compiled, we may use `busybox` or even `scratch` as the base image.
 The goal should be to be able to compile `kubelet` this way, so we get rid of the dependency on `glibc` libraries at runtime.
 
+#### GOARM
 
-## Cross-building
+ARM contains three relevant variants: `ARMv5` (soft-float), `ARMv6` (both soft and hard-float) and `ARMv7` (hard-float; the most common one)
+`armel` means that the processor is soft-float, `armhf` is hard-float. The Raspberry Pi 1 is quite special, it's processor is `ARMv6` hard-float.
+`ARMv5` binaries can run on `ARMv6` devices, but not vice versa. The same for `ARMv6` and `ARMv7`.
+GCC packages for ARM come in two flavors: `armel` and `armhf`. Here we encounter a problem: the `armel` gcc package is `ARMv5` and the `armhf` package is `ARMv7` 
+Since we want support for the Raspberry Pi 1, we have to use `armel` for linking the `cgo` code, otherwise it won't work. 
+The performance difference between `ARMv5` and `ARMv7` is so small anyway, so it doesn't matter.
 
-### QEMU
+## Cross-building for linux
 
+After we've cross-compiled some binaries for another architecture, we also might want to package it in a Docker image.
 
+### Trivial Dockerfile
 
+All `Dockerfile` commands except for `RUN` works without any modification.
+Of course, the base image has to be switched to an arch-specific one, but except from that
+
+```Dockerfile
+FROM armel/busybox
+ENV kubernetes=true
+COPY kube-apiserver /usr/local/bin/
+CMD /usr/local/bin/kube-apiserver
+```
+```console
+$ ldd kube-apiserver
+TODO
+$ docker build -t gcr.io/google_containers/kube-apiserver-arm:v1.x.y
+TODO
+```
+
+### Complex Dockerfile
+
+However, in many cases, `RUN` statements are needed when building the image.
+The `RUN` statement invokes `/bin/sh` in the container, but since we're using `armel/debian` for example as the base image, `/bin/sh` is an ARM binary and can't execute on a `amd64` host.
+
+#### QEMU to the rescue
+
+Here's a way to run ARM Docker images on an amd64 host by using `qemu`:
+```console
+$ mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
+$ echo ':arm:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-arm-static:' > /proc/sys/fs/binfmt_misc/register
+$ curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/v2.5.0/x86_64_qemu-arm-static.tar.xz | tar -xJ
+$ docker run -it -v $(pwd)/qemu-arm-static:/usr/bin/qemu-arm-static armel/busybox /bin/sh
+# Now we're inside an ARM container although we're running on an amd64 host
+$ uname -a
+TODO
+$ ldd --version
+TODO
+$ exit
+```
+
+Here, `binfmt_misc`, a linux module, registered the ARM magic number, and whenever it finds an ARM binary, it will redirect the call to `/usr/bin/qemu-arm-static` in this example.
+`/usr/bin/qemu-arm-static` is an `amd64` binary that is statically linked and translates all syscalls it gets from the ARM binary (in this example `/bin/sh`) to `amd64` ones.
+
+You probably noticed that `qemu` was downloaded from [`multiarch/qemu-user-static`](https://github.com/multiarch/qemu-user-static). 
+The multiarch guys have packaged `qemu` nicely, and there's a prebuilt image that registers `binfmt_misc`
 
 ## Code changes required
 
 ### The pause image
 
+The `pause` is used for connecting containers into Pods. It's a binary that just sleeps forever. 
+
+`kubelet` has the `--pod-infra-container-image` option, and that option has been used when running Kubernetes on other platforms, because obviously the `pause-amd64` image can't run on `arm` hosts for example.
+
 ### Exposing information
+
+
 
 ### Dependencies
 
@@ -229,13 +280,9 @@ The goal should be to be able to compile `kubelet` this way, so we get rid of th
 ### Client binaries
 
 
-## Clustering
+## Running Kubernetes
 
-### Running locally
 
-### Running locally dockerized
-
-### Running docker-multinode
 
 
 ## Addons
