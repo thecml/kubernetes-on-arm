@@ -323,53 +323,74 @@ The `pause` is used for connecting containers into Pods. It's a binary that just
 
 `kubelet` has the `--pod-infra-container-image` option, and that option has been used when running Kubernetes on other platforms, because obviously the `pause-amd64` image can't run on `arm` hosts for example.
 
+But relying on the deployment setup to specify the right image for the platform isn't great UX, kubelet should be smarter than that. This case is already fixed in [#auto-arch-pause-num]().
+
 ### Exposing information
 
+It should be possible to run clusters with mixed platforms smoothly, after all, bringing heterogenous machines together to a single unit (a cluster) is one of Kubernetes' greatest strengths. And since the Kubernetes' components communicate over HTTP, two binaries of different architectures may talk to each other normally.
 
+The crucial thing here is that the components have to know each others platform, and initially we've solved it by exposing the labels `beta.kubernetes.io/{os,arch}` on every node. This way an user may run binaries for different platforms on a multi-platform cluster, but still it requires manual work.
 
-### Dependencies
+### Vendored packages
 
+Kubernetes might depend on packages that aren't coded in a cross-platform manner. Some examples of what they might be doing wrong are:
+ - Including constants combined with build tags
+ 	```go
+ 	//+ build linux,amd64
+ 	const AReallyAmd64SpecificConstant = 123
+ 	```
+ - Relying on platform-specific syscalls (e.g. `syscall.Dup2`)
 
-## Conditional build tags
+If this happens, we have to send a PR that fixes it in the vendored repository and then update the vendored package in `vendor/`
 
+But these compilation errors are much easier to spot now when the CI are building Kubernetes for all platforms at every PR change.
 
-## Releasing
+## Building and releasing
+
+The major part of this work affects the test and release infrastructure system. The builds are running inside a docker container; `kube-cross`, where all `linux/amd64` build dependencies are installed in order to get reproducible builds. This means `build/run.sh` commands only work on `linux/amd64`, but the main compilation script `hack/build-go.sh` should work on all platforms given that dependencies like `go` and `gcc` are installed.
+
+The released binaries are uploaded to `https://storage.googleapis.com/kubernetes-release/release/${version}/bin/${os}/${arch}/${binary}`
 
 ### Image naming
 
+This has been debated quite a lot about; how we should name non-amd64 docker images that are pushed to `gcr.io`. #thread #thread. The conclusion is that until docker incorporates the manifest list fully, we will use the `gcr.io/google_containers/${binary}-${arch}:${version}` naming.
+
+This means that the "older" naming `gcr.io/google_containers/${binary}:${version}` is deprecated, _for those images that are compiled for multiple platforms._
+
 ### Client binaries
 
+Client binaries, i. e. only kubectl at the moment, are built for more platforms than the server binaries are.
+If you want to check out an up-to-date list of them, [see here](https://github.com/kubernetes/kubernetes/blob/master/hack/lib/golang.sh).
+
+kubectl is a static binary with no C code, so it's trivial to cross-compile. If there's interest in adding a client platform, it should be as easy as appending the list.
 
 ## Running Kubernetes
 
+The easiest way of running Kubernetes on another architecture is probably by using the docker or the docker-multinode deployment. Of course, you may choose whatever deployment you want, the binaries are easily downloadable from the URL above. But [docker-multinode](https://github.com/kubernetes/kube-deploy/tree/master/docker-multinode) should be a "just works" multi-platform solution with docker as the only real dependency.
 
+As the [docker deployment](http://kubernetes.io/docs/getting-started-guides/docker/) is deprecated in favor for [minikube](https://github.com/kubernetes/minikube), minikube will be cross-platform in the same manner as well. 
 
 
 ## Addons
 
-### DNS
+Addons like dns, heapster and ingress play a big role in a working Kubernetes cluster, and we should aim to be able to deploy these addons on multiple platforms too.
 
-### Heapster
+`kube-dns`, `dashboard` and `addon-manager` are already ported for multiple platforms.
 
-### Ingress
+Some ideas about which addons we should make cross-platform:
+ - heapster
+ - heapster_influxdb
+ - heapster_grafana
+ - ingress
+ - elasticsearch
+ - fluentd
+ - kibana
+ - registry
 
-### Registry
-
-### Logging
-
+This might seem like a long list, but we've already done it for some addons, and it mostly follows the same pattern, so it should be pretty straightforward to do.
 
 ## Conflicts
 
-### How are multiple platforms supported?
+Last but not least, what should we do if there's a conflict between keeping e.g. `linux/ppc64le` builds vs merging a release blocker?
 
-
-
-
-Kubernetes is a great piece of software and a great platform for learning how distributed computing works.
-And it will be even easier and cheaper for people to try Kubernetes out on Raspberry Pi's
-
-As Brendan Burns noted on Twitter, Kubernetes cluster of Raspberry Pis is the new ["Hello World"](https://twitter.com/brendandburns/status/697499559539384320	) of cloud computing
-
-
-
-
+It is quite obvious that the release blocker is of higher priority.
