@@ -1,6 +1,6 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-# Build the alpine on the host
+# Build alpine rootfs on the host
 ./mkimage.sh
 
 # Get the rootfs archive
