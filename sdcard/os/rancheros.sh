@@ -33,7 +33,7 @@ checkrootfs(){
 
     # RancherOS doesn't support these root filesystems
     case $ROOTFSNAME in
-        kube-systemd|deb-file)
+        kube-systemd)
             exit;;
     esac
 }

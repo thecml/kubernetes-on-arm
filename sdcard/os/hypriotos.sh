@@ -52,7 +52,7 @@ checkrootfs(){
 
     # HypriotOS supports these root filesystems
     case $ROOTFSNAME in
-        kube-systemd|deb-file)
+        kube-systemd)
             ;;
         *)
             exit;;

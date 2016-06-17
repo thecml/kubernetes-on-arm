@@ -47,7 +47,7 @@ checkrootfs(){
     case $ROOTFSNAME in
         kube-systemd)
             ;;
-        deb-file|*)
+        *)
             exit;;
     esac
 }

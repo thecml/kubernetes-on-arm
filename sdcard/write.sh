@@ -79,7 +79,6 @@ Explanation:
     rootfs - Prepopulated rootfs with scripts and such.
         - Currently supported:
             - kube-systemd - Kubernetes scripts prepopulated (for archlinux and hypriotos)
-            - deb-file - Installs the kube-systemd rootfs from the deb deployment (for hypriotos and raspbian)
 
 Example:
 sdcard/write.sh /dev/sdb rpi-2 archlinux kube-systemd
