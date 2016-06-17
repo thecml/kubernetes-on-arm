@@ -68,6 +68,34 @@ nameserver $DNS_IP
 search default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN
 --------------------
 EOF
+    else
+        # Only edit the DNS config if the file exists
+        if [[ -f /etc/dhcp/dhclient.conf ]]; then
+
+            # Write the DNS options to the file
+            updateline /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
+            updateline /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers $DNS_IP;"
+
+            # If we are using /etc/init.d/networking, restart it
+            if [[ $(systemctl is-active networking) == "active" ]]; then
+                systemctl restart networking
+            elif [[ $(systemctl is-active systemd-networkd) == "active" ]]; then
+                systemctl restart systemd-networkd
+            else
+                echo "WARNING: You have to restart your networking daemon for DNS changes to take effect and flush changes to /etc/resolv.conf"
+            fi
+        fi
+
+        # Only edit the DNS config if the file exists
+        if [[ -f /etc/resolvconf.conf ]]; then
+
+            # Write the DNS options to the file
+            updateline /etc/resolvconf.conf "search_domains" "search_domains=\"default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN\""
+            updateline /etc/resolvconf.conf "name_servers" "name_servers=$DNS_IP;"
+
+            # Update resolv.conf 
+            resolvconf -u
+        fi
     fi
 
     # Is git installed? If not, try to install it
@@ -84,7 +112,6 @@ EOF
     fi
 }
 
-
 os_upgrade(){
     # If apt-get is there, use it
     if [[ -f $(which apt-get 2>&1) ]]; then
@@ -92,36 +119,5 @@ os_upgrade(){
         apt-get update -y && apt-get upgrade -y
     else
         echo "Don't know which package manager you are using. Upgrade the packages yourself..."
-    fi
-}
-
-os_addon_dns(){
-
-    # Only edit the DNS config if the file exists
-    if [[ -f /etc/dhcp/dhclient.conf ]]; then
-
-        # Write the DNS options to the file
-        updateline /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
-        updateline /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers $DNS_IP;"
-
-        # If we are using /etc/init.d/networking, restart it
-        if [[ $(systemctl is-active networking) == "active" ]]; then
-            systemctl restart networking
-        elif [[ $(systemctl is-active systemd-networkd) == "active" ]]; then
-            systemctl restart systemd-networkd
-        else
-            echo "WARNING: You have to restart your networking daemon for DNS changes to take effect and flush changes to /etc/resolv.conf"
-        fi
-    fi
-
-    # Only edit the DNS config if the file exists
-    if [[ -f /etc/resolvconf.conf ]]; then
-
-        # Write the DNS options to the file
-        updateline /etc/resolvconf.conf "search_domains" "search_domains=\"default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN\""
-        updateline /etc/resolvconf.conf "name_servers" "name_servers=$DNS_IP;"
-
-        # Update resolv.conf 
-        resolvconf -u
     fi
 }
