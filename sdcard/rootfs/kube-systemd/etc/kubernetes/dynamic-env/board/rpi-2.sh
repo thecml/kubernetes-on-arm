@@ -10,5 +10,9 @@ board_post_install(){
     if [[ -z $(grep "cgroup_enable=memory" /boot/cmdline.txt) ]]; then
         sed -e "s@console=tty1@console=tty1 cgroup_enable=memory@" -i /boot/cmdline.txt
     fi
+
+    if [[ -z $(grep "cgroup_enable=cpuset" /boot/cmdline.txt) ]]; then
+        sed -e "s@console=tty1@console=tty1 cgroup_enable=cpuset@" -i /boot/cmdline.txt
+    fi
          
 }
