@@ -1,0 +1,380 @@
+#!/bin/bash
+
+# Catch errors
+trap 'exit' ERR
+
+if [[ ${DEBUG} == 1 ]]; then
+    set -x
+fi
+
+# Root is required
+if [[ ${EUID} != 0 ]]; then
+    echo "Please run as root"
+    usage
+    exit 1
+fi
+
+INSTALL_DEFAULT_TIMEZONE="Europe/Helsinki"
+INSTALL_DEFAULT_HOSTNAME="kubepi"
+INSTALL_DEFAULT_STORAGEDRIVER="overlay"
+
+KUBERNETES_DIR=/etc/kubernetes
+KUBERNETES_CONFIG=${KUBERNETES_DIR}/k8s.conf
+KUBERNETES_ON_ARM_ADDONS_DIR=${KUBERNETES_DIR}/addons
+KUBERNETES_ENV_DIR=${KUBERNETES_DIR}/env
+KUBERNETES_ENV_FILE=${KUBERNETES_ENV_DIR}/env.conf
+
+KUBE_DEPLOY_DIR=${KUBERNETES_DIR}/kube-deploy
+KUBE_DEPLOY_COMMIT=20455d9174036144697e034ece3ccbcdd68545e8
+MULTINODE_DIR=${KUBE_DEPLOY_DIR}/docker-multinode
+
+DNS_DOMAIN="cluster.local"
+DNS_IP=10.0.0.10
+
+source ${KUBERNETES_CONFIG}
+
+
+
+usage(){
+    cat <<EOF
+Welcome to kube-config!
+
+With this utility, you can setup Kubernetes on ARM!
+
+Usage: 
+    kube-config install - Installs docker and makes your board ready for kubernetes
+    kube-config upgrade - Upgrade current operating system packages to latest version.
+
+    kube-config enable-master - Enable the master services and then kubernetes is ready to use
+        - FYI, etcd data will be stored in the /var/lib/kubernetes/etcd directory. Backup that directory if you have important data.
+    kube-config enable-worker [master-ip] - Enable the worker services and then kubernetes has a new node
+    kube-config enable-addon [addon] ...[addon_n] - Enable one or more addons
+        - Automatically deployed (mandatory) addons
+        	- dns: Makes all services accessible via DNS
+        	- dashboard: A general-purpose Web UI for Kubernetes
+        - Currently defined addons
+            - registry: Makes a central docker registry
+            - loadbalancer: A loadbalancer that exposes services to the outside world.
+            - heapster: Cluster monitoring for Kubernetes. Has a frontend with graphs how the cluster resources are used.
+            - (unofficial) sleep: A debug addon. Starts two containers: luxas/alpine and resin/rpi-raspbian.
+
+    kube-config disable - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong or you just want to stop Kubernetes
+    kube-config disable-addon [addon] ...[addon_n] - Disable one or more addons
+    
+    kube-config delete-data - Clean the /var/lib/kubernetes and /var/lib/kubelet directories, where all master data is stored
+
+    kube-config info - Outputs some version information and info about your board and Kubernetes
+    kube-config help - Display this help text
+EOF
+}
+
+
+install(){
+
+    # Source the commands, e.g. os_install, os_upgrade, os_post_install, board_post_install
+    if [[ -f ${KUBERNETES_ENV_FILE} ]]; then
+        source ${KUBERNETES_ENV_FILE}
+    fi
+
+    # If some of the options are unset, ask the user
+    # This makes it possible to export OS and BOARD before running this command (requires that no env.conf is present)
+    if [[ -z ${BOARD} || -z ${OS} ]]; then
+        read -p "Which board is this running on? Options: [$(ls -l ${KUBERNETES_ENV_DIR}/board | grep ".sh" | awk '{print $9}'| cut -d. -f1 | sed ':a;N;s/\n/, /;ta')]. " BOARD
+        read -p "Which OS do you have? Options: [$(ls -l ${KUBERNETES_ENV_DIR}/os | grep ".sh" | awk '{print $9}'| cut -d. -f1 | sed ':a;N;s/\n/, /;ta')]. " OS
+    fi
+
+    # If some of the options doesn't exist, exit
+    if [[ ! -f ${KUBERNETES_ENV_DIR}/board/${BOARD}.sh ]]; then
+        echo "Invalid board: ${BOARD}. That value does not exist. Exiting..."
+        exit
+    fi
+    if [[ ! -f ${KUBERNETES_ENV_DIR}/os/${OS}.sh ]]; then
+        echo "Invalid os: ${OS}. That value does not exist. Exiting..."
+        exit
+    fi
+
+    # OK, both BOARD and OS are valid. Write the info to the file (even if it was the same as before)
+    echo -e "OS=${OS}\nBOARD=${BOARD}" > ${KUBERNETES_ENV_FILE}
+
+    # Source the board/os specific functions
+    source ${KUBERNETES_ENV_DIR}/board/${BOARD}.sh
+    source ${KUBERNETES_ENV_DIR}/os/${OS}.sh
+
+    # If we have a external command file, use it
+    if [[ $(type -t os_install) == "function" ]]; then
+        echo "Installing required packages for this OS"
+        os_install
+    else
+        echo "OS not supported. Exiting..."
+        exit 1
+    fi
+
+    # Download the kube-deploy project
+    git clone https://github.com/kubernetes/kube-deploy ${KUBE_DEPLOY_DIR}
+    (cd ${KUBE_DEPLOY_DIR} && git checkout ${KUBE_DEPLOY_COMMIT})
+
+    # Set hostname
+    if [[ -z ${NEW_HOSTNAME} ]]; then
+        read -p "What hostname do you want? Defaults to ${INSTALL_DEFAULT_HOSTNAME}. " hostnameanswer
+        NEW_HOSTNAME=${hostnameanswer:-${INSTALL_DEFAULT_HOSTNAME}}
+    fi
+    hostnamectl set-hostname ${NEW_HOSTNAME}
+
+    # Set timezone
+    if [[ -z ${TIMEZONE} ]]; then
+        read -p "Which timezone should be set? Defaults to ${INSTALL_DEFAULT_TIMEZONE}. " timezoneanswer
+        TIMEZONE=${timezoneanswer:-${INSTALL_DEFAULT_TIMEZONE}}
+    fi
+    timedatectl set-timezone ${TIMEZONE}
+
+    # Set timezone
+    if [[ -z ${STORAGE_DRIVER} ]]; then
+        read -p "Which storage driver do you want? Defaults to ${INSTALL_DEFAULT_STORAGEDRIVER}. " storagedriveranswer
+        STORAGE_DRIVER=${storagedriveranswer:-${INSTALL_DEFAULT_STORAGEDRIVER}}
+    fi
+
+    # Has the user explicitely specified it? If not, ask.
+    if [[ -z ${SWAP} ]]; then
+        read -p "Do you want to create an 1GB swapfile (required for compiling)? N is default [y/N] " swapanswer
+        case ${swapanswer} in
+            [yY]*)
+                SWAP=1;;
+        esac
+    fi
+    if [[ ${SWAP} == 1 || ${SWAP} == "y" || ${SWAP} == "Y" ]]; then
+        echo "Makes an 1GB swapfile, NOTE: it takes up precious SD Card space"
+        # Check that the swapfile doesn't already exist
+        if [[ ! -f /swapfile ]]; then
+            # Make 1GB swap
+            dd if=/dev/zero of=/swapfile bs=1M count=1024
+
+            # Enable it with right permissions
+            mkswap /swapfile
+            chmod 600 /swapfile
+            swapon /swapfile
+
+            # And recreate it on every boot
+            echo "/swapfile  none  swap  defaults  0  0" >> /etc/fstab
+        fi
+    fi
+
+    if [[ $(type -t board_post_install) == "function" ]]; then
+        echo "Doing some custom work specific to this board"
+        board_post_install
+    fi
+    if [[ $(type -t os_post_install) == "function" ]]; then
+        echo "Doing some custom work specific to this OS"
+        os_post_install
+    fi
+
+    # Reboot?
+    if [[ -z ${REBOOT} ]]; then
+        read -p "Do you want to reboot now? A reboot is required for Docker to function. Y is default. [Y/n] " rebootanswer
+
+        case ${rebootanswer} in
+            [nN]*)
+                echo "Done.";;
+            *)
+                reboot;;
+        esac
+    elif [[ ${REBOOT} == 1 || ${REBOOT} == "y" || ${REBOOT} == "Y" ]]; then
+        reboot
+    fi
+}
+
+upgrade(){
+    echo "Upgrading the system"
+
+    # Source the os file and use that upgrade method
+    source ${KUBERNETES_ENV_FILE}
+    source ${KUBERNETES_ENV_DIR}/os/${OS}.sh
+    if [[ $(type -t os_upgrade) == "function" ]]; then
+        os_upgrade
+    fi
+}
+
+enable-master() {
+    ${MULTINODE_DIR}/master.sh
+}
+
+enable-master() {
+    IP=${1:-${K8S_MASTER_IP}}
+
+    echo "Using master ip: ${IP}"
+    updateconfig K8S_MASTER_IP ${IP}
+
+    # Check if we have a connection
+    if [[ $(checkformaster ${IP}) != "OK" ]]; then
+        cat <<EOF
+The Kubernetes master was not found.
+Exiting...
+
+Usage:
+kube-config enable-worker [master-ip]
+EOF
+        exit
+    fi
+
+    MASTER_IP=${IP} ${MULTINODE_DIR}/worker.sh
+}
+
+turndown(){
+    ${MULTINODE_DIR}/turndown.sh
+}
+
+change-addon() {
+	if [[ $(is-active) == 1 ]]; then
+
+		ACTION=$1
+		shift
+        for ADDON in $@; do
+            if [[ -f ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml ]]; then
+
+                ${KUBECTL} ${ACTION} -f ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml
+                echo "Stopped addon: ${ADDON}"
+            else
+                echo "This addon doesn't exist: ${ADDON}"
+            fi
+        done
+    else
+        echo "Kubernetes is not running!"
+    fi
+}
+
+
+version(){
+    echo "Architecture: $(uname -m)" 
+    echo "Kernel: $(uname) $(uname -r | grep -o "[0-9.]*" | grep "[.]")"
+    echo "CPU: $(lscpu | grep 'Core(s)' | grep -o "[0-9]*") cores x $(lscpu | grep "CPU max" | grep -o "[0-9]*" | head -1) MHz"
+
+    echo
+    echo "Used RAM Memory: $(free -m | grep Mem | awk '{print $3}') MiB"
+    echo "RAM Memory: $(free -m | grep Mem | awk '{print $2}') MiB"
+    echo
+    echo "Used disk space: $(df -h | grep /dev/root | awk '{print $3}')B ($(df | grep /dev/root | awk '{print $3}') KB)"
+    echo "Free disk space: $(df -h | grep /dev/root | awk '{print $4}')B ($(df | grep /dev/root | awk '{print $4}') KB)"
+    echo
+
+    if [[ -f $KUBERNETES_DIR/SDCard_metadata.conf ]]; then
+        source $KUBERNETES_DIR/SDCard_metadata.conf
+        D=${SDCARD_BUILD_DATE}
+        echo "SD Card/deb package was built: $(echo $D | cut -c1-2)-$(echo $D | cut -c3-4)-20$(echo $D | cut -c5-6) $(echo $D | cut -c8-9):$(echo $D | cut -c10-11)"
+        echo
+        echo "kubernetes-on-arm: "
+        echo "Latest commit: ${K8S_ON_ARM_COMMIT}"
+        echo "Version: ${K8S_ON_ARM_VERSION}"
+        echo
+    fi
+
+    echo "systemd version: v$(systemctl --version | head -1 | cut -c9-)"
+    if [[ $(docker ps 2> /dev/null 1> /dev/null; echo $?) == "0" ]]; then
+
+        echo "docker version: v$(docker --version | awk '{print $3}' | sed -e 's/,$//')"
+
+        # if kubectl exists, output k8s server version. If there is no server, output client Version
+        if [[ -f $(which ${KUBECTL} 2>&1) ]]; then
+            SERVER_K8S=$(${KUBECTL} version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
+
+            if [[ ! -z $SERVER_K8S ]]; then
+                echo "kubernetes server version: $SERVER_K8S"
+                echo
+                echo "CPU Time (minutes):"
+                echo "kubelet: $(getcputime kubelet)"
+                echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
+
+                if [[ $(get-node-type) == "master" ]]; then
+                    echo "apiserver: $(getcputime apiserver)"
+                    echo "controller-manager: $(getcputime controller-manager)"
+                    echo "scheduler: $(getcputime scheduler)"
+                    echo "proxy: $(getcputime proxy)"
+                fi
+            else
+                echo "kubernetes client version: $(${KUBECTL} version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
+            fi
+        fi
+    fi
+}
+
+getcputime(){
+    echo $(ps aux | grep " $1 " | grep -v grep | grep -v docker | awk '{print $10}')
+}
+
+# Update variable in k8s.conf
+# Example: updateconfig K8S_MASTER_IP [new value]
+updateconfig(){
+    updateline ${KUBERNETES_CONFIG} $1 "$1=$2"
+}
+
+# Example: updateline path_to_file value_to_search_for replace_that_line_with_this_content
+# 
+updateline(){
+    if [[ -z $(cat $1 | grep "$2") ]]; then
+        echo "$3" >> $1
+    else
+        sed -i "/$2/c\\$3" $1
+    fi
+}
+
+checkformaster(){
+    if [[ $(curl -m 5 -sSLIk http://${1}:8080 2>&1 | head -1) == *"OK"* ]]; then
+        echo "OK"
+    fi
+}
+
+get-node-type(){
+    local active=$(is-active)
+    if [[ ${active} == 1 && $(docker ps 2>&1 | grep apiserver) != "" ]]; then
+        echo "master"
+    elif [[ ${active} == 1 ]]; then
+        echo "worker"
+    else
+        echo ""
+    fi 
+}
+
+# Is kubernetes enabled?
+is-active(){
+    if [[ $(docker ps 2>&1 | grep kubelet) != "" ]]; then
+        echo 1;
+    else 
+        echo 0;
+    fi
+}
+
+
+
+# If nothing is specified, return usage
+if [[ $# == 0 ]]; then
+    usage
+    exit
+fi
+
+# Commands available
+case $1 in
+    'install')
+        install;;
+    'upgrade')
+        upgrade;;
+
+    'enable-master')
+        start-master;;
+    'enable-worker')
+        start-worker $2;;
+    'enable-addon')
+        shift
+        change-addon create $@;;
+
+    'turndown')
+        turndown;;
+    'disable-addon')
+        shift
+        change-addon delete $@;;
+
+    'info')
+        version;;
+    'help')
+        usage;;
+    *) 
+        usage;;
+esac
+
