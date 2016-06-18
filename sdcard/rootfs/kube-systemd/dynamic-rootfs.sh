@@ -5,22 +5,16 @@
 # PROJROOT: Path to kubernetes-on-arm
 rootfs(){
 
-    K8S_DIR="$ROOT/etc/kubernetes"
-    SDCARD_METADATA_FILE=$K8S_DIR/SDCard_metadata.conf
+    K8S_DIR=${ROOT}/etc/kubernetes
+    SDCARD_METADATA_FILE=${K8S_DIR}/SDCard_metadata.conf
 
     # Allow ssh connections by root to this machine
-    if [[ -f $ROOT/etc/ssh/sshd_config ]]; then
-        echo "PermitRootLogin yes" >> $ROOT/etc/ssh/sshd_config
+    if [[ -f ${ROOT}/etc/ssh/sshd_config ]]; then
+        echo "PermitRootLogin yes" >> ${ROOT}/etc/ssh/sshd_config
     fi
 
-    # Shortcut for running tests
-    ln -s ../../etc/kubernetes/source/scripts/run-test.sh $ROOT/usr/bin/run-test
-
-    # Copy current source
-    cp -r $PROJROOT $K8S_DIR/source
-
     # Remove the .sh
-    mv $ROOT/usr/bin/kube-config{.sh,}
+    mv ${ROOT}/usr/bin/kube-config{-2.sh,}
 
     # Make the docker dropin directory
     mkdir -p $ROOT/usr/lib/systemd/system/docker.service.d
@@ -34,10 +28,7 @@ rootfs(){
     ln -s ./source/addons $K8S_DIR
 
     # Inform the newly created SD Cards' scripts about which files to use.
-    cat > $K8S_DIR/dynamic-env/env.conf <<EOF
-OS=$OSNAME
-BOARD=$MACHINENAME
-EOF
+    echo -e "OS=${OSNAME}\nBOARD=${MACHINENAME}" > ${K8S_DIR}/env/env.conf
 
     # Remember the time we built this SD Card
     echo -e "SDCARD_BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $SDCARD_METADATA_FILE
