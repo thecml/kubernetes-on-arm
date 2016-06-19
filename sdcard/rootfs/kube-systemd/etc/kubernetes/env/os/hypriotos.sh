@@ -9,9 +9,11 @@ os_install(){
         apt-get install bridge-utils -y
     fi
 
-    # Write the DNS options to the file. TODO: Check if this is obsolete in v0.8.0
+    # Write the DNS options to the file.
     updateline /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
     updateline /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers $DNS_IP;"
+
+    systemctl disable cluster-lab
 }
 
 
@@ -21,7 +23,7 @@ os_upgrade(){
 }
 
 os_post_install(){
-    # Reflect the new hostname in /boot/occidentalis
+    # Reflect the new hostname in /boot/device-init.yaml
     newhostname=$(hostnamectl | grep hostname | awk '{print $3}')
-    sed -i "/hostname=/c\hostname=$newhostname" /boot/occidentalis.txt
+    sed -i "/hostname:/c\hostname: ${newhostname}" /boot/device-init.yaml
 }
