@@ -16,33 +16,26 @@ rootfs(){
     # Remove the .sh
     mv ${ROOT}/usr/bin/kube-config{-2.sh,}
 
-    # Make the docker dropin directory
-    mkdir -p $ROOT/usr/lib/systemd/system/docker.service.d
-    ln -s ../../../../../etc/kubernetes/dropins/docker-overlay.conf $ROOT/usr/lib/systemd/system/docker.service.d/docker-overlay.conf
-
-    # Symlink latest built binaries to an easier path, TODO: seems to fail
-    mkdir -p $K8S_DIR/source/images/kubernetesonarm/_bin/latest
-    ln -s ./source/images/kubernetesonarm/_bin/latest $K8S_DIR/binaries
-
-    # Symlink the addons to an easier path
-    ln -s ./source/addons $K8S_DIR
+    # Copy over all addons
+    mkdir -p ${ROOT}/etc/kubernetes/addons
+    cp ${PROJROOT}/addons/* ${ROOT}/etc/kubernetes/addons
 
     # Inform the newly created SD Cards' scripts about which files to use.
     echo -e "OS=${OSNAME}\nBOARD=${MACHINENAME}" > ${K8S_DIR}/env/env.conf
 
     # Remember the time we built this SD Card
-    echo -e "SDCARD_BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> $SDCARD_METADATA_FILE
+    echo -e "SDCARD_BUILD_DATE=\"$(date +%d%m%y_%H%M)\"" >> ${SDCARD_METADATA_FILE}
 
     # Try to fetch latest commit from git
     COMMIT=$(git log --oneline 2>&1 | head -1 | awk '{print $1}')
-    if [[ $COMMIT != "bash:"* && $COMMIT != "fatal:"* ]]; then
-        echo "K8S_ON_ARM_COMMIT=$COMMIT" >> $SDCARD_METADATA_FILE
+    if [[ ${COMMIT} != "bash:"* && ${COMMIT} != "fatal:"* ]]; then
+        echo "K8S_ON_ARM_COMMIT=${COMMIT}" >> ${SDCARD_METADATA_FILE}
     fi
 
     # Get version relative to $PROJROOT
-    source $PROJROOT/version
-    echo "K8S_ON_ARM_VERSION=$VERSION" >> $SDCARD_METADATA_FILE
+    source ${PROJROOT}/version
+    echo "K8S_ON_ARM_VERSION=${VERSION}" >> ${SDCARD_METADATA_FILE}
 
     # Remove the copy of this script
-    rm $ROOT/dynamic-rootfs.sh
+    rm ${ROOT}/dynamic-rootfs.sh
 }
