@@ -7,12 +7,14 @@ if [[ ${DEBUG} == 1 ]]; then
     set -x
 fi
 
-# Root is required
-if [[ ${EUID} != 0 ]]; then
-    echo "Please run as root"
-    usage
-    exit 1
-fi
+ensure_root() {
+    # Root is required
+    if [[ ${EUID} != 0 ]]; then
+        echo "Please run as root"
+        usage
+        exit 1
+    fi
+}
 
 INSTALL_DEFAULT_TIMEZONE="Europe/Helsinki"
 INSTALL_DEFAULT_HOSTNAME="kubepi"
@@ -27,9 +29,12 @@ KUBERNETES_ENV_FILE=${KUBERNETES_ENV_DIR}/env.conf
 KUBE_DEPLOY_DIR=${KUBERNETES_DIR}/kube-deploy
 KUBE_DEPLOY_COMMIT=20455d9174036144697e034ece3ccbcdd68545e8
 MULTINODE_DIR=${KUBE_DEPLOY_DIR}/docker-multinode
+SUPPORTED_K8S_VERSION=v1.3.0-alpha.1
 
 DNS_DOMAIN="cluster.local"
 DNS_IP=10.0.0.10
+
+KUBECTL=/usr/local/bin/kubectl
 
 source ${KUBERNETES_CONFIG}
 
@@ -52,17 +57,14 @@ Usage:
         - Automatically deployed (mandatory) addons
         	- dns: Makes all services accessible via DNS
         	- dashboard: A general-purpose Web UI for Kubernetes
-        - Currently defined addons
+        - Optional Kubernetes addons
             - registry: Makes a central docker registry
             - loadbalancer: A loadbalancer that exposes services to the outside world.
             - heapster: Cluster monitoring for Kubernetes. Has a frontend with graphs how the cluster resources are used.
-            - (unofficial) sleep: A debug addon. Starts two containers: luxas/alpine and resin/rpi-raspbian.
 
     kube-config disable - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong or you just want to stop Kubernetes
     kube-config disable-addon [addon] ...[addon_n] - Disable one or more addons
     
-    kube-config delete-data - Clean the /var/lib/kubernetes and /var/lib/kubelet directories, where all master data is stored
-
     kube-config info - Outputs some version information and info about your board and Kubernetes
     kube-config help - Display this help text
 EOF
@@ -104,14 +106,18 @@ install(){
     if [[ $(type -t os_install) == "function" ]]; then
         echo "Installing required packages for this OS"
         os_install
-    else
-        echo "OS not supported. Exiting..."
-        exit 1
+    fi
+    if [[ $(type -t board_install) == "function" ]]; then
+        board_install
     fi
 
     # Download the kube-deploy project
     git clone https://github.com/kubernetes/kube-deploy ${KUBE_DEPLOY_DIR}
     (cd ${KUBE_DEPLOY_DIR} && git checkout ${KUBE_DEPLOY_COMMIT})
+
+    # Download kubectl
+    curl -sSL https://storage.googleapis.com/kubernetes-release/release/${SUPPORTED_K8S_VERSION}/bin/linux/$(get-arch)/kubectl > ${KUBECTL}
+    chmod +x ${KUBECTL}
 
     # Set hostname
     if [[ -z ${NEW_HOSTNAME} ]]; then
@@ -127,11 +133,21 @@ install(){
     fi
     timedatectl set-timezone ${TIMEZONE}
 
-    # Set timezone
+    # Set storage driver
     if [[ -z ${STORAGE_DRIVER} ]]; then
         read -p "Which storage driver do you want? Defaults to ${INSTALL_DEFAULT_STORAGEDRIVER}. " storagedriveranswer
         STORAGE_DRIVER=${storagedriveranswer:-${INSTALL_DEFAULT_STORAGEDRIVER}}
     fi
+    DOCKER_CONF=$(systemctl cat docker | head -1 | awk '{print $2}')
+    DOCKER_CMD=$(grep "/usr/bin/docker" ${DOCKER_CONF})
+
+    # This expression checks if the "--storage-driver" or "-s" options are in the .service
+    # If they aren't, they are inserted at the end of the docker command
+    if [[ -z $(grep -- "--storage-driver=" ${DOCKER_CONF}) || -z $(grep -- "-s=" ${DOCKER_CONF}) ]]; then
+      sed -e "s@${DOCKER_CMD}@${DOCKER_CMD} --storage-driver=${STORAGE_DRIVER}@g" -i ${DOCKER_CONF}
+    fi
+    sed -e "s@-s=@--storage-driver=@g" -i ${DOCKER_CONF}
+    sed -e "s@$(grep -o -- "--storage-driver=[[:graph:]]*" ${DOCKER_CONF})@--storage-driver=${STORAGE_DRIVER}@g" -i ${DOCKER_CONF}
 
     # Has the user explicitely specified it? If not, ask.
     if [[ -z ${SWAP} ]]; then
@@ -149,9 +165,7 @@ install(){
             dd if=/dev/zero of=/swapfile bs=1M count=1024
 
             # Enable it with right permissions
-            mkswap /swapfile
-            chmod 600 /swapfile
-            swapon /swapfile
+            mkswap /swapfile && chmod 600 /swapfile && swapon /swapfile
 
             # And recreate it on every boot
             echo "/swapfile  none  swap  defaults  0  0" >> /etc/fstab
@@ -194,10 +208,12 @@ upgrade(){
 }
 
 enable-master() {
+    export K8S_VERSION=${K8S_VERSION:-${SUPPORTED_K8S_VERSION}}
     ${MULTINODE_DIR}/master.sh
 }
 
-enable-master() {
+enable-worker() {
+    export K8S_VERSION=${K8S_VERSION:-${SUPPORTED_K8S_VERSION}}
     IP=${1:-${K8S_MASTER_IP}}
 
     echo "Using master ip: ${IP}"
@@ -231,7 +247,6 @@ change-addon() {
             if [[ -f ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml ]]; then
 
                 ${KUBECTL} ${ACTION} -f ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml
-                echo "Stopped addon: ${ADDON}"
             else
                 echo "This addon doesn't exist: ${ADDON}"
             fi
@@ -341,6 +356,18 @@ is-active(){
     fi
 }
 
+get-arch(){
+    case "$(uname -m)" in
+        aarch64*)
+          host_arch=arm64;;
+        arm64*)
+          host_arch=arm64;;
+        *)
+          host_arch=arm;;
+    esac
+    echo ${host_arch}
+}
+
 
 
 # If nothing is specified, return usage
@@ -357,9 +384,9 @@ case $1 in
         upgrade;;
 
     'enable-master')
-        start-master;;
+        enable-master;;
     'enable-worker')
-        start-worker $2;;
+        enable-worker $2;;
     'enable-addon')
         shift
         change-addon create $@;;
