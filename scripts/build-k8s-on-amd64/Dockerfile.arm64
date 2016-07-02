@@ -11,11 +11,13 @@ RUN echo "deb http://emdebian.org/tools/debian/ jessie main" > /etc/apt/sources.
     && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Important ENV variables
-ENV GOARM=6 \
+ENV PATH=$PATH:$GOPATH/bin \
+    GOARM=6 \
     GOARCH=arm64 \
     CC=aarch64-linux-gnu-gcc \
     K8S_DIR="$GOPATH/src/k8s.io/kubernetes" \
     K8S_CONTRIB="$GOPATH/src/k8s.io/contrib" \
+    K8S_HELM="$GOPATH/src/k8s.io/helm" \
     ETCD_DIR="$GOPATH/src/github.com/coreos/etcd" \
     FLANNEL_DIR="$GOPATH/src/github.com/coreos/flannel" \
     REGISTRY_DIR="$GOPATH/src/github.com/docker/distribution" \
@@ -44,3 +46,7 @@ RUN OUTPUT=_output/local/go/bin/linux_arm64 /build-k8s.sh
 # Build Kubernetes contrib binaries
 ADD build-k8s-contrib.sh /build-k8s-contrib.sh
 RUN /build-k8s-contrib.sh
+
+# Build Kubernetes Helm binaries
+ADD build-helm.sh /build-helm.sh
+RUN /build-helm.sh
