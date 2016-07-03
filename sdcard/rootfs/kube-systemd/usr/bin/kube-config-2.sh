@@ -31,6 +31,8 @@ KUBE_DEPLOY_COMMIT=28c64a0ba3407172f8518811e144c9eb7bd75f73
 MULTINODE_DIR=${KUBE_DEPLOY_DIR}/docker-multinode
 SUPPORTED_K8S_VERSION=v1.3.0
 
+KUBERNETES_ON_ARM_IMAGE_VERSION=0.8.0
+
 DNS_DOMAIN="cluster.local"
 DNS_IP=10.0.0.10
 
@@ -246,7 +248,7 @@ change-addon() {
         for ADDON in $@; do
             if [[ -f ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml ]]; then
 
-                ${KUBECTL} ${ACTION} -f ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml
+                sed -e "s|VERSION|${KUBERNETES_ON_ARM_IMAGE_VERSION}|g" ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml | ${KUBECTL} ${ACTION} -f -
             else
                 echo "This addon doesn't exist: ${ADDON}"
             fi
@@ -270,8 +272,8 @@ version(){
     echo "Free disk space: $(df -h | grep /dev/root | awk '{print $4}')B ($(df | grep /dev/root | awk '{print $4}') KB)"
     echo
 
-    if [[ -f $KUBERNETES_DIR/SDCard_metadata.conf ]]; then
-        source $KUBERNETES_DIR/SDCard_metadata.conf
+    if [[ -f ${KUBERNETES_DIR}/SDCard_metadata.conf ]]; then
+        source ${KUBERNETES_DIR}/SDCard_metadata.conf
         D=${SDCARD_BUILD_DATE}
         echo "SD Card/deb package was built: $(echo $D | cut -c1-2)-$(echo $D | cut -c3-4)-20$(echo $D | cut -c5-6) $(echo $D | cut -c8-9):$(echo $D | cut -c10-11)"
         echo
@@ -296,12 +298,12 @@ version(){
                 echo "CPU Time (minutes):"
                 echo "kubelet: $(getcputime kubelet)"
                 echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
+                echo "proxy: $(getcputime proxy)"
 
                 if [[ $(get-node-type) == "master" ]]; then
                     echo "apiserver: $(getcputime apiserver)"
                     echo "controller-manager: $(getcputime controller-manager)"
                     echo "scheduler: $(getcputime scheduler)"
-                    echo "proxy: $(getcputime proxy)"
                 fi
             else
                 echo "kubernetes client version: $(${KUBECTL} version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
