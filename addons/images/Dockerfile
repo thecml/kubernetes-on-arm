@@ -1,42 +1,47 @@
 FROM gcr.io/google_containers/kube-cross:v1.6.2-1
 
-ENV GOARCH=arm \
-	GOARM=6 \
-	CGO_ENABLED=0 \
-	CC=arm-linux-gnueabi-gcc \
-	OUTPUT_DIR=/build/bin \
-	HEAPSTER_DIR=${GOPATH}/src/k8s.io/heapster \
-	CONTRIB_DIR=${GOPATH}/src/k8s.io/contrib \
-	REGISTRY_DIR=${GOPATH}/src/github.com/docker/distribution \
-	INFLUXDB_DIR=${GOPATH}/src/github.com/influxdb/influxdb \
-	GRAFANA_DIR=${GOPATH}/src/github.com/grafana/grafana
+ARG GOARCH=arm
+ARG CC=arm-linux-gnueabi-gcc
 
-ENV HEAPSTER_VERSION=v1.1.0 \
+ENV GOARM=6 \
+	CGO_ENABLED=0 \
+	OUTPUT_DIR=/build/bin \
+	REGISTRY_DIR=${GOPATH}/src/github.com/docker/distribution \
+	HEAPSTER_DIR=${GOPATH}/src/k8s.io/heapster \
+	INFLUXDB_DIR=${GOPATH}/src/github.com/influxdb/influxdb \
+	GRAFANA_DIR=${GOPATH}/src/github.com/grafana/grafana \
+	GRAFANA_ROOTFS_DIR=/tmp/grafana \
+	CONTRIB_DIR=${GOPATH}/src/k8s.io/contrib \
+	HELM_DIR=${GOPATH}/src/k8s.io/helm
+
+ENV REGISTRY_VERSION=v2.5.0-rc.1 \
+	HEAPSTER_VERSION=v1.1.0 \
 	INFLUXDB_VERSION=v0.13.0 \
 	GRAFANA_VERSION=v3.0.4 \
 	GRAFANA_DL_VERSION=3.0.4-1464167696 \
-	REGISTRY_VERSION=v2.5.0-rc.1 \
-	GOSU_VERSION=1.9 \
-	INGRESS_CONTROLLER_VERSION=0.8
+	CONTRIB_COMMIT=189e960d0735c17890a0bba7c5cb233a4c9618a4 \
+	INGRESS_CONTROLLER_VERSION=0.8 \
+	HELM_VERSION=v2.0.0-alpha.2
 
 RUN mkdir -p \
 	${OUTPUT_DIR} \
-	${HEAPSTER_DIR} \
-	${CONTRIB_DIR} \
 	${REGISTRY_DIR} \
+	${HEAPSTER_DIR} \
 	${INFLUXDB_DIR} \
-	${GRAFANA_DIR}
+	${GRAFANA_DIR} \
+	${CONTRIB_DIR} \
+	${HELM_DIR}
+
+RUN curl -sSL https://github.com/docker/distribution/archive/${REGISTRY_VERSION}.tar.gz | tar -xz -C ${REGISTRY_DIR} --strip-components=1 \
+	&& cd ${REGISTRY_DIR} \
+	&& go build -a --installsuffix cgo --ldflags "-X `go list ./version`.Version=${REGISTRY_VERSION}" -o bin/registry ./cmd/registry \
+	&& cp bin/registry ${OUTPUT_DIR}
 
 RUN curl -sSL https://github.com/kubernetes/heapster/archive/${HEAPSTER_VERSION}.tar.gz | tar -C ${HEAPSTER_DIR} -xz --strip-components=1 \
 	&& cd ${HEAPSTER_DIR} \
 	&& go build -a --installsuffix cgo -o heapster k8s.io/heapster/metrics \
 	&& go build -a --installsuffix cgo -o eventer k8s.io/heapster/events \
 	&& cp heapster eventer ${OUTPUT_DIR}
-
-RUN curl -sSL https://github.com/docker/distribution/archive/${REGISTRY_VERSION}.tar.gz | tar -xz -C ${REGISTRY_DIR} --strip-components=1 \
-	&& cd ${REGISTRY_DIR} \
-	&& go build -a --installsuffix cgo --ldflags "-X `go list ./version`.Version=${REGISTRY_VERSION}" -o bin/registry ./cmd/registry \
-	&& cp bin/registry ${OUTPUT_DIR}
 
 RUN curl -sSL https://github.com/influxdata/influxdb/archive/${INFLUXDB_VERSION}.tar.gz | tar -C ${INFLUXDB_DIR} -xz --strip-components=1 \
 	&& cd ${INFLUXDB_DIR} \
@@ -58,13 +63,12 @@ RUN curl -sSL https://github.com/grafana/grafana/archive/${GRAFANA_VERSION}.tar.
 	&& cp grafana-server grafana-cli ${OUTPUT_DIR}
 
 RUN curl -sSL https://grafanarel.s3.amazonaws.com/builds/grafana_${GRAFANA_DL_VERSION}_amd64.deb > /tmp/grafana.deb \
-	&& dpkg -x /tmp/grafana.deb /tmp/grafana \
-	&& cp -f ${GRAFANA_DIR}/grafana-server ${GRAFANA_DIR}/grafana-cli /tmp/grafana/usr/sbin/ \
-	&& cd /tmp/grafana && tar -cf ${OUTPUT_DIR}/grafana.tar . \
-	&& curl -sSL https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-armel > ${OUTPUT_DIR}/gosu \
-	&& chmod +x ${OUTPUT_DIR}/gosu
+	&& dpkg -x /tmp/grafana.deb ${GRAFANA_ROOTFS_DIR} \
+	&& cp -f ${GRAFANA_DIR}/grafana-server ${GRAFANA_DIR}/grafana-cli ${GRAFANA_ROOTFS_DIR}/usr/sbin/ \
+	&& cd ${GRAFANA_ROOTFS_DIR} && tar -cf ${OUTPUT_DIR}/grafana.tar .
 
-RUN curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar -xz -C ${CONTRIB_DIR} --strip-components=1 \
+RUN git clone https://github.com/kubernetes/contrib ${CONTRIB_DIR} \
+	&& cd ${CONTRIB_DIR} && git checkout ${CONTRIB_COMMIT} \
 	&& cd ${CONTRIB_DIR}/service-loadbalancer \
 	&& godep go build -a --installsuffix cgo -ldflags '-w' -o service_loadbalancer ./service_loadbalancer.go ./loadbalancer_log.go \
 	&& cp service_loadbalancer ${OUTPUT_DIR} \
@@ -77,3 +81,10 @@ RUN curl -sSL https://github.com/kubernetes/contrib/archive/master.tar.gz | tar 
 	&& cd ${CONTRIB_DIR}/ingress/controllers/nginx \
     && CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags "-w -X main.version=${INGRESS_CONTROLLER_VERSION} -X main.gitRepo=git@github.com:kubernetes/contrib" -o nginx-ingress-controller \
     && cp nginx-ingress-controller ${OUTPUT_DIR}
+
+RUN curl -sSL https://github.com/kubernetes/helm/archive/${HELM_VERSION}.tar.gz | tar -xz -C ${HELM_DIR} --strip-components=1 \
+	&& cd ${HELM_DIR} \
+	&& GOARCH=amd64 make bootstrap \
+	&& go build -a -installsuffix cgo -ldflags '-w' -o helm ./cmd/helm \
+	&& go build -a -installsuffix cgo -ldflags '-w' -o tiller ./cmd/tiller \
+	&& cp helm tiller ${OUTPUT_DIR}
