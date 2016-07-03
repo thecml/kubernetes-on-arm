@@ -27,9 +27,9 @@ KUBERNETES_ENV_DIR=${KUBERNETES_DIR}/env
 KUBERNETES_ENV_FILE=${KUBERNETES_ENV_DIR}/env.conf
 
 KUBE_DEPLOY_DIR=${KUBERNETES_DIR}/kube-deploy
-KUBE_DEPLOY_COMMIT=20455d9174036144697e034ece3ccbcdd68545e8
+KUBE_DEPLOY_COMMIT=28c64a0ba3407172f8518811e144c9eb7bd75f73
 MULTINODE_DIR=${KUBE_DEPLOY_DIR}/docker-multinode
-SUPPORTED_K8S_VERSION=v1.3.0-alpha.1
+SUPPORTED_K8S_VERSION=v1.3.0
 
 DNS_DOMAIN="cluster.local"
 DNS_IP=10.0.0.10
@@ -391,7 +391,7 @@ case $1 in
         shift
         change-addon create $@;;
 
-    'turndown')
+    'disable')
         turndown;;
     'disable-addon')
         shift
