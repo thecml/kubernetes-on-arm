@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: registry
-        image: kubernetesonarm/registry
+        image: kubernetesonarm/registry:VERSION
         imagePullPolicy: IfNotPresent
         args:
         - /etc/docker/registry/config.yml
