@@ -151,6 +151,18 @@ install(){
     sed -e "s@-s=@--storage-driver=@g" -i ${DOCKER_CONF}
     sed -e "s@$(grep -o -- "--storage-driver=[[:graph:]]*" ${DOCKER_CONF})@--storage-driver=${STORAGE_DRIVER}@g" -i ${DOCKER_CONF}
 
+
+    if [[ -z ${DOWNLOAD_BINARIES} ]]; then
+        read -p "Do you want to download all Kubernetes on ARM binaries? N is default [y/N] " dlanswer
+        case ${dlanswer} in
+            [yY]*)
+                DOWNLOAD_BINARIES=1;;
+        esac
+    fi
+    if [[ ${DOWNLOAD_BINARIES} == 1 || ${DOWNLOAD_BINARIES} == "y" || ${DOWNLOAD_BINARIES} == "Y" ]]; then
+
+    fi
+
     # Has the user explicitely specified it? If not, ask.
     if [[ -z ${SWAP} ]]; then
         read -p "Do you want to create an 1GB swapfile (required for compiling)? N is default [y/N] " swapanswer
