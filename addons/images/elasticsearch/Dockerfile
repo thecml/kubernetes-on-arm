@@ -1,5 +1,8 @@
 FROM luxas/java
 
+# Add support for cross-builds
+COPY qemu-arm-static /usr/bin/
+
 ENV ELASTICSEARCH_VERSION=2.3.3
 
 RUN apk add --update curl sudo \

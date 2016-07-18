@@ -1,5 +1,8 @@
 FROM hypriot/rpi-alpine-scratch:edge
 
+# Add support for cross-builds
+COPY qemu-arm-static /usr/bin/
+
 ENV KIBANA_VERSION=4.5.1
 
 RUN apk add --update nodejs curl \
