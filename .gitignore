@@ -1,2 +1,3 @@
 addons/images/bin
 scripts/cross-compile-k8s/bin
+scripts/download-official-binaries/bin
