@@ -1,4 +1,3 @@
-
 ARCH?=arm
 IMAGE_NAME?=build-k8s-on-amd64
 OUTPUT?=./bin/$(ARCH)
