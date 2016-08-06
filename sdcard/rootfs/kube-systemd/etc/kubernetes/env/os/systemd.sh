@@ -36,17 +36,6 @@ os_install(){
         raspi-config --expand-rootfs 1>$RASPICONFIG_EXPAND_LOG 2>$RASPICONFIG_EXPAND_LOG
     fi
 
-    # If brctl isn't installed, notify the user
-    if [[ ! -f $(which brctl 2>&1) ]]; then
-
-        # Install automatically if apt-get is present
-        if [[ -f $(which apt-get 2>&1) ]]; then
-            apt-get install bridge-utils -y
-        else
-            echo "WARNING: brctl is required for Kubernetes to function. Install it if you want Kubernetes to function properly."
-        fi
-    fi
-
     # If iptables isn't installed, notify the user
     if [[ ! -f $(which iptables 2>&1) ]]; then
 

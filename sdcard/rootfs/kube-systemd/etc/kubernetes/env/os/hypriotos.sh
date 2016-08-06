@@ -4,14 +4,9 @@ os_install(){
     # The two commands may be combined, but I leave it as is for now.
     os_upgrade
 
-    # If brctl isn't installed, install it
-    if [[ ! -f $(which brctl 2>&1) ]]; then
-        apt-get install bridge-utils -y
-    fi
-
     # Write the DNS options to the file.
-    updateline /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
-    updateline /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers $DNS_IP;"
+    updateline /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.${DNS_DOMAIN}\",\"svc.${DNS_DOMAIN}\",\"${DNS_DOMAIN}\";"
+    updateline /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers ${DNS_IP};"
 
     systemctl disable cluster-lab
 }

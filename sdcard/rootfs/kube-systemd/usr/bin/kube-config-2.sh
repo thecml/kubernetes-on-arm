@@ -27,9 +27,9 @@ KUBERNETES_ENV_DIR=${KUBERNETES_DIR}/env
 KUBERNETES_ENV_FILE=${KUBERNETES_ENV_DIR}/env.conf
 
 KUBE_DEPLOY_DIR=${KUBERNETES_DIR}/kube-deploy
-KUBE_DEPLOY_COMMIT=28c64a0ba3407172f8518811e144c9eb7bd75f73
+KUBE_DEPLOY_COMMIT=969086b076e8f6feb6e9d8c351e620d46bb0b65e
 MULTINODE_DIR=${KUBE_DEPLOY_DIR}/docker-multinode
-SUPPORTED_K8S_VERSION=v1.3.0
+SUPPORTED_K8S_VERSION=v1.3.4
 
 KUBERNETES_ON_ARM_IMAGE_VERSION=0.8.0
 
@@ -39,8 +39,6 @@ DNS_IP=10.0.0.10
 KUBECTL=/usr/local/bin/kubectl
 
 source ${KUBERNETES_CONFIG}
-
-
 
 usage(){
     cat <<EOF
@@ -63,6 +61,7 @@ Usage:
             - registry: Makes a central docker registry
             - loadbalancer: A loadbalancer that exposes services to the outside world.
             - heapster: Cluster monitoring for Kubernetes. Has a frontend with graphs how the cluster resources are used.
+            - helm: Package manager for Kubernetes
 
     kube-config disable - Disable Kubernetes on this node, reverting the enable actions, useful if something went wrong or you just want to stop Kubernetes
     kube-config disable-addon [addon] ...[addon_n] - Disable one or more addons
@@ -114,8 +113,12 @@ install(){
     fi
 
     # Download the kube-deploy project
-    git clone https://github.com/kubernetes/kube-deploy ${KUBE_DEPLOY_DIR}
-    (cd ${KUBE_DEPLOY_DIR} && git checkout ${KUBE_DEPLOY_COMMIT})
+    if [[ -f $(which git 2>&1) ]]; then
+        git clone https://github.com/kubernetes/kube-deploy ${KUBE_DEPLOY_DIR} && cd ${KUBE_DEPLOY_DIR} && git checkout ${KUBE_DEPLOY_COMMIT}
+    else
+        echo "WARNING: git is not installed. Falling back on the master branch"
+        curl -sSL https://github.com/kubernetes/kube-deploy/archive/master.tar.gz | tar -xz -C ${KUBE_DEPLOY_DIR}
+    fi
 
     # Download kubectl
     curl -sSL https://storage.googleapis.com/kubernetes-release/release/${SUPPORTED_K8S_VERSION}/bin/linux/$(get-arch)/kubectl > ${KUBECTL}
@@ -211,7 +214,7 @@ install(){
 }
 
 upgrade(){
-    echo "Upgrading the system"
+    echo "Upgrading the system packages"
 
     # Source the os file and use that upgrade method
     source ${KUBERNETES_ENV_FILE}
