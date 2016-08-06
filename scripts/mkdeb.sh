@@ -25,7 +25,7 @@ EOF
 fi
 
 # Build the image
-docker build -t kubernetesonarm/package package
+docker build -t kubernetesonarm/package scripts/package
 
 # Run the container
 CID=$(docker run -d kubernetesonarm/make-deb $2 $3)
@@ -40,6 +40,7 @@ OUTDIR=$(parse-path-or-disc $1)
 docker cp $CID:/build .
 
 # Copy the .deb and .tar.gz package to the output directory
+mkdir -p $OUTDIR
 cp build/* $OUTDIR
 
 # And remove the intermediate directory and container
