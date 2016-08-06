@@ -2,7 +2,6 @@ FROM hypriot/rpi-alpine-scratch:edge
 
 # Add support for cross-builds
 COPY qemu-arm-static /usr/bin/
-COPY qemu-arm-static /usr/bin/
 
 RUN apk add --update haproxy pcre curl socat lua5.3 \
 	&& mkdir -p /etc/haproxy/errors /var/state/haproxy \
