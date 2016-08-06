@@ -7,7 +7,7 @@ os_install(){
     pacman -Syu --noconfirm
 
     # Install git and some other required things
-    pacman -S git bridge-utils iproute2 docker --noconfirm --needed
+    pacman -S git iproute2 docker --noconfirm --needed
 }
 
 
