@@ -14,13 +14,13 @@ ENV GOARM=6 \
 	CONTRIB_DIR=${GOPATH}/src/k8s.io/contrib \
 	HELM_DIR=${GOPATH}/src/k8s.io/helm
 
-ENV REGISTRY_VERSION=v2.5.0-rc.1 \
+ENV REGISTRY_VERSION=v2.5.0 \
 	HEAPSTER_VERSION=v1.1.0 \
 	INFLUXDB_VERSION=v0.13.0 \
-	GRAFANA_VERSION=v3.0.4 \
-	GRAFANA_DL_VERSION=3.0.4-1464167696 \
-	CONTRIB_COMMIT=189e960d0735c17890a0bba7c5cb233a4c9618a4 \
-	INGRESS_CONTROLLER_VERSION=0.8 \
+	GRAFANA_VERSION=v3.1.1 \
+	GRAFANA_DL_VERSION=3.1.1-1470047149 \
+	CONTRIB_COMMIT=5853c5071cbc8dd47fef8ee948115650b03c8873 \
+	INGRESS_CONTROLLER_VERSION=0.8.2 \
 	HELM_VERSION=v2.0.0-alpha.2
 
 RUN mkdir -p \
@@ -65,6 +65,8 @@ RUN curl -sSL https://github.com/grafana/grafana/archive/${GRAFANA_VERSION}.tar.
 RUN curl -sSL https://grafanarel.s3.amazonaws.com/builds/grafana_${GRAFANA_DL_VERSION}_amd64.deb > /tmp/grafana.deb \
 	&& dpkg -x /tmp/grafana.deb ${GRAFANA_ROOTFS_DIR} \
 	&& cp -f ${GRAFANA_DIR}/grafana-server ${GRAFANA_DIR}/grafana-cli ${GRAFANA_ROOTFS_DIR}/usr/sbin/ \
+	&& curl -sSL https://raw.githubusercontent.com/kubernetes/heapster/${HEAPSTER_VERSION}/grafana/dashboards/pods.json > ${OUTPUT_DIR}/pods.json \
+	&& curl -sSL https://raw.githubusercontent.com/kubernetes/heapster/${HEAPSTER_VERSION}/grafana/dashboards/cluster.json > ${OUTPUT_DIR}/cluster.json \
 	&& cd ${GRAFANA_ROOTFS_DIR} && tar -cf ${OUTPUT_DIR}/grafana.tar .
 
 RUN git clone https://github.com/kubernetes/contrib ${CONTRIB_DIR} \
