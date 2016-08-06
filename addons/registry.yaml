@@ -18,8 +18,6 @@ spec:
       - name: registry
         image: kubernetesonarm/registry:VERSION
         imagePullPolicy: IfNotPresent
-        args:
-        - /etc/docker/registry/config.yml
         resources:
           limits:
             cpu: 50m
