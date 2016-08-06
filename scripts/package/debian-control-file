@@ -1,0 +1,10 @@
+Package: kubernetes-on-arm
+Version: VERSION-REVISION
+Architecture: armhf
+Maintainer: Lucas Kaldstrom <lucas.kaldstrom@hotmail.co.uk>
+Installed-Size: FILESIZE
+Recommends: ca-certificates, cgroupfs-mount, git, systemd, iptables | cgroup-lite, xz-utils
+Section: admin
+Priority: optional
+Homepage: https://github.com/luxas/kubernetes-on-arm
+Description: Kubernetes for ARM devices
