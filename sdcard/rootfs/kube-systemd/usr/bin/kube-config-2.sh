@@ -55,8 +55,8 @@ Usage:
     kube-config enable-worker [master-ip] - Enable the worker services and then kubernetes has a new node
     kube-config enable-addon [addon] ...[addon_n] - Enable one or more addons
         - Automatically deployed (mandatory) addons
-        	- dns: Makes all services accessible via DNS
-        	- dashboard: A general-purpose Web UI for Kubernetes
+            - dns: Makes all services accessible via DNS
+            - dashboard: A general-purpose Web UI for Kubernetes
         - Optional Kubernetes addons
             - registry: Makes a central docker registry
             - loadbalancer: A loadbalancer that exposes services to the outside world.
@@ -70,7 +70,6 @@ Usage:
     kube-config help - Display this help text
 EOF
 }
-
 
 install(){
 
@@ -153,18 +152,6 @@ install(){
     fi
     sed -e "s@-s=@--storage-driver=@g" -i ${DOCKER_CONF}
     sed -e "s@$(grep -o -- "--storage-driver=[[:graph:]]*" ${DOCKER_CONF})@--storage-driver=${STORAGE_DRIVER}@g" -i ${DOCKER_CONF}
-
-
-    if [[ -z ${DOWNLOAD_BINARIES} ]]; then
-        read -p "Do you want to download all Kubernetes on ARM binaries? N is default [y/N] " dlanswer
-        case ${dlanswer} in
-            [yY]*)
-                DOWNLOAD_BINARIES=1;;
-        esac
-    fi
-    if [[ ${DOWNLOAD_BINARIES} == 1 || ${DOWNLOAD_BINARIES} == "y" || ${DOWNLOAD_BINARIES} == "Y" ]]; then
-
-    fi
 
     # Has the user explicitely specified it? If not, ask.
     if [[ -z ${SWAP} ]]; then
