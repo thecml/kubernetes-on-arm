@@ -1,24 +1,4 @@
-K8S_PREFIX="kubernetesonarm"
-
-# This list have to be kept in sync with the one in kube-config
-IMAGES=(
-    "$K8S_PREFIX/etcd"
-    "$K8S_PREFIX/flannel"
-    "$K8S_PREFIX/hyperkube"
-    "$K8S_PREFIX/pause"
-
-    "$K8S_PREFIX/skydns"
-    "$K8S_PREFIX/kube2sky"
-    "$K8S_PREFIX/exechealthz"
-
-    "$K8S_PREFIX/registry"
-
-    "$K8S_PREFIX/loadbalancer"
-
-    "$K8S_PREFIX/heapster"
-    "$K8S_PREFIX/influxdb"
-    "$K8S_PREFIX/grafana"
-)
+#!/bin/bash
 
 KUBE_SCRIPTS_TEMP="/tmp/kubernetes-on-arm-scripts"
 

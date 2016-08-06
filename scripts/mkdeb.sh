@@ -6,7 +6,7 @@ source scripts/common.sh
 # Require two args
 if [[ $# < 2 ]]; then
     cat <<EOF
-Create a .deb file of https://github.com/luxas/kubernetes-on-arm
+Create a .deb and .tar.gz file of https://github.com/luxas/kubernetes-on-arm
 
 Usage:
 scripts/mkdeb.sh [output] [git_ref] [revision]
@@ -25,7 +25,7 @@ EOF
 fi
 
 # Build the image
-images/build.sh kubernetesonarm/make-deb
+docker build -t kubernetesonarm/package package
 
 # Run the container
 CID=$(docker run -d kubernetesonarm/make-deb $2 $3)

@@ -18,15 +18,12 @@ main() {
 
     mkdir -p $OUT
 
-    echo "Saving docker images: "
-    docker save ${IMAGES[@]} | gzip > $OUT/images.tar.gz
-
     echo "Bundling binaries: "
     cd images/kubernetesonarm/_bin/latest
     tar -czf $OUT/binaries.tar.gz *
     cd -
 
-    if [[ $DEB_PACKAGE == 1 ]]; then
+    if [[ ${DEB_PACKAGE} == 1 ]]; then
 
         # Make the .deb file from master as the default option
         scripts/mkdeb.sh $OUT $PACKAGE_BRANCH $PACKAGE_REVISION
