@@ -26,9 +26,7 @@ Supported OSes/boards:
   - Raspberry Pi 1 A, A+, B, B+, armv6 **(rpi)**
   - Raspberry Pi 2 Model B, armv7 **(rpi-2)**
   - Raspberry Pi 3 Model B, armv8, _armv7 rootfs_ **(rpi-3)**
-- RancherOS **(rancheros)**
-  - Raspberry Pi 2 Model B, armv7 **(rpi-2)**
-  - Raspberry Pi 3 Model B, armv8, _armv7 rootfs_ **(rpi-3)**
+
 
 ```bash
 # Go to our home folder, if you want
@@ -75,8 +73,8 @@ Arch Linux users:
 
 HypriotOS users:
  - The user/password is: **pirate/hypriot**
- - Remember to prepend all commands with `sudo` if you are the `pi` user
-   - Sometimes, it's even required to prepend commands with `sudo env PATH=$PATH ...`
+ - Remember to prepend all commands with `sudo` if you are the `pirate` user
+   
 
 Yes, I know. Root enabled via ssh isn´t that good.
 But the task to enhance ssh security is left as an exercise to the user.  
@@ -85,9 +83,8 @@ But the task to enhance ssh security is left as an exercise to the user.
 # This script will install and setup docker etc.
 kube-config install
 
-# First, it will update the system and install docker
-# Then it will download prebuilt Kubernetes binaries
-# Later, if you build kubernetes yourself via "kube-config build-images", all binaries will be replaced with the latest version
+# First, it will install docker, if not present
+# Then it will download kube deploy
 
 # It will ask for which hostname you want. Defaults to kubepi.
 
@@ -95,10 +92,9 @@ kube-config install
 # Run "timedatectl list-timezones" before to check for values
 
 # It will ask you if it should create a 1 GB swapfile.
-# If you are gonna build Kubernetes on your own machine, you have to create this
 
 # Last question is whether you want to reboot
-# You must do this now, otherwise docker will behave very strange and fail
+# You should reboot in order to get the cgroups working
 
 # If you want to run this script non-interactively, do this:
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
@@ -107,7 +103,6 @@ kube-config install
 
 ## Setup Kubernetes
 
-If you want to change something in the source, edit files in `/etc/kubernetes/source/images` and run `kube-config build-images` before you do this
 These scripts are important in the setup process. 
 They spin up all required services in the right order, and download the images from Github if not present.  
 This may take ~5-10min, depending on your internet connection.
@@ -198,7 +193,6 @@ kubectl get svc
 curl $SERVICE_IP
 # --> <p>WELCOME TO NGINX</p>
 
-# Start dns, this will spin up 4 containers and expose them as a DNS service at ip 10.0.0.10
 # 10.0.0.10 is already enabled as a DNS server in your system, see the file /etc/systemd/resolved.conf.d/dns.conf
 # That file makes /etc/resolv.conf use kube-dns also outside of your containers
 kube-config enable-addon dns
@@ -259,60 +253,6 @@ kube-config disable-node
 kube-config delete-data
 ```
 
-## Custom hacking
-
-If you already have set up a lot of devices and already are familiar with one OS, just grab the binaries [here](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.7.0), pull the images from Docker Hub and start to hack your own solution :smile:
-
-```
-# Get the binaries and put them in /usr/bin
-curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.7.0/binaries.tar.gz | tar -xz -C /usr/bin
-
-# Pull the images for master
-docker pull kubernetesonarm/hyperkube
-docker pull kubernetesonarm/etcd
-docker pull kubernetesonarm/flannel
-docker pull kubernetesonarm/pause
-
-
-# Pull the images for worker
-docker pull kubernetesonarm/hyperkube
-docker pull kubernetesonarm/flannel
-docker pull kubernetesonarm/pause
-```
-Then check the service files here for the right commands to use: https://github.com/luxas/kubernetes-on-arm/tree/master/sdcard/rootfs/kube-systemd/usr/lib/systemd/system
-
-### Build the images yourself
-
-Instructions [here](docs/build-images.md)
-
-#### However, only use this method if you know what you are doing and want to customize just for your need
-#### Otherwise, use the SD Card method or deb package for an easy installation
-
-### Start a one-node cluster for testing
-
-```console
-$ mount -B /var/lib/kubelet /var/lib/kubelet
-$ mount --make-shared /var/lib/kubelet
-$ docker run \
-    --volume=/sys:/sys:ro \
-    --volume=/var/lib/docker/:/var/lib/docker:rw \
-    --volume=/var/lib/kubelet/:/var/lib/kubelet:shared \
-    --volume=/var/run:/var/run:rw \
-    --net=host \
-    --pid=host \
-    --privileged=true \
-    -d \
-    kubernetesonarm/hyperkube \
-    /hyperkube kubelet \
-        --hostname-override="127.0.0.1" \
-        --pod_infra_container_image=kubernetesonarm/pause \
-        --address="0.0.0.0" \
-        --api-servers=http://localhost:8080 \
-        --config=/etc/kubernetes/manifests \
-        --cluster-dns=10.0.0.10 \
-        --cluster-domain=cluster.local \
-        --allow-privileged=true --v=2
-```
 
 ## Addons
 
@@ -390,9 +330,6 @@ There is a configuration file: `/etc/kubernetes/k8s.conf`, where you can customi
 
 **Note:** You must change the values in `k8s.conf` before starting Kubernetes. Otherwise they won't have effect, just be able to harm your setup. And remember that if you change `DNS_IP` and `DNS_DOMAIN` on one node, you'll have to change them on all nodes in the cluster
 
-You can also customize the master containers´ flags in the file: `/etc/kubernetes/static/master/master.json`. There the configuration for the master components are. [Official file](https://github.com/kubernetes/kubernetes/blob/master/cluster/images/hyperkube/master-multi.json)
-
-You may also put more `.json` files in `/etc/kubernetes/static/master` and `/etc/kubernetes/static/worker` if you want; they will come up as static pods.
 
 On Arch Linux, this file will override the default `eth0` settings. If you have a special `eth0` setup (or use some other network), edit this file to fit your use case: `/etc/systemd/network/dns.network`
 
@@ -412,26 +349,6 @@ Right now there is one test:
 Logs can be found at: `/etc/kubernetes/source/scripts/logs`
 The tests can be found at: `/etc/kubernetes/source/scripts/tests`
 The test might fail, although the thing it's testing is in fact working. Report an issue in that case.
-
-## Service management
-
-The `kube-systemd` rootfs uses systemd services for starting/stopping containers.
-
-Systemd services: 
- - system-docker: Or `docker-bootstrap`. Used for running `etcd` and `flannel`.
- - etcd: Starts the `kubernetesonarm/etcd` container. Depends on `system-docker`.
- - flannel: Starts the `kubernetesonarm/flannel` container. Depends on `etcd`.
- - docker: Plain docker service. Dropins are symlinked. Depends on `flannel`.
- - k8s-master: Service that starts up the main master components
- - k8s-worker: Service that starts up `kubelet` and the `proxy`.
-
-Useful commands for troubleshooting: 
- - `systemctl status (service)`: Get the status for a service
- - `systemctl start (service)`: Start a service
- - `systemctl stop (service)`: Stop a service
- - `systemctl cat (service)`: See the `.service` files for an unit.
- - `journalctl -xe`: Get the system log
- - `journalctl -xeu (service)`: Get logs for a service
 
 ## Troubleshooting
 
