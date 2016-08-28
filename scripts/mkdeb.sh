@@ -9,7 +9,7 @@ if [[ $# < 2 ]]; then
 Create a .deb and .tar.gz file of https://github.com/luxas/kubernetes-on-arm
 
 Usage:
-scripts/mkdeb.sh [output] [git_ref] [revision]
+scripts/mkdeb.sh [output dir] [git_ref] [revision]
 
 Arguments:
 output: May be a disc or partition or absolute path
@@ -28,7 +28,7 @@ fi
 docker build -t kubernetesonarm/package scripts/package
 
 # Run the container
-CID=$(docker run -d kubernetesonarm/make-deb $2 $3)
+CID=$(docker run -d kubernetesonarm/package $2 $3)
 
 # Wait for the package process
 docker wait $CID
