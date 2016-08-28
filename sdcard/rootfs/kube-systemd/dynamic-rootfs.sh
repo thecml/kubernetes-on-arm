@@ -8,17 +8,14 @@ rootfs(){
     K8S_DIR=${ROOT}/etc/kubernetes
     SDCARD_METADATA_FILE=${K8S_DIR}/SDCard_metadata.conf
 
-    # Allow ssh connections by root to this machine
-    if [[ -f ${ROOT}/etc/ssh/sshd_config ]]; then
+    # Allow root ssh connections when using arch linux
+    if [[ ${OSNAME} == "archlinux" && -f ${ROOT}/etc/ssh/sshd_config ]]; then
         echo "PermitRootLogin yes" >> ${ROOT}/etc/ssh/sshd_config
     fi
 
-    # Remove the .sh
-    mv ${ROOT}/usr/bin/kube-config{-2.sh,}
-
     # Copy over all addons
     mkdir -p ${ROOT}/etc/kubernetes/addons
-    cp ${PROJROOT}/addons/* ${ROOT}/etc/kubernetes/addons
+    cp ${PROJROOT}/addons/* ${ROOT}/etc/kubernetes/addons/
 
     # Inform the newly created SD Cards' scripts about which files to use.
     echo -e "OS=${OSNAME}\nBOARD=${MACHINENAME}" > ${K8S_DIR}/env/env.conf
