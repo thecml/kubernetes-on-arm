@@ -121,24 +121,23 @@ kube-config install
 # It will ask you if it should create a 1 GB swapfile.
 
 # Last question is whether you want to reboot
-# You should reboot in order to get the cgroups working
+# You have to reboot in order to get the cgroups working
 
 # If you want to run this script non-interactively, do this:
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
 # This script runs in 2-3 mins
 ```
 
-## Setup Kubernetes
+## Start Kubernetes!
 
-These scripts are important in the setup process. 
-They spin up all required services in the right order, and download the images from Github if not present.  
-This may take ~5-10min, depending on your internet connection.
+Hmm, starting a complex system like Kubernetes should be a complex task, right?
+Well, not this time.
 
 ```bash
-# To enable the master service, run
+# To set up your board as both a master and a node, run
 kube-config enable-master
 
-# To enable the worker service, run
+# To set up your board as a node, run
 kube-config enable-worker [master-ip]
 ```
 
