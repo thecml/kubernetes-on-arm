@@ -39,7 +39,7 @@ cd sdcard
 rootfs
 
 # That file is temporary and do not include env information in the .deb file
-rm $ROOT/etc/kubernetes/dynamic-env/env.conf
+rm $ROOT/etc/kubernetes/env/env.conf
 rm -rf $ROOT/etc/kubernetes/source/.git
 
 
