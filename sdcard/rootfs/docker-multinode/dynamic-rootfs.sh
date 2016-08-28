@@ -15,7 +15,7 @@ rootfs(){
 
     # Copy over all addons
     mkdir -p ${ROOT}/etc/kubernetes/addons
-    cp ${PROJROOT}/addons/* ${ROOT}/etc/kubernetes/addons/
+    cp ${PROJROOT}/addons/*.yaml ${ROOT}/etc/kubernetes/addons/
 
     # Inform the newly created SD Cards' scripts about which files to use.
     echo -e "OS=${OSNAME}\nBOARD=${MACHINENAME}" > ${K8S_DIR}/env/env.conf
