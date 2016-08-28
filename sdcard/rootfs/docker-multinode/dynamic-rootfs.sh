@@ -1,7 +1,7 @@
-# Configures a kube-systemd filesystem
+# Configures a docker-multinode filesystem
 #
 # Globals required: 
-# ROOT: Path to kube-systemd filesystem
+# ROOT: Path to the docker-multinode filesystem
 # PROJROOT: Path to kubernetes-on-arm
 rootfs(){
 

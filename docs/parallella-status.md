@@ -2,7 +2,7 @@
 
 It is possible to write a sd card for it, but it's a painfully slow system.
 
-`sdcard/write.sh parallella archlinux kube-systemd`
+`sdcard/write.sh parallella archlinux docker-multinode`
 
 Notify me if there is newer versions of these. This is the current configuration.
 Kernel: 3.14

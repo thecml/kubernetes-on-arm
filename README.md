@@ -10,7 +10,6 @@ Imagine... Your own testbed for Kubernetes with cheap Raspberry Pis and friends.
 #### **Are you convinced too, like me, that cheap ARM boards and Kubernetes is a match made in heaven?**    
 **Then, lets go!**
 
-
 ## Important information
 
 This project was published in September 2015 as the first fully working way to easily set up Kubernetes on ARM devices.
@@ -80,7 +79,7 @@ sdcard/write.sh
 sudo sdcard/write.sh /dev/sdX [board] [os] [rootfs]
 
 # Example: Write the SD Card for Raspberry Pi 2, Arch Linux ARM and include this project's Kubernetes scripts
-sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-systemd
+sudo sdcard/write.sh /dev/sdX rpi-2 archlinux docker-multinode
 
 # The installer will ask you if you want to erase all data on your card
 # Answer y/n on that question
@@ -89,7 +88,7 @@ sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-systemd
 # This script runs in 3-4 mins
 ```
 
-The README for the `kube-systemd` rootfs [is here](sdcard/rootfs/kube-systemd/etc/kubernetes/README.md)
+The README for the `docker-multinode` rootfs [is here](sdcard/rootfs/docker-multinode/etc/kubernetes/README.md)
 
 ## Setup your board from an SD Card
 
@@ -147,7 +146,7 @@ kube-config enable-worker [master-ip]
 If you have already made a SD Card and your device is up and running, what can you do instead?
 For that, I've made a `.deb` package, so you could install it easily
 
-The README for the `kube-systemd` rootfs [is here](sdcard/rootfs/kube-systemd/etc/kubernetes/README.md)
+The README for the `docker-multinode` rootfs [is here](sdcard/rootfs/docker-multinode/etc/kubernetes/README.md)
 
 If you already have set up your Pi with latest Raspbian OS for example, follow this guide.
 
@@ -156,12 +155,12 @@ If you already have set up your Pi with latest Raspbian OS for example, follow t
 # The OS have to be systemd based, e. g. HypriotOS, Debian Jessie, Arch Linux ARM, Ubuntu 15.04
 
 # Download the latest package
-curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.7.0/kube-systemd.deb > kube-systemd.deb
+curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.8.0/docker-multinode.deb > docker-multinode.deb
 # or
-wget https://github.com/luxas/kubernetes-on-arm/releases/download/v0.7.0/kube-systemd.deb
+wget https://github.com/luxas/kubernetes-on-arm/releases/download/v0.8.0/docker-multinode.deb
 
 # Requires dpkg, which is preinstalled in at least all Debian/Ubuntu OSes
-sudo dpkg -i kube-systemd.deb
+sudo dpkg -i docker-multinode.deb
 
 # Setup the enviroinment
 # It will ask which board it's running on and which OS

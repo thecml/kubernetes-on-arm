@@ -28,14 +28,14 @@ git checkout origin/$PACKAGE_GIT_COMMIT
 export PROJROOT=$(pwd)
 export ROOT=$(mktemp -d /tmp/make-deb.XXXX)
 
-# Copy kube-systemd source to /tmp
-cp -r $PROJROOT/sdcard/rootfs/kube-systemd/* $ROOT
+# Copy docker-multinode source to /tmp
+cp -r $PROJROOT/sdcard/rootfs/docker-multinode/* $ROOT
 
 # Source our pre-packaging script
 source $ROOT/dynamic-rootfs.sh
 cd sdcard
 
-# Invoke the function that customizes the kube-systemd with symlinks and stuff
+# Invoke the function that customizes the docker-multinode with symlinks and stuff
 rootfs
 
 # That file is temporary and do not include env information in the .deb file

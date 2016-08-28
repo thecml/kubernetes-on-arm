@@ -51,12 +51,10 @@ cleanup(){
 checkrootfs(){
 
     # HypriotOS supports these root filesystems
-    case $ROOTFSNAME in
-        kube-systemd)
-            ;;
-        *)
-            exit;;
-    esac
+    if [[ ${ROOTFSNAME} != "docker-multinode" ]]; then
+        echo "HypriotOS does only work with docker-multinode"
+        exit
+    fi
 }
 
 

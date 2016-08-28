@@ -44,12 +44,10 @@ cleanup(){
 checkrootfs(){
 
     # Arch Linux supports these root filesystems
-    case $ROOTFSNAME in
-        kube-systemd)
-            ;;
-        *)
-            exit;;
-    esac
+    if [[ ${ROOTFSNAME} != "docker-multinode" ]]; then
+        echo "archlinux does only work with docker-multinode"
+        exit
+    fi
 }
 
 
