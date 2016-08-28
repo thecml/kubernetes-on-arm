@@ -27,9 +27,9 @@ KUBERNETES_ENV_DIR=${KUBERNETES_DIR}/env
 KUBERNETES_ENV_FILE=${KUBERNETES_ENV_DIR}/env.conf
 
 KUBE_DEPLOY_DIR=${KUBERNETES_DIR}/kube-deploy
-KUBE_DEPLOY_COMMIT=57b33d24211ee06d56e8b9aac0615cfb5cf658f4
+KUBE_DEPLOY_COMMIT=775bf0731a5f9cf25603514ac83cf1c157c74d5f
 MULTINODE_DIR=${KUBE_DEPLOY_DIR}/docker-multinode
-SUPPORTED_K8S_VERSION=v1.3.5
+SUPPORTED_K8S_VERSION=v1.3.6
 
 KUBERNETES_ON_ARM_IMAGE_VERSION=0.8.0-dev
 
@@ -73,7 +73,7 @@ EOF
 
 install(){
 
-    # Source the commands, e.g. os_install, os_upgrade, os_post_install, board_post_install
+    # Source the commands, e.g. os_install, os_upgrade, os_post_install, board_install and board_post_install
     if [[ -f ${KUBERNETES_ENV_FILE} ]]; then
         source ${KUBERNETES_ENV_FILE}
     fi
@@ -371,8 +371,6 @@ get-arch(){
     esac
     echo ${host_arch}
 }
-
-
 
 # If nothing is specified, return usage
 if [[ $# == 0 ]]; then
