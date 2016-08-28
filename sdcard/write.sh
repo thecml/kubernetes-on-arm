@@ -74,14 +74,12 @@ Explanation:
         - Currently supported:
             - archlinux - Arch Linux ARM (for rpi, rpi-2, rpi-3, parallella, cubietruck, bananapro and odroid-c2)
             - hypriotos - HypriotOS (for rpi, rpi-2 and rpi-3)
-            - rancheros - RancherOS (for rpi-2 and rpi-3)
-            - raspbian - Raspbian Lite (for rpi, rpi-2 and rpi-3)
     rootfs - Prepopulated rootfs with scripts and such.
         - Currently supported:
-            - kube-systemd - Kubernetes scripts prepopulated (for archlinux and hypriotos)
+            - docker-multinode - Kubernetes scripts prepopulated (for archlinux and hypriotos)
 
 Example:
-sdcard/write.sh /dev/sdb rpi-2 archlinux kube-systemd
+sdcard/write.sh /dev/sdb rpi-2 archlinux docker-multinode
 EOF
 }
 
@@ -177,8 +175,6 @@ if [[ ! -d rootfs/$ROOTFSNAME ]]; then
     rm -r $TMPDIR
     exit 1
 fi
-
-
 
 # Source machine and os
 source os/$OSNAME.sh
