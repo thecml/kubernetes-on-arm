@@ -5,7 +5,7 @@ os_install(){
 
         # Install docker-hypriot
         curl -s https://packagecloud.io/install/repositories/Hypriot/Schatzkiste/script.deb.sh | bash
-        apt-get install docker-hypriot
+        apt-get install -y docker-hypriot
     fi
 
     # If the raspi-config command exists, expand filesystem automatically
@@ -63,9 +63,4 @@ os_install(){
 	net.ipv4.tcp_mtu_probing=1
 	vm.swappiness = 1
 	EOF
-}
-
-os_upgrade(){
-    # If apt-get is there, use it
-    apt-get update -y && apt-get upgrade -y
 }

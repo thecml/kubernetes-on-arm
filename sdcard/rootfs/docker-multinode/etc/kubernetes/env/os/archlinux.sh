@@ -23,7 +23,3 @@ os_install(){
     systemctl daemon-reload
     systemctl enable docker.service
 }
-
-os_upgrade(){
-    pacman -Syu --noconfirm
-}

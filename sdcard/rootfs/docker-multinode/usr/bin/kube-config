@@ -48,11 +48,11 @@ With this utility, you can setup Kubernetes on ARM!
 
 Usage: 
     kube-config install - Installs docker and makes your board ready for kubernetes
-    kube-config upgrade - Upgrade current operating system packages to latest version.
 
     kube-config enable-master - Enable the master services and then kubernetes is ready to use
         - FYI, etcd data will be stored in the /var/lib/kubernetes/etcd directory. Backup that directory if you have important data.
     kube-config enable-worker [master-ip] - Enable the worker services and then kubernetes has a new node
+    
     kube-config enable-addon [addon] ...[addon_n] - Enable one or more addons
         - Automatically deployed (mandatory) addons
             - dns: Makes all services accessible via DNS
@@ -73,7 +73,7 @@ EOF
 
 install(){
 
-    # Source the commands, e.g. os_install, os_upgrade, os_post_install, board_install and board_post_install
+    # Source the commands, e.g. os_install, os_post_install, board_install and board_post_install
     if [[ -f ${KUBERNETES_ENV_FILE} ]]; then
         source ${KUBERNETES_ENV_FILE}
     fi
@@ -197,17 +197,6 @@ install(){
         esac
     elif [[ ${REBOOT} == 1 || ${REBOOT} == "y" || ${REBOOT} == "Y" ]]; then
         reboot
-    fi
-}
-
-upgrade(){
-    echo "Upgrading the system packages"
-
-    # Source the os file and use that upgrade method
-    source ${KUBERNETES_ENV_FILE}
-    source ${KUBERNETES_ENV_DIR}/os/${OS}.sh
-    if [[ $(type -t os_upgrade) == "function" ]]; then
-        os_upgrade
     fi
 }
 

@@ -11,12 +11,6 @@ os_install(){
 	EOF
 }
 
-
-os_upgrade(){
-    echo "Upgrading packages..."
-    apt-get update -y && apt-get upgrade -y
-}
-
 os_post_install(){
     # Reflect the new hostname in /boot/device-init.yaml
     newhostname=$(hostnamectl | grep hostname | awk '{print $3}')
