@@ -3,18 +3,16 @@
 # Catch errors
 trap 'exit' ERR
 
-if [[ ${DEBUG} == 1 ]]; then
+if [[ ${K8S_DEBUG} == 1 ]]; then
     set -x
 fi
 
-ensure_root() {
-    # Root is required
-    if [[ ${EUID} != 0 ]]; then
-        echo "Please run as root"
-        usage
-        exit 1
-    fi
-}
+# Root is required
+if [[ ${EUID} != 0 ]]; then
+    echo "Please run as root"
+    usage
+    exit 1
+fi
 
 INSTALL_DEFAULT_TIMEZONE="Europe/Helsinki"
 INSTALL_DEFAULT_HOSTNAME="kubepi"
