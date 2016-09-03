@@ -7,7 +7,7 @@ os_install(){
     # Thanks to http://a.frtzlr.com/kubernetes-on-raspberry-pi-3-the-missing-troubleshooting-guide/
     cat >> /etc/sysctl.d/k8s.conf <<-EOF
 	net.ipv4.tcp_mtu_probing=1
-	vm.swappiness = 1
+	vm.swappiness = 10
 	EOF
 }
 
