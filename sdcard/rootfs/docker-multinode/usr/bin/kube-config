@@ -275,30 +275,30 @@ version(){
     fi
 
     echo "systemd version: v$(systemctl --version | head -1 | cut -c9-)"
-    if [[ $(docker ps 2> /dev/null 1> /dev/null; echo $?) == "0" ]]; then
+    if [[ -f $(which docker) ]]; then
 
         echo "docker version: v$(docker --version | awk '{print $3}' | sed -e 's/,$//')"
+    fi
 
-        # if kubectl exists, output k8s server version. If there is no server, output client Version
-        if [[ -f $(which ${KUBECTL} 2>&1) ]]; then
-            SERVER_K8S=$(${KUBECTL} version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
+    # if kubectl exists, output k8s server version. If there is no server, output client Version
+    if [[ -f $(which ${KUBECTL} 2>&1) ]]; then
+        SERVER_K8S=$(${KUBECTL} version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
 
-            if [[ ! -z $SERVER_K8S ]]; then
-                echo "kubernetes server version: $SERVER_K8S"
-                echo
-                echo "CPU Time (minutes):"
-                echo "kubelet: $(getcputime kubelet)"
-                echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
-                echo "proxy: $(getcputime proxy)"
+        if [[ ! -z $SERVER_K8S ]]; then
+            echo "kubernetes server version: $SERVER_K8S"
+            echo
+            echo "CPU Time (minutes):"
+            echo "kubelet: $(getcputime kubelet)"
+            echo "kubelet has been up for: $(docker ps -f "ID=$(docker ps | grep kubelet | awk '{print $1}')" --format "{{.RunningFor}}")"
+            echo "proxy: $(getcputime proxy)"
 
-                if [[ $(get-node-type) == "master" ]]; then
-                    echo "apiserver: $(getcputime apiserver)"
-                    echo "controller-manager: $(getcputime controller-manager)"
-                    echo "scheduler: $(getcputime scheduler)"
-                fi
-            else
-                echo "kubernetes client version: $(${KUBECTL} version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
+            if [[ $(get-node-type) == "master" ]]; then
+                echo "apiserver: $(getcputime apiserver)"
+                echo "controller-manager: $(getcputime controller-manager)"
+                echo "scheduler: $(getcputime scheduler)"
             fi
+        else
+            echo "kubernetes client version: $(${KUBECTL} version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
         fi
     fi
 }
