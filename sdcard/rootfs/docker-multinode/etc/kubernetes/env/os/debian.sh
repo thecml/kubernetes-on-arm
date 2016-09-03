@@ -31,7 +31,9 @@ os_install(){
         else
             echo "WARNING: You have to restart your networking daemon for DNS changes to take effect and flush changes to /etc/resolv.conf"
         fi
-    elif [[ -f /etc/resolvconf.conf ]]; then
+        RESOLVCONF_UPDATED=1
+    fi
+    if [[ -f /etc/resolvconf.conf ]]; then
 
         # Write the DNS options to the file
         updateline /etc/resolvconf.conf "search_domains" "search_domains=\"default.svc.$DNS_DOMAIN svc.$DNS_DOMAIN $DNS_DOMAIN\""
@@ -39,7 +41,9 @@ os_install(){
 
         # Update resolv.conf 
         resolvconf -u
-    else
+
+        RESOLVCONF_UPDATED=1
+    if [[ ${RESOLVCONF_UPDATED} != 1 ]]; then
         cat <<-EOF
 		WARNING: You have to include these statements in your /etc/resolv.conf file if you want Kubernetes DNS to work on the host machine, not only in pods
 		/etc/resolv.conf
