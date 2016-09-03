@@ -27,7 +27,7 @@ KUBERNETES_ENV_DIR=${KUBERNETES_DIR}/env
 KUBERNETES_ENV_FILE=${KUBERNETES_ENV_DIR}/env.conf
 
 KUBE_DEPLOY_DIR=${KUBERNETES_DIR}/kube-deploy
-KUBE_DEPLOY_COMMIT=775bf0731a5f9cf25603514ac83cf1c157c74d5f
+KUBE_DEPLOY_COMMIT=8c6e6bfa44f6a83afe9b129f3ad78334beb680f1
 MULTINODE_DIR=${KUBE_DEPLOY_DIR}/docker-multinode
 SUPPORTED_K8S_VERSION=v1.3.6
 
@@ -50,7 +50,7 @@ Usage:
     kube-config install - Installs docker and makes your board ready for kubernetes
 
     kube-config enable-master - Enable the master services and then kubernetes is ready to use
-        - FYI, etcd data will be stored in the /var/lib/kubernetes/etcd directory. Backup that directory if you have important data.
+        - FYI, etcd data will be stored in the /var/lib/kubelet/etcd directory. Backup that directory if you have important data.
     kube-config enable-worker [master-ip] - Enable the worker services and then kubernetes has a new node
     
     kube-config enable-addon [addon] ...[addon_n] - Enable one or more addons
