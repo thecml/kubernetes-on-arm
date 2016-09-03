@@ -204,7 +204,8 @@ install(){
 
 enable-master() {
     export K8S_VERSION=${K8S_VERSION:-${SUPPORTED_K8S_VERSION}}
-    ${MULTINODE_DIR}/master.sh
+    cd ${MULTINODE_DIR}
+    ./master.sh
 }
 
 enable-worker() {
@@ -226,11 +227,14 @@ EOF
         exit
     fi
 
-    MASTER_IP=${IP} ${MULTINODE_DIR}/worker.sh
+    export MASTER_IP=${IP} 
+    cd ${MULTINODE_DIR}
+    ./worker.sh
 }
 
 turndown(){
-    ${MULTINODE_DIR}/turndown.sh
+    cd ${MULTINODE_DIR}
+    ./turndown.sh
 }
 
 change-addon() {
