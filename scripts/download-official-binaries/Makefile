@@ -8,7 +8,7 @@ K8S_VERSION = v1.3.6
 
 all: compress
 compress: etcd flanneld kube
-	cd $(TMPDIR)/bin && tar -czf $(OUTPUT)/kube-$(K8S_VERSION)-$(ARCH).tar.gz .
+	cd $(TMPDIR)/bin && tar -czf $(OUTPUT)/kube-core-$(K8S_VERSION)-$(ARCH).tar.gz .
 
 etcd: dirs
 	docker export $(shell docker create gcr.io/google_containers/etcd-$(ARCH):$(ETCD_VERSION)) | tar -x -C $(TMPDIR)/etcd
