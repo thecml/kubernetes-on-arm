@@ -7,19 +7,14 @@ os_install(){
     pacman -Syu --noconfirm
 
     # Install git and some other required things
-    pacman -S git bridge-utils iproute2 --noconfirm --needed
-
-    # Download docker daemon
-    curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.6.3/docker-1.10.0 > /usr/bin/docker
-    chmod +x /usr/bin/docker
-
-    # Add the docker group, so the daemon starts
-    groupadd docker
-
-    # Download the systemd service file
-    curl -sSL https://raw.githubusercontent.com/docker/docker/master/contrib/init/systemd/docker.service > /usr/lib/systemd/system/docker.service
-    curl -sSL https://raw.githubusercontent.com/docker/docker/master/contrib/init/systemd/docker.socket > /usr/lib/systemd/system/docker.socket
+    pacman -S git bridge-utils iproute2 docker --noconfirm --needed
 
     systemctl daemon-reload
     systemctl enable docker.service
+
+    # Well, this doesn't work anyway :(
+    cat >> /usr/lib/sysctl.d/99-k8s.conf <<-EOF
+	net.ipv4.tcp_mtu_probing=1
+	vm.swappiness = 10
+	EOF
 }
