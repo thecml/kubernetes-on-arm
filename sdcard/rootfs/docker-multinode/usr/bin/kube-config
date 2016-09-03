@@ -123,6 +123,10 @@ install(){
     curl -sSL https://storage.googleapis.com/kubernetes-release/release/${SUPPORTED_K8S_VERSION}/bin/linux/$(get-arch)/kubectl > ${KUBECTL}
     chmod +x ${KUBECTL}
 
+    # Download helm
+    curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.8.0/helm > /usr/local/bin/helm
+    chmod +x /usr/local/bin/helm
+
     # Set hostname
     if [[ -z ${NEW_HOSTNAME} ]]; then
         read -p "What hostname do you want? Defaults to ${INSTALL_DEFAULT_HOSTNAME}. " hostnameanswer
