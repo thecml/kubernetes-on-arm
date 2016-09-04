@@ -1,5 +1,34 @@
 ## Changelog
 
+ - v0.8.0
+   - Upgraded to Kubernetes v1.3.6 and flannel v0.6.1
+   - **Using official Kubernetes binaries and docker images**
+     - They are built in line with my multi-platform proposal: [kubernetes/kubernetes#26863](https://github.com/kubernetes/kubernetes/pull/26863)
+   - Most of the code is "official" from [kube-deploy/docker-multinode](https://github.com/kubernetes/kube-deploy/tree/master/docker-multinode)
+   - All binaries and images are now cross-compiled from `amd64`, no more releasing from Raspberry Pis!
+   - Using HypriotOS v1.0.1!
+   - It's fully possible to add `amd64` nodes seamlessly with docker-multinode
+     - Then you can control which nodes a pod should land on with the `beta.kubernetes.io/arch` label: [kubernetes/kubernetes#23684](https://github.com/kubernetes/kubernetes/pull/23684)
+   - Made the dns and the dashboard addons mandatory, they can't and shouldn't be disabled as they're required components of the core.
+   - The earlier `skydns` component has been replaced with the new `kubedns` component that is more integrated with Kubernetes and more efficent.
+   - Raspbian is supported out-of-the-box, just download the deb package and install on your Pi!
+   - Pine64 is now supported as a platform.
+   - Upgraded the addons:
+     - dashboard to v1.1.1
+     - kubedns to 1.5 (manifest version v17.1)
+     - registry to v2.5.0
+     - heapster to v1.2.0-beta.2
+     - influxdb to v0.13.0
+     - grafana to v3.1.1
+   - Total refactor of `kube-config` and of the whole project; as much as possible official Kubernetes code is used, which means the configuration for v0.8.0 is more generic than v0.7.0 which was more specialized.
+   - Added the helm package manager at version v2.0.0-alpha.3
+   - kube-registry-proxy is now added to the registry addon which makes every node expose the registry at `localhost:5000`
+   - Possible to use `--containerized` by adding `export USE_CONTAINERIZED=true` to `/etc/kubernetes/k8s.conf`
+   - Renamed `kube-systemd` to `docker-multinode` and the generic `systemd` OS to the generic `debian` OS
+   - Caveats:
+    - Reboots aren't working nor supported. (Added to roadmap)
+    - Arch Linux ARM, the Pine64 and Scaleway suffers from the `docker pull` mtu bug [docker/docker#22635](https://github.com/docker/docker/issues/22635)
+
  - v0.7.0 (21th Mar 2016)
    - Upgrade to Kubernetes v1.2.0 [Changelog](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md), dashboard v1.0.0, etcd v2.2.5, registry v2.3.1
    - Using official binaries built from my Kubernetes PR: [kubernetes/kubernetes#19769](https://github.com/kubernetes/kubernetes/pull/19769)
