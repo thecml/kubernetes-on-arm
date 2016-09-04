@@ -6,15 +6,15 @@ source scripts/common.sh
 # Require two args
 if [[ $# < 2 ]]; then
     cat <<EOF
-Create a .deb file of https://github.com/luxas/kubernetes-on-arm
+Create a .deb and .tar.gz file of https://github.com/luxas/kubernetes-on-arm
 
 Usage:
-scripts/mkdeb.sh [output] [git_ref] [revision]
+scripts/mkdeb.sh [output dir] [git_ref] [revision]
 
 Arguments:
 output: May be a disc or partition or absolute path
 git_ref: A commit, tag or branch in the repo. Usage in this script: git checkout $git_ref
-revision: The package revision. Just a number like 2
+revision: The package revision.
 
 Examples:
 scripts/mkdeb.sh /dev/sda master 1 [/dev/sda1 automatically chosen]
@@ -25,26 +25,22 @@ EOF
 fi
 
 # Build the image
-images/build.sh kubernetesonarm/make-deb
+docker build -t kubernetesonarm/package scripts/package
 
-# Run the container
-CID=$(docker run -d kubernetesonarm/make-deb $2 $3)
+rm -rf build
+mkdir -p build
 
-# Wait for the package process
-docker wait $CID
+docker run --rm -it -v $(pwd)/build:/build kubernetesonarm/package $2 $3
 
 # Get the directory we should put the file in
 OUTDIR=$(parse-path-or-disc $1)
 
-# Copy out the whole folder that includes the .deb
-docker cp $CID:/build .
-
 # Copy the .deb and .tar.gz package to the output directory
+mkdir -p $OUTDIR
 cp build/* $OUTDIR
 
 # And remove the intermediate directory and container
-rm -r build
-docker rm $CID
+rm -rf build
 
 # Lastly, clean up the directory
 cleanup-path-or-disc

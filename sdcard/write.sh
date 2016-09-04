@@ -2,7 +2,8 @@
 
 ########################## HELPER ##############################
 
-# Install a package 
+# Install a package
+# Usage: require [binary (e.g. fdisk)] [package to install] [hard dependency]
 require()
 {
     BINARY=$1
@@ -10,28 +11,34 @@ require()
 
     # If the $BINARY path doesn't exist
     if [[ ! -e $(which $BINARY 2>&1) ]]; then
-        
+
         if [[ -e $(which pacman 2>&1) ]]; then # Is pacman present?
             pacman -S $PACKAGE --noconfirm
 
             if [[ $(echo $?) != 0 ]]; then
-                require_exit $BINARY $PACKAGE
+                require_exit $@
             fi
         elif [[ -e $(which apt-get 2>&1) ]]; then # Is apt-get present?
             apt-get update && apt-get install -y $PACKAGE
 
             if [[ $(echo $?) != 0 ]]; then
-                require_exit $BINARY $PACKAGE
+                require_exit $@
             fi
         else
-            require_exit $BINARY $PACKAGE
+            require_exit $@
         fi
     fi
 }
 
 require_exit(){
+    HARD_DEP=${3:-"true"}
+
     echo "The required package $2 with the binary $1 isn't present now. Install it."
-    exit 1
+
+    if [[ ${HARD_DEP} == "true" ]]; then
+        echo "Exiting..."
+        exit 1
+    fi
 }
 
 ########################## USAGE ##############################
@@ -53,26 +60,26 @@ Optional argument:
 sdcard/write.sh [disc or sd card] [boot] [os] [rootfs]
 
 Explanation:
-    disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' to see which letter your sd card has.
+    disc - The SD Card place, often /dev/sdb or something. Run 'fdisk -l' or 'lsblk' to see which letter your SD Card has.
     boot - The type of board you have
         - Currently supported:
             - rpi - Raspberry Pi A, A+, B, B+, ZERO
             - rpi-2 - Raspberry Pi 2 Model B
             - rpi-3 - Raspberry Pi 3 Model B
-            - parallella - Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. Should have a newer kernel (only with archlinux)
-            - cubietruck - Cubietruck (only with archlinux)
-            - bananapro - Banana Pro (only with archlinux)
+            - parallella - Adepteva Parallella board. Note: Awfully slow. Do not use as-is. But you're welcome to hack and improve it. It should have a newer kernel
+            - cubietruck - Cubietruck
+            - bananapro - Banana Pro
+            - odroid-c2 - Odroid C2
     os - The operating system which should be downloaded and installed.
         - Currently supported:
-            - archlinux - Arch Linux ARM
-            - hypriotos - HypriotOS
-            - rancheros - RancherOS (only with rpi-2 and rpi-3)
+            - archlinux - Arch Linux ARM (for rpi, rpi-2, rpi-3, parallella, cubietruck, bananapro and odroid-c2)
+            - hypriotos - HypriotOS (for rpi, rpi-2 and rpi-3)
     rootfs - Prepopulated rootfs with scripts and such.
-        - Currently supported: 
-            - kube-systemd - Kubernetes scripts prepopulated (not with rancheros)
+        - Currently supported:
+            - docker-multinode - Kubernetes scripts prepopulated (for archlinux and hypriotos)
 
 Example:
-sdcard/write.sh /dev/sdb rpi-2 archlinux kube-systemd
+sdcard/write.sh /dev/sdb rpi-2 archlinux docker-multinode
 EOF
 }
 
@@ -113,10 +120,10 @@ fi
 # /dev/sdb, /dev/sdb1, /dev/sdb2
 SDCARD=$1
 
-# Special case. the mmcblk0 disc's partitions are named p1 and p2 instead of 1 and 2 
+# Special case. the mmcblk0 disc's partitions are named p1 and p2 instead of 1 and 2
 if [[ $SDCARD == "/dev/mmcblk"* ]]; then
     PARTITION1=${1}p1
-    PARTITION2=${1}p2   
+    PARTITION2=${1}p2
 else
     PARTITION1=${1}1
     PARTITION2=${1}2
@@ -139,11 +146,11 @@ if [[ -z $QUIET || $QUIET == 0 ]]; then
     # Security check
     read -p "You are going to lose all your data on $1. Continue? (Y is default) [Y/n]" answer
 
-    case $answer in 
-        [nN]*) 
+    case $answer in
+        [nN]*)
             echo "Quitting..."
             rm -r $TMPDIR
-            exit 1;;        
+            exit 1;;
     esac
 
     # OK to continue
@@ -155,28 +162,16 @@ fi
 # Make some temp directories
 mkdir -p $ROOT $BOOT
 
-# Ensure the OS exists  
+# Ensure the OS exists
 if [[ ! -f os/$OSNAME.sh ]]; then
     echo "os/$OSNAME.sh not found. That file is required. Exiting..."
     rm -r $TMPDIR
     exit 1
 fi
 
-# Rewrite for compability
-if [[ $ROOTFSNAME == "kube-archlinux" ]]; then
-    echo "DEPRECATED: kube-archlinux is a deprecated name. Use kube-systemd. Continuing with kube-systemd anyway..."
-    ROOTFSNAME="kube-systemd"
-fi
-
-# Ensure the rootfs exists  
+# Ensure the rootfs exists
 if [[ ! -d rootfs/$ROOTFSNAME ]]; then
     echo "rootfs/$ROOTFSNAME not found. That rootfs doesn't exist. Exiting..."
-    rm -r $TMPDIR
-    exit 1
-fi
-
-if [[ $ROOTFSNAME == "kube-systemd" && $OSNAME == "rancheros" ]]; then
-    echo "rancheros doesn't support kube-systemd. Exiting..."
     rm -r $TMPDIR
     exit 1
 fi
@@ -188,6 +183,7 @@ source os/$OSNAME.sh
 # mountpartitions()
 # initos()
 # cleanup()
+# checkrootfs()
 
 # Mount them
 mountpartitions
@@ -209,7 +205,7 @@ if [[ -d rootfs/$ROOTFSNAME ]]; then
 
     # If we've a dynamic rootfs, invoke it
     if [[ -f rootfs/$ROOTFSNAME/dynamic-rootfs.sh ]]; then
-        
+
         # Source the dynamic rootfs script
         source rootfs/$ROOTFSNAME/dynamic-rootfs.sh
 

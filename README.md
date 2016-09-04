@@ -10,6 +10,33 @@ Imagine... Your own testbed for Kubernetes with cheap Raspberry Pis and friends.
 #### **Are you convinced too, like me, that cheap ARM boards and Kubernetes is a match made in heaven?**    
 **Then, lets go!**
 
+## Important information
+
+This project was published in September 2015 as the first fully working way to easily set up Kubernetes on ARM devices.
+
+I worked on making it better non-stop until early 2016, when I started contributing the changes I've made back to Kubernetes core.
+I strongly think that most of these features belong to the core, so everyone may take advantage of it, and so Kubernetes can be ported to even more platforms.
+
+So I opened [kubernetes/kubernetes#17981](https://github.com/kubernetes/kubernetes/issues/17981) and started working on making Kubernetes cross-platform.
+To date I've ported the Kubernetes core to ARM, ARM 64-bit and PowerPC 64-bit Little-endian. Already in `v1.2.0` binaries were released for ARM, and I used the official binaries in `v0.7.0` in Kubernetes on ARM.
+
+Since `v1.3.0-alpha.3` the `hyperkube` image has been built for both `arm` and `arm64`, which have made it possible to run Kubernetes officially the "kick the tires way".
+So it has been possible to run `v1.3.x` Kubernetes on Raspberry Pi´s (or whatever arm or arm64 device that runs docker) with the [docker-multinode](https://github.com/kubernetes/kube-deploy/tree/master/docker-multinode) deployment!
+
+I've written a proposal about how to make Kubernetes available for multiple platforms [here](https://github.com/kubernetes/kubernetes/pull/26863)
+
+*And then I became a Kubernetes maintainer in April!* :smile:
+
+This means I have not had any extra time for maintaining Kubernetes on ARM when I instead made these features available in the core.
+
+### So what should I use Kubernetes on ARM for now then?
+
+Kubernetes on ARM will still serve as a out-of-the-box solution that builds upon the Kubernetes core features. For example: A SD Card writing process for Raspberry Pi`s with Kubernetes prebaked will never reach the core, but it`s a great feature here.
+
+Also, addons will first be ported to ARM in this project, then proposed to the official project.
+
+**OK, are you ready now to put your ARM boards to work? Then let´s go!**
+
 ## Download and build a SD Card
 
 The first thing you will do, is to create a SD Card for your Pi. Alternatively, you may use the [`.deb` deployment](#deb-deployment)
@@ -26,9 +53,7 @@ Supported OSes/boards:
   - Raspberry Pi 1 A, A+, B, B+, armv6 **(rpi)**
   - Raspberry Pi 2 Model B, armv7 **(rpi-2)**
   - Raspberry Pi 3 Model B, armv8, _armv7 rootfs_ **(rpi-3)**
-- RancherOS **(rancheros)**
-  - Raspberry Pi 2 Model B, armv7 **(rpi-2)**
-  - Raspberry Pi 3 Model B, armv8, _armv7 rootfs_ **(rpi-3)**
+
 
 ```bash
 # Go to our home folder, if you want
@@ -54,7 +79,7 @@ sdcard/write.sh
 sudo sdcard/write.sh /dev/sdX [board] [os] [rootfs]
 
 # Example: Write the SD Card for Raspberry Pi 2, Arch Linux ARM and include this project's Kubernetes scripts
-sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-systemd
+sudo sdcard/write.sh /dev/sdX rpi-2 archlinux docker-multinode
 
 # The installer will ask you if you want to erase all data on your card
 # Answer y/n on that question
@@ -63,7 +88,7 @@ sudo sdcard/write.sh /dev/sdX rpi-2 archlinux kube-systemd
 # This script runs in 3-4 mins
 ```
 
-The README for the `kube-systemd` rootfs [is here](sdcard/rootfs/kube-systemd/etc/kubernetes/README.md)
+The README for the `docker-multinode` rootfs [is here](sdcard/rootfs/docker-multinode/etc/kubernetes/README.md)
 
 ## Setup your board from an SD Card
 
@@ -74,9 +99,9 @@ Arch Linux users:
  - These scripts requires root. So if you login via **alarm**, then `su root` when you´re going to do some serious hacking :)
 
 HypriotOS users:
- - The user/password is: **pi/raspberry** or **root/hypriot**
- - Remember to prepend all commands with `sudo` if you are the `pi` user
-   - Sometimes, it's even required to prepend commands with `sudo env PATH=$PATH ...`
+ - The user/password is: **pirate/hypriot**
+ - Remember to prepend all commands with `sudo` if you are the `pirate` user
+   
 
 Yes, I know. Root enabled via ssh isn´t that good.
 But the task to enhance ssh security is left as an exercise to the user.  
@@ -85,9 +110,8 @@ But the task to enhance ssh security is left as an exercise to the user.
 # This script will install and setup docker etc.
 kube-config install
 
-# First, it will update the system and install docker
-# Then it will download prebuilt Kubernetes binaries
-# Later, if you build kubernetes yourself via "kube-config build-images", all binaries will be replaced with the latest version
+# First, it will install docker, if not present
+# Then it will download kube deploy
 
 # It will ask for which hostname you want. Defaults to kubepi.
 
@@ -95,28 +119,28 @@ kube-config install
 # Run "timedatectl list-timezones" before to check for values
 
 # It will ask you if it should create a 1 GB swapfile.
-# If you are gonna build Kubernetes on your own machine, you have to create this
 
 # Last question is whether you want to reboot
-# You must do this now, otherwise docker will behave very strange and fail
+# You have to reboot in order to get the cgroups working
 
 # If you want to run this script non-interactively, do this:
 # TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
 # This script runs in 2-3 mins
 ```
 
-## Setup Kubernetes
+## Start Kubernetes!
 
-If you want to change something in the source, edit files in `/etc/kubernetes/source/images` and run `kube-config build-images` before you do this
-These scripts are important in the setup process. 
-They spin up all required services in the right order, and download the images from Github if not present.  
-This may take ~5-10min, depending on your internet connection.
+Hmm, starting a complex system like Kubernetes should be a complex task, right?
+Well, not this time.
+
+`enable-master` runs [master.sh](https://github.com/kubernetes/kube-deploy/blob/master/docker-multinode/master.sh)
+`enable-worker` runs [worker.sh](https://github.com/kubernetes/kube-deploy/blob/master/docker-multinode/worker.sh)
 
 ```bash
-# To enable the master service, run
+# To set up your board as both a master and a node, run
 kube-config enable-master
 
-# To enable the worker service, run
+# To set up your board as a node, run
 kube-config enable-worker [master-ip]
 ```
 
@@ -124,28 +148,26 @@ kube-config enable-worker [master-ip]
 If you have already made a SD Card and your device is up and running, what can you do instead?
 For that, I've made a `.deb` package, so you could install it easily
 
-The README for the `kube-systemd` rootfs [is here](sdcard/rootfs/kube-systemd/etc/kubernetes/README.md)
+The README for the `docker-multinode` rootfs [is here](sdcard/rootfs/docker-multinode/etc/kubernetes/README.md)
 
 If you already have set up your Pi with latest Raspbian OS for example, follow this guide.
 
 #### Install the `.deb` package
-```bash
-# The OS have to be systemd based, e. g. HypriotOS, Debian Jessie, Arch Linux ARM, Ubuntu 15.04
 
+Supported operating systems are HypriotOS, Raspbian, Arch Linux ARM and in some cases Debian/Ubuntu.
+
+```bash
 # Download the latest package
-curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.7.0/kube-systemd.deb > kube-systemd.deb
+curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.8.0/docker-multinode.deb > docker-multinode.deb
 # or
-wget https://github.com/luxas/kubernetes-on-arm/releases/download/v0.7.0/kube-systemd.deb
+wget https://github.com/luxas/kubernetes-on-arm/releases/download/v0.8.0/docker-multinode.deb
 
 # Requires dpkg, which is preinstalled in at least all Debian/Ubuntu OSes
-sudo dpkg -i kube-systemd.deb
+sudo dpkg -i docker-multinode.deb
 
 # Setup the enviroinment
 # It will ask which board it's running on and which OS
-# If your OS is Hypriot or Arch Linux, choose that. Otherwise, choose systemd, which is generic
-# It will download prebuilt binaries
-# And make a swap file if you plan to compile things
-# A reboot is required for it to function properly
+# A reboot is required for it to function properly, but not for HypriotOS
 kube-config install
 
 ## ----- REBOOT -----
@@ -198,11 +220,6 @@ kubectl get svc
 curl $SERVICE_IP
 # --> <p>WELCOME TO NGINX</p>
 
-# Start dns, this will spin up 4 containers and expose them as a DNS service at ip 10.0.0.10
-# 10.0.0.10 is already enabled as a DNS server in your system, see the file /etc/systemd/resolved.conf.d/dns.conf
-# That file makes /etc/resolv.conf use kube-dns also outside of your containers
-kube-config enable-addon dns
-
 # See which internal cluster services that are running
 kubectl --namespace=kube-system get pods,rc,svc
 
@@ -223,16 +240,13 @@ kube-config enable-addon registry
 kubectl --namespace=kube-system get pods
 
 # Tag an image
-docker tag my-name/my-image registry.kube-system:5000/my-name/my-image
+docker tag my-name/my-image localhost:5000/my-name/my-image
 
 # And push it to the registry
-docker push registry.kube-system:5000/my-name/my-image
+docker push localhost:5000/my-name/my-image
 
 # On another node, pull it
-docker pull registry.kube-system:5000/my-name/my-image
-
-# The registry address may be written longer if search isn't specified.
-# registry.kube-system.svc.cluster.local == registry.kube-system
+docker pull localhost:5000/my-name/my-image
 
 # The master also proxies the services so that they are accessible from outside
 # The -L flag is there because curl has to follow redirects
@@ -252,66 +266,8 @@ kubectl cluster-info
 # cAdvisor in kubelet provides a web site that outputs all kind of stats in real time
 # http://$MASTER_IP:4194
 
-# Disable this node. This always reverts the "kube-config enable-*" commands
-kube-config disable-node
-
-# Remove the data for the cluster
-kube-config delete-data
-```
-
-## Custom hacking
-
-If you already have set up a lot of devices and already are familiar with one OS, just grab the binaries [here](https://github.com/luxas/kubernetes-on-arm/releases/tag/v0.7.0), pull the images from Docker Hub and start to hack your own solution :smile:
-
-```
-# Get the binaries and put them in /usr/bin
-curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.7.0/binaries.tar.gz | tar -xz -C /usr/bin
-
-# Pull the images for master
-docker pull kubernetesonarm/hyperkube
-docker pull kubernetesonarm/etcd
-docker pull kubernetesonarm/flannel
-docker pull kubernetesonarm/pause
-
-
-# Pull the images for worker
-docker pull kubernetesonarm/hyperkube
-docker pull kubernetesonarm/flannel
-docker pull kubernetesonarm/pause
-```
-Then check the service files here for the right commands to use: https://github.com/luxas/kubernetes-on-arm/tree/master/sdcard/rootfs/kube-systemd/usr/lib/systemd/system
-
-### Build the images yourself
-
-Instructions [here](docs/build-images.md)
-
-#### However, only use this method if you know what you are doing and want to customize just for your need
-#### Otherwise, use the SD Card method or deb package for an easy installation
-
-### Start a one-node cluster for testing
-
-```console
-$ mount -B /var/lib/kubelet /var/lib/kubelet
-$ mount --make-shared /var/lib/kubelet
-$ docker run \
-    --volume=/sys:/sys:ro \
-    --volume=/var/lib/docker/:/var/lib/docker:rw \
-    --volume=/var/lib/kubelet/:/var/lib/kubelet:shared \
-    --volume=/var/run:/var/run:rw \
-    --net=host \
-    --pid=host \
-    --privileged=true \
-    -d \
-    kubernetesonarm/hyperkube \
-    /hyperkube kubelet \
-        --hostname-override="127.0.0.1" \
-        --pod_infra_container_image=kubernetesonarm/pause \
-        --address="0.0.0.0" \
-        --api-servers=http://localhost:8080 \
-        --config=/etc/kubernetes/manifests \
-        --cluster-dns=10.0.0.10 \
-        --cluster-domain=cluster.local \
-        --allow-privileged=true --v=2
+# Turndown Kubernetes on this node. This always reverts the "kube-config enable-*" commands
+kube-config disable
 ```
 
 ## Addons
@@ -327,26 +283,28 @@ Three addons are available for the moment:
    - Example: `my-awesome-webserver.default.svc.cluster.local` or just `my-awesome-webserver` may resolve to ip `10.0.0.154`
    - Those DNS names is available both in containers and on the node itself (kube-config automatically adds the info to `/etc/resolv.conf`)
    - If you want to access the Kubernetes API easily, `curl -k https://kubernetes` or `curl -k https://10.0.0.1` if you remember numbers better (`-k` stands for insecure as apiserver has no signed certs by default)
-   - The DNS server itself has allocated ip `10.0.0.10` by default
-   - The DNS domain is `cluster.local` by default
+   - The DNS server itself has allocated ip `10.0.0.10`
+   - The DNS domain is `cluster.local`
+   - This addon can't be disabled.
+ - Kubernetes Dashboard:
+   - The Kubernetes Dashboard project [is here](https://github.com/kubernetes/dashboard)
+   - Access the dashboard on: `http://[master-ip]:8080/ui`
+   - This addon can't be disabled.
  - Central image registry:
    - A registry for storing cluster images if e.g. the cluster has no internet connection for a while
    - Or for cluster-specific images that one not want to publish on Docker Hub
-   - This service is available at this address: `registry.kube-system` when DNS is enabled
-   - Just tag your image: `docker tag my-name/my-image registry.kube-system:5000/my-name/my-image`
-   - And push it to the registry: `docker push registry.kube-system:5000/my-name/my-image`
- - Kubernetes Dashboard:
-   - The Kubernetes Dashboard project [is here](https://github.com/kubernetes/dashboard)
-   - Replaces `kube-ui`
-   - Access the dashboard on: `http://[master-ip]:8080/ui`
- - The Service Loadbalancer:
+   - This service is available at `localhost:5000` on all nodes, which by default is a "trusted" location.
+   - `localhost:5000` forwards the traffic to the internal IP of the registry service.
+   - Just tag your image: `docker tag my-name/my-image localhost:5000/my-name/my-image`
+   - And push it to the registry: `docker push localhost:5000/my-name/my-image`
+ - Service loadbalancer:
    - Documentation [here](https://github.com/kubernetes/contrib/tree/master/service-loadbalancer)
    - You have to label at least one node `role=loadbalancer` like this: `kubectl label no [node_ip] role=loadbalancer`
    - The loadbalancer will expose http services in the default namespace on `http://[loadbalancer_ip]/[service_name]`. Only `http` services on port 80 are tested in this release. It should be pretty easy to add `https` support though.
    - You may see `haproxy` stats on `http://[loadbalancer_ip]:1936`
-   - More info will come later
+   - Not recommended for heavy use. Will be replaced with ingress in coming releases.
  - Cluster monitoring with heapster, influxdb and grafana
-   - When running this addon (`heapster`), the Dashboard will show usage graphs in the CPU and RAM columns.
+   - When this addon is enabled, the dashboard will show usage graphs in the CPU and RAM columns.
    - All heapster data is stored in an InfluxDB database. Data is written once a minute. Access the graphical InfluxDB UI: `http://[master-ip]:8080/api/v1/proxy/namespaces/kube-system/services/monitoring-influxdb:http` and the raw api on: `http://[master-ip]:8080/api/v1/proxy/namespaces/kube-system/services/monitoring-influxdb:api`
    - A nice `grafana` web dashboard that shows resource usage for the whole cluster as for individual pods is accessible at: `http://[master-ip]:8080/api/v1/proxy/namespaces/kube-system/services/monitoring-grafana`. It may take some minutes for data to show up.
 
@@ -362,8 +320,8 @@ Here is some ways to make your outside devices reach the services running in the
  - Connect a computer to the `flannel` network
    - It's possible to start `flannel` and `kube-proxy` on another computer **in the same network** and access all services
    - Run these two commands from a `amd64` machine with docker:
-     - `docker run --net=host -d --privileged -v /dev/net:/dev/net quay.io/coreos/flannel:0.5.5 /opt/bin/flanneld --etcd-endpoints=http://$MASTER_IP:4001`
-     - `docker run --net=host -d --privileged gcr.io/google_containers/hyperkube-amd64:v1.2.0 /hyperkube proxy --master=http://$MASTER_IP:8080 --v=2`'
+     - `docker run --net=host -d --privileged -v /dev/net:/dev/net quay.io/coreos/flannel:0.6.1-amd64 /opt/bin/flanneld --etcd-endpoints=http://$MASTER_IP:2379`
+     - `docker run --net=host -d --privileged gcr.io/google_containers/hyperkube-amd64:v1.3.6 /hyperkube proxy --master=http://$MASTER_IP:8080 --v=2`'
    - Replace $MASTER_IP with the actual ip of your master node
    - The consuming `amd64` computer can access all services
    - For example: `curl -k https://10.0.0.1`
@@ -382,62 +340,23 @@ Go to a web browser and type: `{IP of your node}:4194` and a nice dashboard will
 
 There is a configuration file: `/etc/kubernetes/k8s.conf`, where you can customize some things:
  - `K8S_MASTER_IP`: Points to the master in the cluster. If the node is master, it uses `127.0.0.1` (aka `localhost`). Default: `127.0.0.1`
- - `FLANNEL_SUBNET`: The subnet `flannel` should use. [More information](https://github.com/coreos/flannel#configuration). Default: `10.1.0.0/16`
- - `FLANNEL_BACKEND`: The backend `flannel` will use to proxy packets from one node to another. [More information](https://github.com/coreos/flannel#configuration). Default: `host-gw`, which requires Layer 2 connectivity between nodes.
- - `DNS_IP`: The IP the DNS addon will allocate. Defaults to: `10.0.0.10`. Do not change this unless you have a good reason.
- - `DNS_DOMAIN`: The domain for DNS names. Defaults to: `cluster.local`. If you for example changes this to `abc`, your DNS names will look like this: `my-nginx.default.svc.abc`.
- - `DOCKER_STORAGE_DRIVER`: The storage driver all docker daemons will use. Note: You shouldn't change this after the installation.
+ - The other options comes from [docker-multinode](https://github.com/kubernetes/kube-deploy/tree/master/docker-multinode#optionsconfiguration)
 
-**Note:** You must change the values in `k8s.conf` before starting Kubernetes. Otherwise they won't have effect, just be able to harm your setup. And remember that if you change `DNS_IP` and `DNS_DOMAIN` on one node, you'll have to change them on all nodes in the cluster
-
-You can also customize the master containers´ flags in the file: `/etc/kubernetes/static/master/master.json`. There the configuration for the master components are. [Official file](https://github.com/kubernetes/kubernetes/blob/master/cluster/images/hyperkube/master-multi.json)
-
-You may also put more `.json` files in `/etc/kubernetes/static/master` and `/etc/kubernetes/static/worker` if you want; they will come up as static pods.
+**Note:** You must change the values in `k8s.conf` before starting Kubernetes. Otherwise they won't have effect, just be able to harm your setup.
 
 On Arch Linux, this file will override the default `eth0` settings. If you have a special `eth0` setup (or use some other network), edit this file to fit your use case: `/etc/systemd/network/dns.network`
 
 ## Docker versions
 
-With release `v0.6.5` and higher, only `docker-1.10.0` and higher is supported.
-
-## Cross-compiling
-
-For this project, I compile the binaries on ARM hosts. But I've also made a script that can cross-compile if you want to compile it faster. [Check it out](scripts/build-k8s-on-amd64/Dockerfile)
-
-## Running tests
-
-Right now there is one test:
- - `run-test master` will simply do what the `Use Kubernetes` section does. It setups a master, runs `nginx`, starts the DNS, registry and sleep addons.
-
-Logs can be found at: `/etc/kubernetes/source/scripts/logs`
-The tests can be found at: `/etc/kubernetes/source/scripts/tests`
-The test might fail, although the thing it's testing is in fact working. Report an issue in that case.
-
-## Service management
-
-The `kube-systemd` rootfs uses systemd services for starting/stopping containers.
-
-Systemd services: 
- - system-docker: Or `docker-bootstrap`. Used for running `etcd` and `flannel`.
- - etcd: Starts the `kubernetesonarm/etcd` container. Depends on `system-docker`.
- - flannel: Starts the `kubernetesonarm/flannel` container. Depends on `etcd`.
- - docker: Plain docker service. Dropins are symlinked. Depends on `flannel`.
- - k8s-master: Service that starts up the main master components
- - k8s-worker: Service that starts up `kubelet` and the `proxy`.
-
-Useful commands for troubleshooting: 
- - `systemctl status (service)`: Get the status for a service
- - `systemctl start (service)`: Start a service
- - `systemctl stop (service)`: Stop a service
- - `systemctl cat (service)`: See the `.service` files for an unit.
- - `journalctl -xe`: Get the system log
- - `journalctl -xeu (service)`: Get logs for a service
+Only `docker-1.10` and higher is supported, `docker-1.11` is recommended.
 
 ## Troubleshooting
 
-If your cluster won't start, try `kube-config delete-data`. That will remove all data you store in `/var/lib/kubelet` and `/var/lib/kubernetes`. If you don't want to delete all data, but have to get Kubernetes up and running, you can answer `M`, when running `kube-config delete-data` and it will rename `/var/lib/kubernetes` and `/var/lib/kubelet` to `/var/lib/kubernetesold` and `/var/lib/kubeletold` so you may restore them later.
+If your cluster won't start, try `kube-config disable` and choose to remove `/var/lib/kubelet`. That will remove all data you store in `/var/lib/kubelet` and kill most running docker images.
 
-There is also no guarantee that the master/workers and all their services will come up successfully after a reboot, but it's possible.
+## Reboots
+
+Will **not** work in this version. It's in the roadmap to enable reboots again.
 
 ## Contributing
 

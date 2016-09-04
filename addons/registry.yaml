@@ -1,31 +1,27 @@
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: registry
+  name: kube-registry
   namespace: kube-system
   labels:
-    k8s-app: registry
-    kubernetes.io/cluster-service: "true"
+    k8s-app: kube-registry
 spec:
   replicas: 1
   selector:
-    k8s-app: registry
+    k8s-app: kube-registry
   template:
     metadata:
       labels:
-        k8s-app: registry
-        kubernetes.io/cluster-service: "true"
+        k8s-app: kube-registry
     spec:
       containers:
       - name: registry
-        image: kubernetesonarm/registry
+        image: kubernetesonarm/registry:VERSION
         imagePullPolicy: IfNotPresent
-        args:
-        - /etc/docker/registry/config.yml
         resources:
           limits:
-            cpu: 100m
-            memory: 100Mi
+            cpu: 50m
+            memory: 50Mi
         volumeMounts:
         - name: registry-data
           mountPath: /var/lib/registry
@@ -41,17 +37,46 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: registry
+  name: kube-registry
   namespace: kube-system
   labels:
-    k8s-app: registry
-    kubernetes.io/cluster-service: "true"
+    k8s-app: kube-registry
     kubernetes.io/name: "KubeRegistry"
 spec:
   selector:
-    k8s-app: registry
-  clusterIP: 10.0.0.20
+    k8s-app: kube-registry
   ports:
   - name: registry
     port: 5000
     protocol: TCP
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: kube-registry-proxy
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      name: kube-registry-proxy
+      labels:
+        daemon: kube-registry-proxy
+    spec:
+      containers:
+      - name: kube-registry-proxy
+        image: kubernetesonarm/kube-registry-proxy-arm:0.4
+        resources:
+          limits:
+            cpu: 50m
+            memory: 50Mi
+        env:
+        - name: REGISTRY_HOST
+          value: kube-registry.kube-system.svc.cluster.local
+        - name: REGISTRY_PORT
+          value: "5000"
+        - name: FORWARD_PORT
+          value: "5000"
+        ports:
+        - name: registry
+          containerPort: 5000
+          hostPort: 5000

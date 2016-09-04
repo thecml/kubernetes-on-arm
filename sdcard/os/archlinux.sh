@@ -1,14 +1,12 @@
 
-SDCARDSIZE=${SDCARDSIZE:-""}
-
 # First invoked by sdcard/write
 mountpartitions(){
     # Partition the sd card
     case $MACHINENAME in
         rpi|rpi-2|rpi-3|parallella)
-            generalformat 100;; # Make 100 MB fat partition for the RPi
-        cubietruck|bananapro)
-            allwinnerformat;;
+            twopartitionformat 100;; # Make 100 MB fat partition for the RPi
+        cubietruck|bananapro|odroid-c2)
+            onepartitionformat;;
         *)
             exit;;
     esac
@@ -18,6 +16,9 @@ mountpartitions(){
 initos(){
     case $MACHINENAME in
         rpi|rpi-2|rpi-3|parallella)
+            generaldownload
+            move_boot;;
+        odroid-c2)
             generaldownload;;
         cubietruck|bananapro)
             allwinnerdownload;;
@@ -33,9 +34,20 @@ cleanup(){
             umount_boot_and_root;;
         cubietruck|bananapro)
             umount_root;;
+        odroid-c2)
+            write_boot_loader_and_umount_root;;
         *)
             exit;;
     esac
+}
+
+checkrootfs(){
+
+    # Arch Linux supports these root filesystems
+    if [[ ${ROOTFSNAME} != "docker-multinode" ]]; then
+        echo "archlinux does only work with docker-multinode"
+        exit
+    fi
 }
 
 
@@ -43,10 +55,7 @@ cleanup(){
 
 # Format the SD Card with two partitions, boot and root. Boot is $1 MB big.
 # This makes the root partition as big as the sd card minus boot
-generalformat(){
-    if [[ ! -z $SDCARDSIZE ]]; then
-        SDCARDSIZE="+$(($SDCARDSIZE-$1))M"
-    fi
+twopartitionformat(){
 
     # Here we "press" the keys in order, commanding fdisk to make a partition
     echo "Now $SDCARD is going to be partitioned."
@@ -64,7 +73,7 @@ n
 p
 2
 
-$SDCARDSIZE
+
 w
 EOF
 
@@ -72,7 +81,7 @@ EOF
     require mkfs.vfat dosfstools
 
     # Make boot filesystem
-    mkfs.vfat $PARTITION1 
+    mkfs.vfat $PARTITION1
 
     # Mount partition 1 to boot, for editing
     mount $PARTITION1 $BOOT
@@ -98,7 +107,10 @@ generaldownload(){
     curl -sSL -k http://archlinuxarm.org/os/ArchLinuxARM-${ARCH_BOARD}-latest.tar.gz | tar -xz -C $ROOT >> $LOGFILE 2>&1
 
     sync
+}
 
+move_boot(){
+    echo "Moving boot files to boot partition"
     # Move /boot to separate partition
     mv $ROOT/boot/* $BOOT
 }
@@ -112,10 +124,7 @@ umount_boot_and_root(){
 
 # Cubietruck guide: http://archlinuxarm.org/platforms/armv7/allwinner/cubietruck
 # All the commands copied from there
-allwinnerformat(){
-    if [[ ! -z $SDCARDSIZE ]]; then
-        SDCARDSIZE="+${SDCARDSIZE}M"
-    fi
+onepartitionformat(){
 
     fdisk $SDCARD <<EOF
 o
@@ -124,7 +133,7 @@ n
 p
 1
 2048
-$SDCARDSIZE
+
 w
 EOF
 
@@ -154,4 +163,15 @@ allwinnerdownload(){
 
 umount_root(){
     umount $ROOT
+}
+
+write_boot_loader_and_umount_root(){
+    CURRDIR=`pwd`
+    cd $ROOT/boot
+
+    # Flash the bootloader files
+    ./sd_fusing.sh $SDCARD
+    cd $CURRDIR
+
+    umount_root
 }

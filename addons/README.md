@@ -33,19 +33,3 @@ The official `amd64` service-loadbalancer addon is here: https://github.com/kube
 ### Heapster
 
 The official `amd64` heapster addon is here: https://github.com/kubernetes/heapster/tree/master/deploy/kube-config/influxdb
-
-### Sleep
-
-Just two pods for testing
-
-If you want to test out some kubernetes settings like DNS, this addon is very handy.
-Starts up two containers, resin/rpi-raspbian and luxas/alpine. They both sleep for one hour and then restarts forever.
-
-Example use:
-```
-kubectl exec -it alpine-sleep /bin/sh
-
-kubectl exec -it raspbian-sleep /bin/bash
-
-kubectl exec -it alpine-sleep -- nslookup kubernetes.default.svc.cluster.local
-```

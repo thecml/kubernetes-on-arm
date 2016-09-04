@@ -1,6 +1,35 @@
 ## Changelog
 
- - v0.7.0
+ - v0.8.0
+   - Upgraded to Kubernetes v1.3.6 and flannel v0.6.1
+   - **Using official Kubernetes binaries and docker images**
+     - They are built in line with my multi-platform proposal: [kubernetes/kubernetes#26863](https://github.com/kubernetes/kubernetes/pull/26863)
+   - Most of the code is "official" from [kube-deploy/docker-multinode](https://github.com/kubernetes/kube-deploy/tree/master/docker-multinode)
+   - All binaries and images are now cross-compiled from `amd64`, no more releasing from Raspberry Pis!
+   - Using HypriotOS v1.0.1!
+   - It's fully possible to add `amd64` nodes seamlessly with docker-multinode
+     - Then you can control which nodes a pod should land on with the `beta.kubernetes.io/arch` label: [kubernetes/kubernetes#23684](https://github.com/kubernetes/kubernetes/pull/23684)
+   - Made the dns and the dashboard addons mandatory, they can't and shouldn't be disabled as they're required components of the core.
+   - The earlier `skydns` component has been replaced with the new `kubedns` component that is more integrated with Kubernetes and more efficent.
+   - Raspbian is supported out-of-the-box, just download the deb package and install on your Pi!
+   - Pine64 is now supported as a platform.
+   - Upgraded the addons:
+     - dashboard to v1.1.1
+     - kubedns to 1.5 (manifest version v17.1)
+     - registry to v2.5.0
+     - heapster to v1.2.0-beta.2
+     - influxdb to v0.13.0
+     - grafana to v3.1.1
+   - Total refactor of `kube-config` and of the whole project; as much as possible official Kubernetes code is used, which means the configuration for v0.8.0 is more generic than v0.7.0 which was more specialized.
+   - Added the helm package manager at version v2.0.0-alpha.3
+   - kube-registry-proxy is now added to the registry addon which makes every node expose the registry at `localhost:5000`
+   - Possible to use `--containerized` by adding `export USE_CONTAINERIZED=true` to `/etc/kubernetes/k8s.conf`
+   - Renamed `kube-systemd` to `docker-multinode` and the generic `systemd` OS to the generic `debian` OS
+   - Caveats:
+    - Reboots aren't working nor supported. (Added to roadmap)
+    - Arch Linux ARM, the Pine64 and Scaleway suffers from the `docker pull` mtu bug [docker/docker#22635](https://github.com/docker/docker/issues/22635)
+
+ - v0.7.0 (21th Mar 2016)
    - Upgrade to Kubernetes v1.2.0 [Changelog](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md), dashboard v1.0.0, etcd v2.2.5, registry v2.3.1
    - Using official binaries built from my Kubernetes PR: [kubernetes/kubernetes#19769](https://github.com/kubernetes/kubernetes/pull/19769)
    - Added cluster monitoring! Heapster v1.0.0, influxdb v0.10.3 and grafana v2.6.0
@@ -21,7 +50,7 @@
    - Changed proxying mode to `iptables` for better performance.
    - Added a script for cross-compiling Kubernetes to ARM 64-bit on a `amd64` host.
    - Other minor enhancements, improvements and bug fixes are included too.
- - v0.6.5
+ - v0.6.5 (14th Feb 2016)
    - Add a http loadbalancer. Thanks for the help @larmog
    - **Upgrade to and support docker-1.10.0 only**
    - **Kubernetes Dashboard UI added as an addon**
@@ -32,7 +61,7 @@
    - Better UX when writing the hypriot image, caches the downloaded image for faster writes and installs unzip if not present
    - Bug fixes
    - Rearranged the addon manifests
- - v0.6.3
+ - v0.6.3 (9th Jan 2016)
    - Fix bugs and make the `.deb` file stable
    - Add an experimental `.tar.gz` deployment for platforms that doesn't have `dpkg`
    - Document the /etc/kubernetes/README.md better
@@ -42,7 +71,7 @@
    - Better DNS management on Arch Linux
    - Use a shell for looking up paths to executables needed in `.service` files
    - Easier to use on `systemd`, most of the packages is automatically installed
- - v0.6.2
+ - v0.6.2 (26th Dec 2015)
    - Support for Banana Pro
    - `.deb` package deployment
    - `iptables` proxying mode for `kube-proxy` should result in better performance
@@ -56,7 +85,7 @@
    - Small improvments and much better README
    - Bug fixes
    - Broke out the flannel subnet to the configuration file: `/etc/kubernetes/k8s.conf` supports now `FLANNEL_SUBNET` which defaults to `10.1.0.0/16`
- - v0.6.0
+ - v0.6.0 (29th Nov 2015)
    - A new, more customizable way to write the SD Card, allows for more OSes in the future
      - Automates post-installation for cubietruck.
    - Upgrade k8s => 1.1.2, flannel => v0.5.4, etcd => 2.2.1, registry => 2.2.0, go => 1.4.3
@@ -69,7 +98,7 @@
    - `kube-proxy` runs in a container under `kubelet` on master
    - Now it's possible to reboot and k8s restarts automatically
    - Many small bugfixes and improvments
- - v0.5.8
+ - v0.5.8 (27th Oct 2015)
    - Enhanced the SD Card write process
    - Now cubietruck is supported
    - Kubernetes binaries are now downloaded from Github, this makes it also possible to use k8s out-of-docker
@@ -78,21 +107,21 @@
    - Added lots of new info to `kube-config info`
    - Added `kube-config upgrade` for upgrading the system
    - Added the `sleep` addon. [README](addons/sleep/README.md)
- - v0.5.6
+ - v0.5.6 (24th Oct 2015)
    - Added experimental support for Kube UI and Cubietruck
    - Now memory accounting is enabled on RPi. No docker warnings are shown anymore.
    - Updated README.md and added READMEs to the core Kubernetes images. More to come.
    - Fixed the most of @nsteinmetz's bug reports. Thanks.
    - Some bugfixes here and there
    - Note: this is a prerelease, just for one to have newer code to hack on.
- - v0.5.5
+ - v0.5.5 (14th Oct 2015)
    - Added two addons: DNS and central image registry
    - Fixed some bugs
    - Added support for Parallella (although it´s slow)
    - Extended the README
    - Published the Kubernetes images on Docker Hub
    - Rewrite of the SD Card writing process
- - v0.5.0
+ - v0.5.0 (30th Sept 2015)
    - First release, Kubernetes is working and one may build the SD Card on Linux.
    - Kubernetes v1.0.6
    - flannel v0.5.3
