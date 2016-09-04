@@ -101,15 +101,15 @@ install(){
     source ${KUBERNETES_ENV_DIR}/os/${OS}.sh
 
     # If we have a external command file, use it
-    if [[ $(type -t os_install) == "function" ]]; then
-        echo "Installing required packages for this OS"
-        os_install
-    fi
     if [[ $(type -t board_install) == "function" ]]; then
         board_install
     fi
+    if [[ $(type -t os_install) == "function" ]]; then
+        os_install
+    fi
 
     # Download the kube-deploy project
+    echo "Downloading kube-deploy..."
     if [[ -f $(which git 2>&1) ]]; then
         git clone https://github.com/kubernetes/kube-deploy ${KUBE_DEPLOY_DIR} && cd ${KUBE_DEPLOY_DIR} && git checkout ${KUBE_DEPLOY_COMMIT}
     else
