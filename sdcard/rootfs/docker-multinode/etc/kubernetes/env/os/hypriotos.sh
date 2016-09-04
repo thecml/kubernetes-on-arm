@@ -9,6 +9,10 @@ os_install(){
 	net.ipv4.tcp_mtu_probing=1
 	vm.swappiness = 10
 	EOF
+
+    rm /etc/systemd/system/docker.service.d/overlay.conf
+    systemctl daemon-reload
+    systemctl restart docker
 }
 
 os_post_install(){
