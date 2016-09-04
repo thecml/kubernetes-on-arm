@@ -133,6 +133,9 @@ kube-config install
 Hmm, starting a complex system like Kubernetes should be a complex task, right?
 Well, not this time.
 
+`enable-master` runs [master.sh](https://github.com/kubernetes/kube-deploy/blob/master/docker-multinode/master.sh)
+`enable-worker` runs [worker.sh](https://github.com/kubernetes/kube-deploy/blob/master/docker-multinode/worker.sh)
+
 ```bash
 # To set up your board as both a master and a node, run
 kube-config enable-master
@@ -150,9 +153,10 @@ The README for the `docker-multinode` rootfs [is here](sdcard/rootfs/docker-mult
 If you already have set up your Pi with latest Raspbian OS for example, follow this guide.
 
 #### Install the `.deb` package
-```bash
-# The OS have to be systemd based, e. g. HypriotOS, Debian Jessie, Arch Linux ARM, Ubuntu 15.04
 
+Supported operating systems are HypriotOS, Raspbian, Arch Linux ARM and in some cases Debian/Ubuntu.
+
+```bash
 # Download the latest package
 curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.8.0/docker-multinode.deb > docker-multinode.deb
 # or
@@ -163,10 +167,7 @@ sudo dpkg -i docker-multinode.deb
 
 # Setup the enviroinment
 # It will ask which board it's running on and which OS
-# If your OS is Hypriot or Arch Linux, choose that. Otherwise, choose systemd, which is generic
-# It will download prebuilt binaries
-# And make a swap file if you plan to compile things
-# A reboot is required for it to function properly
+# A reboot is required for it to function properly, but not for HypriotOS
 kube-config install
 
 ## ----- REBOOT -----
@@ -219,10 +220,6 @@ kubectl get svc
 curl $SERVICE_IP
 # --> <p>WELCOME TO NGINX</p>
 
-# 10.0.0.10 is already enabled as a DNS server in your system, see the file /etc/systemd/resolved.conf.d/dns.conf
-# That file makes /etc/resolv.conf use kube-dns also outside of your containers
-kube-config enable-addon dns
-
 # See which internal cluster services that are running
 kubectl --namespace=kube-system get pods,rc,svc
 
@@ -243,16 +240,13 @@ kube-config enable-addon registry
 kubectl --namespace=kube-system get pods
 
 # Tag an image
-docker tag my-name/my-image registry.kube-system:5000/my-name/my-image
+docker tag my-name/my-image localhost:5000/my-name/my-image
 
 # And push it to the registry
-docker push registry.kube-system:5000/my-name/my-image
+docker push localhost:5000/my-name/my-image
 
 # On another node, pull it
-docker pull registry.kube-system:5000/my-name/my-image
-
-# The registry address may be written longer if search isn't specified.
-# registry.kube-system.svc.cluster.local == registry.kube-system
+docker pull localhost:5000/my-name/my-image
 
 # The master also proxies the services so that they are accessible from outside
 # The -L flag is there because curl has to follow redirects
@@ -272,13 +266,9 @@ kubectl cluster-info
 # cAdvisor in kubelet provides a web site that outputs all kind of stats in real time
 # http://$MASTER_IP:4194
 
-# Disable this node. This always reverts the "kube-config enable-*" commands
-kube-config disable-node
-
-# Remove the data for the cluster
-kube-config delete-data
+# Turndown Kubernetes on this node. This always reverts the "kube-config enable-*" commands
+kube-config disable
 ```
-
 
 ## Addons
 
@@ -293,26 +283,28 @@ Three addons are available for the moment:
    - Example: `my-awesome-webserver.default.svc.cluster.local` or just `my-awesome-webserver` may resolve to ip `10.0.0.154`
    - Those DNS names is available both in containers and on the node itself (kube-config automatically adds the info to `/etc/resolv.conf`)
    - If you want to access the Kubernetes API easily, `curl -k https://kubernetes` or `curl -k https://10.0.0.1` if you remember numbers better (`-k` stands for insecure as apiserver has no signed certs by default)
-   - The DNS server itself has allocated ip `10.0.0.10` by default
-   - The DNS domain is `cluster.local` by default
+   - The DNS server itself has allocated ip `10.0.0.10`
+   - The DNS domain is `cluster.local`
+   - This addon can't be disabled.
+ - Kubernetes Dashboard:
+   - The Kubernetes Dashboard project [is here](https://github.com/kubernetes/dashboard)
+   - Access the dashboard on: `http://[master-ip]:8080/ui`
+   - This addon can't be disabled.
  - Central image registry:
    - A registry for storing cluster images if e.g. the cluster has no internet connection for a while
    - Or for cluster-specific images that one not want to publish on Docker Hub
-   - This service is available at this address: `registry.kube-system` when DNS is enabled
-   - Just tag your image: `docker tag my-name/my-image registry.kube-system:5000/my-name/my-image`
-   - And push it to the registry: `docker push registry.kube-system:5000/my-name/my-image`
- - Kubernetes Dashboard:
-   - The Kubernetes Dashboard project [is here](https://github.com/kubernetes/dashboard)
-   - Replaces `kube-ui`
-   - Access the dashboard on: `http://[master-ip]:8080/ui`
- - The Service Loadbalancer:
+   - This service is available at `localhost:5000` on all nodes, which by default is a "trusted" location.
+   - `localhost:5000` forwards the traffic to the internal IP of the registry service.
+   - Just tag your image: `docker tag my-name/my-image localhost:5000/my-name/my-image`
+   - And push it to the registry: `docker push localhost:5000/my-name/my-image`
+ - Service loadbalancer:
    - Documentation [here](https://github.com/kubernetes/contrib/tree/master/service-loadbalancer)
    - You have to label at least one node `role=loadbalancer` like this: `kubectl label no [node_ip] role=loadbalancer`
    - The loadbalancer will expose http services in the default namespace on `http://[loadbalancer_ip]/[service_name]`. Only `http` services on port 80 are tested in this release. It should be pretty easy to add `https` support though.
    - You may see `haproxy` stats on `http://[loadbalancer_ip]:1936`
-   - More info will come later
+   - Not recommended for heavy use. Will be replaced with ingress in coming releases.
  - Cluster monitoring with heapster, influxdb and grafana
-   - When running this addon (`heapster`), the Dashboard will show usage graphs in the CPU and RAM columns.
+   - When this addon is enabled, the dashboard will show usage graphs in the CPU and RAM columns.
    - All heapster data is stored in an InfluxDB database. Data is written once a minute. Access the graphical InfluxDB UI: `http://[master-ip]:8080/api/v1/proxy/namespaces/kube-system/services/monitoring-influxdb:http` and the raw api on: `http://[master-ip]:8080/api/v1/proxy/namespaces/kube-system/services/monitoring-influxdb:api`
    - A nice `grafana` web dashboard that shows resource usage for the whole cluster as for individual pods is accessible at: `http://[master-ip]:8080/api/v1/proxy/namespaces/kube-system/services/monitoring-grafana`. It may take some minutes for data to show up.
 
@@ -328,8 +320,8 @@ Here is some ways to make your outside devices reach the services running in the
  - Connect a computer to the `flannel` network
    - It's possible to start `flannel` and `kube-proxy` on another computer **in the same network** and access all services
    - Run these two commands from a `amd64` machine with docker:
-     - `docker run --net=host -d --privileged -v /dev/net:/dev/net quay.io/coreos/flannel:0.5.5 /opt/bin/flanneld --etcd-endpoints=http://$MASTER_IP:4001`
-     - `docker run --net=host -d --privileged gcr.io/google_containers/hyperkube-amd64:v1.2.0 /hyperkube proxy --master=http://$MASTER_IP:8080 --v=2`'
+     - `docker run --net=host -d --privileged -v /dev/net:/dev/net quay.io/coreos/flannel:0.6.1-amd64 /opt/bin/flanneld --etcd-endpoints=http://$MASTER_IP:2379`
+     - `docker run --net=host -d --privileged gcr.io/google_containers/hyperkube-amd64:v1.3.6 /hyperkube proxy --master=http://$MASTER_IP:8080 --v=2`'
    - Replace $MASTER_IP with the actual ip of your master node
    - The consuming `amd64` computer can access all services
    - For example: `curl -k https://10.0.0.1`
@@ -348,39 +340,23 @@ Go to a web browser and type: `{IP of your node}:4194` and a nice dashboard will
 
 There is a configuration file: `/etc/kubernetes/k8s.conf`, where you can customize some things:
  - `K8S_MASTER_IP`: Points to the master in the cluster. If the node is master, it uses `127.0.0.1` (aka `localhost`). Default: `127.0.0.1`
- - `FLANNEL_SUBNET`: The subnet `flannel` should use. [More information](https://github.com/coreos/flannel#configuration). Default: `10.1.0.0/16`
- - `FLANNEL_BACKEND`: The backend `flannel` will use to proxy packets from one node to another. [More information](https://github.com/coreos/flannel#configuration). Default: `host-gw`, which requires Layer 2 connectivity between nodes.
- - `DNS_IP`: The IP the DNS addon will allocate. Defaults to: `10.0.0.10`. Do not change this unless you have a good reason.
- - `DNS_DOMAIN`: The domain for DNS names. Defaults to: `cluster.local`. If you for example changes this to `abc`, your DNS names will look like this: `my-nginx.default.svc.abc`.
- - `DOCKER_STORAGE_DRIVER`: The storage driver all docker daemons will use. Note: You shouldn't change this after the installation.
+ - The other options comes from [docker-multinode](https://github.com/kubernetes/kube-deploy/tree/master/docker-multinode#optionsconfiguration)
 
-**Note:** You must change the values in `k8s.conf` before starting Kubernetes. Otherwise they won't have effect, just be able to harm your setup. And remember that if you change `DNS_IP` and `DNS_DOMAIN` on one node, you'll have to change them on all nodes in the cluster
-
+**Note:** You must change the values in `k8s.conf` before starting Kubernetes. Otherwise they won't have effect, just be able to harm your setup.
 
 On Arch Linux, this file will override the default `eth0` settings. If you have a special `eth0` setup (or use some other network), edit this file to fit your use case: `/etc/systemd/network/dns.network`
 
 ## Docker versions
 
-With release `v0.6.5` and higher, only `docker-1.10.0` and higher is supported.
-
-## Cross-compiling
-
-For this project, I compile the binaries on ARM hosts. But I've also made a script that can cross-compile if you want to compile it faster. [Check it out](scripts/build-k8s-on-amd64/Dockerfile)
-
-## Running tests
-
-Right now there is one test:
- - `run-test master` will simply do what the `Use Kubernetes` section does. It setups a master, runs `nginx`, starts the DNS, registry and sleep addons.
-
-Logs can be found at: `/etc/kubernetes/source/scripts/logs`
-The tests can be found at: `/etc/kubernetes/source/scripts/tests`
-The test might fail, although the thing it's testing is in fact working. Report an issue in that case.
+Only `docker-1.10` and higher is supported, `docker-1.11` is recommended.
 
 ## Troubleshooting
 
-If your cluster won't start, try `kube-config delete-data`. That will remove all data you store in `/var/lib/kubelet` and `/var/lib/kubernetes`. If you don't want to delete all data, but have to get Kubernetes up and running, you can answer `M`, when running `kube-config delete-data` and it will rename `/var/lib/kubernetes` and `/var/lib/kubelet` to `/var/lib/kubernetesold` and `/var/lib/kubeletold` so you may restore them later.
+If your cluster won't start, try `kube-config disable` and choose to remove `/var/lib/kubelet`. That will remove all data you store in `/var/lib/kubelet` and kill most running docker images.
 
-There is also no guarantee that the master/workers and all their services will come up successfully after a reboot, but it's possible.
+## Reboots
+
+Will **not** work in this version. It's in the roadmap to enable reboots again.
 
 ## Contributing
 
