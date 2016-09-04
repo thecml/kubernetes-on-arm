@@ -27,6 +27,9 @@ fi
 # Build the image
 docker build -t kubernetesonarm/package scripts/package
 
+rm -rf build
+mkdir -p build
+
 docker run --rm -it -v $(pwd)/build:/build kubernetesonarm/package $2 $3
 
 # Get the directory we should put the file in
@@ -37,7 +40,7 @@ mkdir -p $OUTDIR
 cp build/* $OUTDIR
 
 # And remove the intermediate directory and container
-rm -r build
+rm -rf build
 
 # Lastly, clean up the directory
 cleanup-path-or-disc
