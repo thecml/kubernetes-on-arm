@@ -4,7 +4,7 @@ os_install(){
     if [[ ! -f $(which docker 2>&1) ]]; then
 
         # Install docker-hypriot
-        curl -s https://packagecloud.io/install/repositories/Hypriot/Schatzkiste/script.deb.sh | bash
+        curl -s https://packagecloud.io/install/repositories/Hypriot/Schatzkiste/script.deb.sh | os=debian dist=jessie bash
         apt-get install -y docker-hypriot
     fi
 
