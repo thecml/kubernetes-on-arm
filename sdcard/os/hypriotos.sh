@@ -1,7 +1,7 @@
 
-
-RPI_HYPRIOTOS_RELEASE="hypriotos-rpi-v1.0.0"
-RPI_DOWNLOAD_LINK=http://downloads.hypriot.com/${RPI_HYPRIOTOS_RELEASE}.img.zip
+HYPRIOTOS_VERSION="v1.0.1"
+HYPRIOTOS_RELEASE="hypriotos-rpi-${HYPRIOTOS_VERSION}"
+RPI_DOWNLOAD_LINK=https://github.com/hypriot/image-builder-rpi/releases/download/${HYPRIOTOS_VERSION}/${HYPRIOTOS_RELEASE}.img.zip
 
 # Wait until these images are ready with a newer kernel and more free space partitioned
 ODROID_C1_HYPRIOTOS_VERSION="v0.2.1"
@@ -32,7 +32,7 @@ mountpartitions(){
 initos(){
     case $MACHINENAME in
         rpi|rpi-2|rpi-3)
-            generaldownload $RPI_DOWNLOAD_LINK $RPI_HYPRIOTOS_RELEASE $PARTITION2;;
+            generaldownload $RPI_DOWNLOAD_LINK $HYPRIOTOS_RELEASE $PARTITION2;;
         *)
             exit;;
     esac
