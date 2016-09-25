@@ -123,8 +123,10 @@ kube-config install
 # Last question is whether you want to reboot
 # You have to reboot in order to get the cgroups working
 
-# If you want to run this script non-interactively, do this:
-# TIMEZONE=Europe/Helsinki SWAP=1 NEW_HOSTNAME=mynewpi REBOOT=0 kube-config install
+# If you want to run this script non-interactively, provide the user input beforehand:
+# "\n" is the delimiter, "\" the escape character, presssing enter can be simulated with "\n"
+# Example:
+# /bin/echo -e "rpi-3\nhypriotos\nnodename\nEurope\/Berlin\n\n\ny\nY" | sudo kube-config install
 # This script runs in 2-3 mins
 ```
 
