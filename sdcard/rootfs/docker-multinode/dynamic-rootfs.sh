@@ -8,11 +8,6 @@ rootfs(){
     K8S_DIR=${ROOT}/etc/kubernetes
     SDCARD_METADATA_FILE=${K8S_DIR}/SDCard_metadata.conf
 
-    # Allow root ssh connections when using arch linux
-    if [[ ${OSNAME} == "archlinux" && -f ${ROOT}/etc/ssh/sshd_config ]]; then
-        echo "PermitRootLogin yes" >> ${ROOT}/etc/ssh/sshd_config
-    fi
-
     # Copy over all addons
     mkdir -p ${ROOT}/etc/kubernetes/addons
     cp ${PROJROOT}/addons/*.yaml ${ROOT}/etc/kubernetes/addons/
