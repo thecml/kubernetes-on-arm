@@ -9,27 +9,18 @@ fi
 
 INSTALL_DEFAULT_TIMEZONE="Europe/Helsinki"
 INSTALL_DEFAULT_HOSTNAME="kubepi"
-INSTALL_DEFAULT_STORAGEDRIVER="overlay"
 
-KUBERNETES_DIR=/etc/kubernetes
-KUBERNETES_CONFIG=${KUBERNETES_DIR}/k8s.conf
+KUBERNETES_DIR=/etc/kubernetes-on-arm
 KUBERNETES_ON_ARM_ADDONS_DIR=${KUBERNETES_DIR}/addons
 KUBERNETES_ENV_DIR=${KUBERNETES_DIR}/env
 KUBERNETES_ENV_FILE=${KUBERNETES_ENV_DIR}/env.conf
 
-KUBE_DEPLOY_DIR=${KUBERNETES_DIR}/kube-deploy
-KUBE_DEPLOY_COMMIT=e4c1bccca6897e4df6221af6b60fbb80e5b6708f
-MULTINODE_DIR=${KUBE_DEPLOY_DIR}/docker-multinode
-SUPPORTED_K8S_VERSION=v1.3.6
-
+SUPPORTED_K8S_VERSION=v1.4.1
 KUBERNETES_ON_ARM_IMAGE_VERSION=0.8.0
 
 DNS_DOMAIN="cluster.local"
-DNS_IP=10.0.0.10
-
-KUBECTL=/usr/local/bin/kubectl
-
-source ${KUBERNETES_CONFIG}
+DNS_IP=10.16.0.10
+POD_NETWORK_CIDR=10.244.0.0/16
 
 usage(){
     cat <<EOF
@@ -108,22 +99,41 @@ install(){
         os_install
     fi
 
-    # Download the kube-deploy project
-    echo "Downloading kube-deploy..."
-    if [[ -f $(which git 2>&1) ]]; then
-        git clone https://github.com/kubernetes/kube-deploy ${KUBE_DEPLOY_DIR} && cd ${KUBE_DEPLOY_DIR} && git checkout ${KUBE_DEPLOY_COMMIT}
-    else
-        echo "WARNING: git is not installed. Falling back on the master branch"
-        curl -sSL https://github.com/kubernetes/kube-deploy/archive/master.tar.gz | tar -xz -C ${KUBE_DEPLOY_DIR}
-    fi
-
-    # Download kubectl
-    curl -sSL https://storage.googleapis.com/kubernetes-release/release/${SUPPORTED_K8S_VERSION}/bin/linux/$(get-arch)/kubectl > ${KUBECTL}
-    chmod +x ${KUBECTL}
-
     # Download helm
     curl -sSL https://github.com/luxas/kubernetes-on-arm/releases/download/v0.8.0/helm > /usr/local/bin/helm
     chmod +x /usr/local/bin/helm
+
+    # Install docker if it doesn't exist
+    did_update=0
+    if [[ ! -f $(which docker 2>&1) && $(uname -m) == "aarch64" ]]; then
+
+        # Trust Ubuntu's gpg keys
+        apt-key adv --keyserver keyserver.ubuntu.com --recv C0B21F32
+        apt-key adv --keyserver keyserver.ubuntu.com --recv 437D05B5
+
+        # Add ubuntu repos so we can get docker from there
+        cat > /etc/apt/sources.list.d/docker.list <<-EOF
+		deb http://ports.ubuntu.com xenial main
+		deb http://ports.ubuntu.com xenial-updates universe
+		EOF
+
+        apt-get update -y
+        apt-get install -y docker.io
+
+        rm /etc/apt/sources.list.d/docker.list
+        apt-get update -y
+        did_update=1
+    elif [[ ! -f $(which docker 2>&1) && $(uname -m) == "arm"* ]]; then
+        apt-key adv --keyserver http://keyserver.ubuntu.com --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+        echo "deb https://apt.dockerproject.org/repo raspbian-jessie main" > /etc/apt/sources.list.d/docker.list
+        apt-get install -y docker-engine
+        did_update=1
+    fi
+
+    # Install kubeadm
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+    if [[ ${did_update} == 0 ]]; then apt-get update -y; fi
+    apt-get install kubeadm
 
     # Set hostname
     if [[ -z ${NEW_HOSTNAME} ]]; then
@@ -138,45 +148,6 @@ install(){
         TIMEZONE=${timezoneanswer:-${INSTALL_DEFAULT_TIMEZONE}}
     fi
     timedatectl set-timezone ${TIMEZONE}
-
-    # Set storage driver
-    if [[ -z ${STORAGE_DRIVER} ]]; then
-        read -p "Which storage driver do you want? Defaults to ${INSTALL_DEFAULT_STORAGEDRIVER}. " storagedriveranswer
-        STORAGE_DRIVER=${storagedriveranswer:-${INSTALL_DEFAULT_STORAGEDRIVER}}
-    fi
-    DOCKER_CONF=$(systemctl cat docker | head -1 | awk '{print $2}')
-    DOCKER_CMD=$(grep "/usr/bin/docker" ${DOCKER_CONF})
-
-    # This expression checks if the "--storage-driver" or "-s" options are in the .service
-    # If they aren't, they are inserted at the end of the docker command
-    if [[ -z $(grep -- "--storage-driver=" ${DOCKER_CONF}) || -z $(grep -- "-s=" ${DOCKER_CONF}) ]]; then
-      sed -e "s@${DOCKER_CMD}@${DOCKER_CMD} --storage-driver=${STORAGE_DRIVER}@g" -i ${DOCKER_CONF}
-    fi
-    sed -e "s@-s=@--storage-driver=@g" -i ${DOCKER_CONF}
-    sed -e "s@$(grep -o -- "--storage-driver=[[:graph:]]*" ${DOCKER_CONF})@--storage-driver=${STORAGE_DRIVER}@g" -i ${DOCKER_CONF}
-
-    # Has the user explicitely specified it? If not, ask.
-    if [[ -z ${SWAP} ]]; then
-        read -p "Do you want to create an 1GB swapfile (required for compiling)? N is default [y/N] " swapanswer
-        case ${swapanswer} in
-            [yY]*)
-                SWAP=1;;
-        esac
-    fi
-    if [[ ${SWAP} == 1 || ${SWAP} == "y" || ${SWAP} == "Y" ]]; then
-        echo "Makes an 1GB swapfile, NOTE: it takes up precious SD Card space"
-        # Check that the swapfile doesn't already exist
-        if [[ ! -f /swapfile ]]; then
-            # Make 1GB swap
-            dd if=/dev/zero of=/swapfile bs=1M count=1024
-
-            # Enable it with right permissions
-            mkswap /swapfile && chmod 600 /swapfile && swapon /swapfile
-
-            # And recreate it on every boot
-            echo "/swapfile  none  swap  defaults  0  0" >> /etc/fstab
-        fi
-    fi
 
     if [[ $(type -t board_post_install) == "function" ]]; then
         echo "Doing some custom work specific to this board"
@@ -203,33 +174,12 @@ install(){
 }
 
 enable-master() {
-    export K8S_VERSION=${K8S_VERSION:-${SUPPORTED_K8S_VERSION}}
-    cd ${MULTINODE_DIR}
-    ./master.sh
+    kubeadm init --use-kubernetes-version=${SUPPORTED_K8S_VERSION} --pod-network-cidr=${POD_NETWORK_CIDR}
+    curl -sSL https://github.com/luxas/flannel/blob/06b47705411944d37b174dbab7f64e16f32a04ee/Documentation/kube-flannel.yml | sed "s/amd64/arm/" | kubectl apply -f -
 }
 
 enable-worker() {
-    export K8S_VERSION=${K8S_VERSION:-${SUPPORTED_K8S_VERSION}}
-    IP=${1:-${K8S_MASTER_IP}}
-
-    echo "Using master ip: ${IP}"
-    updateconfig K8S_MASTER_IP ${IP}
-
-    # Check if we have a connection
-    if [[ $(checkformaster ${IP}) != "OK" ]]; then
-        cat <<EOF
-The Kubernetes master was not found.
-Exiting...
-
-Usage:
-kube-config enable-worker [master-ip]
-EOF
-        exit
-    fi
-
-    export MASTER_IP=${IP} 
-    cd ${MULTINODE_DIR}
-    ./worker.sh
+    kubeadm join --token=$1 $2
 }
 
 turndown(){
@@ -245,7 +195,7 @@ change-addon() {
         for ADDON in $@; do
             if [[ -f ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml ]]; then
 
-                sed -e "s|VERSION|${KUBERNETES_ON_ARM_IMAGE_VERSION}|g" ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml | ${KUBECTL} ${ACTION} -f -
+                sed -e "s|VERSION|${KUBERNETES_ON_ARM_IMAGE_VERSION}|g" ${KUBERNETES_ON_ARM_ADDONS_DIR}/${ADDON}.yaml | kubectl ${ACTION} -f -
             else
                 echo "This addon doesn't exist: ${ADDON}"
             fi
@@ -287,8 +237,8 @@ version(){
     fi
 
     # if kubectl exists, output k8s server version. If there is no server, output client Version
-    if [[ -f $(which ${KUBECTL} 2>&1) ]]; then
-        SERVER_K8S=$(${KUBECTL} version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
+    if [[ -f $(which kubectl 2>&1) ]]; then
+        SERVER_K8S=$(kubectl version 2>&1 | grep Server | grep -o "v[0-9.]*" | grep "[0-9]")
 
         if [[ ! -z $SERVER_K8S ]]; then
             echo "kubernetes server version: $SERVER_K8S"
@@ -304,19 +254,13 @@ version(){
                 echo "scheduler: $(getcputime scheduler)"
             fi
         else
-            echo "kubernetes client version: $(${KUBECTL} version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
+            echo "kubernetes client version: $(kubectl version -c 2>&1 | grep Client | grep -o "v[0-9.]*" | grep "[0-9]")"
         fi
     fi
 }
 
 getcputime(){
     echo $(ps aux | grep " $1 " | grep -v grep | grep -v docker | awk '{print $10}')
-}
-
-# Update variable in k8s.conf
-# Example: updateconfig K8S_MASTER_IP [new value]
-updateconfig(){
-    updateline ${KUBERNETES_CONFIG} $1 "$1=$2"
 }
 
 # Example: updateline path_to_file value_to_search_for replace_that_line_with_this_content
@@ -355,18 +299,6 @@ is-active(){
     fi
 }
 
-get-arch(){
-    case "$(uname -m)" in
-        aarch64*)
-          host_arch=arm64;;
-        arm64*)
-          host_arch=arm64;;
-        *)
-          host_arch=arm;;
-    esac
-    echo ${host_arch}
-}
-
 # If nothing is specified, return usage
 if [[ $# == 0 ]]; then
     usage
@@ -377,8 +309,6 @@ fi
 case $1 in
     'install')
         install;;
-    'upgrade')
-        upgrade;;
 
     'enable-master')
         enable-master;;
