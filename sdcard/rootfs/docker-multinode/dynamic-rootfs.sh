@@ -5,12 +5,12 @@
 # PROJROOT: Path to kubernetes-on-arm
 rootfs(){
 
-    K8S_DIR=${ROOT}/etc/kubernetes
+    K8S_DIR=${ROOT}/etc/kubernetes-on-arm
     SDCARD_METADATA_FILE=${K8S_DIR}/SDCard_metadata.conf
 
     # Copy over all addons
-    mkdir -p ${ROOT}/etc/kubernetes/addons
-    cp ${PROJROOT}/addons/*.yaml ${ROOT}/etc/kubernetes/addons/
+    mkdir -p ${K8S_DIR}/addons
+    cp ${PROJROOT}/addons/*.yaml ${K8S_DIR}/addons/
 
     # Inform the newly created SD Cards' scripts about which files to use.
     echo -e "OS=${OSNAME}\nBOARD=${MACHINENAME}" > ${K8S_DIR}/env/env.conf
