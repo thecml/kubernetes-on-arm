@@ -1,13 +1,5 @@
 os_install(){
 
-    # Install docker if it doesn't exist
-    if [[ ! -f $(which docker 2>&1) ]]; then
-
-        # Install docker-hypriot
-        curl -s https://packagecloud.io/install/repositories/Hypriot/Schatzkiste/script.deb.sh | os=debian dist=jessie bash
-        apt-get install -y docker-hypriot
-    fi
-
     # If the raspi-config command exists, expand filesystem automatically
     if [[ -f $(which raspi-config 2>&1) ]]; then
 
@@ -53,18 +45,4 @@ os_install(){
 		--------------------
 		EOF
     fi
-
-    # Is git installed? If not, try to install it
-    if [[ ! -f $(which git 2>&1) ]]; then
-
-        # If apt-get is there, use it and install git
-        echo "Installing git..."
-        apt-get install -y git
-    fi
-
-    # Thanks to http://a.frtzlr.com/kubernetes-on-raspberry-pi-3-the-missing-troubleshooting-guide/
-    cat >> /etc/sysctl.d/k8s.conf <<-EOF
-	net.ipv4.tcp_mtu_probing=1
-	vm.swappiness = 10
-	EOF
 }

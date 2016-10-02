@@ -4,12 +4,6 @@ os_install(){
     updateline /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.${DNS_DOMAIN}\",\"svc.${DNS_DOMAIN}\",\"${DNS_DOMAIN}\";"
     updateline /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers ${DNS_IP};"
 
-    # Thanks to http://a.frtzlr.com/kubernetes-on-raspberry-pi-3-the-missing-troubleshooting-guide/
-    cat >> /etc/sysctl.d/k8s.conf <<-EOF
-	net.ipv4.tcp_mtu_probing=1
-	vm.swappiness = 10
-	EOF
-
     rm /etc/systemd/system/docker.service.d/overlay.conf
     systemctl daemon-reload
     systemctl restart docker
