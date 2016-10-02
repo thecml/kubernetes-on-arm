@@ -79,7 +79,7 @@ Explanation:
             - docker-multinode - Kubernetes scripts prepopulated (for archlinux and hypriotos)
 
 Example:
-sdcard/write.sh /dev/sdb rpi-2 archlinux docker-multinode
+sdcard/write.sh /dev/sdb rpi-3 hypriotos kubeadm
 EOF
 }
 
@@ -183,7 +183,6 @@ source os/$OSNAME.sh
 # mountpartitions()
 # initos()
 # cleanup()
-# checkrootfs()
 
 # Mount them
 mountpartitions
