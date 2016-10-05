@@ -90,6 +90,16 @@ sudo sdcard/write.sh /dev/sdX rpi-2 archlinux docker-multinode
 
 The README for the `docker-multinode` rootfs [is here](sdcard/rootfs/docker-multinode/etc/kubernetes/README.md)
 
+### Prepare a SD Card on a mac
+
+If you are a mac user, it might be easier to install the raw OS and install the `.deb` package manually. To install [HypriotOS](http://blog.hypriot.com/) you can use [flash](https://github.com/hypriot/flash). The following command will install HypriotOS in version 1.0.1:
+
+```
+$ flash https://github.com/hypriot/image-builder-rpi/releases/download/v1.0.1/hypriotos-rpi-v1.0.1.img.zip
+```
+
+Now contiune with the (Package deployment)[README.md#package-deployment].
+
 ## Setup your board from an SD Card
 
 Boot your board and log into it.    
