@@ -12,8 +12,8 @@ os_install(){
     if [[ -f /etc/dhcp/dhclient.conf ]]; then
 
         # Write the DNS options to the file
-        updateline /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
-        updateline /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers $DNS_IP;"
+        updateline /etc/dhcp/dhclient.conf "append domain-search" "append domain-search \"default.svc.$DNS_DOMAIN\",\"svc.$DNS_DOMAIN\",\"$DNS_DOMAIN\";"
+        updateline /etc/dhcp/dhclient.conf "append domain-name-servers" "append domain-name-servers $DNS_IP;"
 
         # If we are using /etc/init.d/networking, restart it
         if [[ $(systemctl is-active networking 2>&1) == "active" ]]; then

@@ -1,8 +1,8 @@
 os_install(){
 
     # Write the DNS options to the file.
-    updateline /etc/dhcp/dhclient.conf "prepend domain-search" "prepend domain-search \"default.svc.${DNS_DOMAIN}\",\"svc.${DNS_DOMAIN}\",\"${DNS_DOMAIN}\";"
-    updateline /etc/dhcp/dhclient.conf "prepend domain-name-servers" "prepend domain-name-servers ${DNS_IP};"
+    updateline /etc/dhcp/dhclient.conf "append domain-search" "append domain-search \"default.svc.${DNS_DOMAIN}\",\"svc.${DNS_DOMAIN}\",\"${DNS_DOMAIN}\";"
+    updateline /etc/dhcp/dhclient.conf "append domain-name-servers" "append domain-name-servers ${DNS_IP};"
 
     rm /etc/systemd/system/docker.service.d/overlay.conf
     systemctl daemon-reload
