@@ -30,13 +30,13 @@ I've written a proposal about how to make Kubernetes available for multiple plat
 
 Then I also ported `kubeadm` to `arm` and `arm64`, and `kubeadm` is so much better than the docker-multinode deployment method I used earlier (before the features that kubeadm takes advantage of existed).
 
-So now the officially recommended and supported way of running Kubernetes on ARM is by following the [`kubeadm getting started guide`](kubernetes.io/docs/getting-started-guides/kubeadm/).
+So now the officially recommended and supported way of running Kubernetes on ARM is by following the [`kubeadm getting started guide`](http://kubernetes.io/docs/getting-started-guides/kubeadm/).
 Since I've moved all the features this project had into the core, there's no big need for this project anymore.
 
 ### Get your ARM device up and running Kubernetes in less than ten minutes
 
 I have a workshop how to create a Kubernetes cluster on ARM here now: https://github.com/luxas/kubeadm-workshop.
-Please look there for information how to create a Kubernetes cluster on ARM or look at the [`kubeadm getting started guide`](kubernetes.io/docs/getting-started-guides/kubeadm/).
+Please look there for information how to create a Kubernetes cluster on ARM or look at the [`kubeadm getting started guide`](http://kubernetes.io/docs/getting-started-guides/kubeadm/).
 
 ### Various related resources
 
